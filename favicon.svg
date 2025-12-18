@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="80" fill="#0A192F"/>
+  
+  <g transform="translate(0, -20)"> <path d="M256 120 L136 260 M256 120 L376 260 M136 260 L376 260" 
+            stroke="#CB9C53" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+      
+      <circle cx="256" cy="120" r="35" fill="#CB9C53"/> <circle cx="136" cy="260" r="35" fill="#CB9C53"/> <circle cx="376" cy="260" r="35" fill="#CB9C53"/> <circle cx="256" cy="215" r="15" fill="#CB9C53" opacity="0.6"/>
+  </g>
+  
+  <text x="50%" y="82%" dominant-baseline="middle" text-anchor="middle" 
+        font-family="Arial, sans-serif" font-weight="bold" font-size="100" fill="#CB9C53" letter-spacing="2">
+    BroMan
+  </text>
+</svg>
