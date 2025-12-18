@@ -17,7 +17,7 @@ if (!isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SocialSync - Social Media Management</title>
+    <title>BroMan Social - Social Media Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,7 @@ if (!isset($_SESSION['user_id'])) {
     <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <h1 class="text-2xl font-bold text-indigo-600">SocialSync</h1>
+                <img src="images/Final_Logo.png" alt="BroMan Social" style="height: 40px;">
                 <span id="userBadge" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium"></span>
             </div>
             <div class="flex items-center gap-4">

@@ -1,6 +1,6 @@
 <?php
 /**
- * SocialSync API Handler
+ * BroMan Social API Handler
  * 
  * Handles all AJAX requests from the frontend
  * Returns JSON responses for SPA functionality

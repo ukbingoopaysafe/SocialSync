@@ -1,6 +1,6 @@
 <?php
 /**
- * SocialSync Configuration
+ * BroMan Social Configuration
  * 
  * IMPORTANT: Update these settings for your hosting environment
  * Keep this file secure and never commit sensitive credentials to version control
@@ -14,7 +14,7 @@ define('DB_PASS', '1671');
 define('DB_CHARSET', 'utf8mb4');
 
 // Application URL (for CORS and redirects)
-define('BASE_URL', 'http://socialsync.local');
+define('BASE_URL', 'http://social.local');
 
 // Session Configuration
 define('SESSION_NAME', 'SOCIALSYNC_SESSION');
@@ -24,7 +24,7 @@ define('SESSION_COOKIE_SECURE', false);   // Set to TRUE if using HTTPS
 define('SESSION_COOKIE_HTTPONLY', true);
 
 // Application Settings
-define('APP_NAME', 'SocialSync');
+define('APP_NAME', 'BroMan Social');
 define('TIMEZONE', 'Africa/Cairo');
 define('DATE_FORMAT', 'Y-m-d H:i:s');
 

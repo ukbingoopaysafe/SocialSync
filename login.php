@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SocialSync</title>
+    <title>Login - BroMan Social</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,8 +17,8 @@
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center">
     <div class="bg-white shadow-2xl rounded-2xl p-10 w-full max-w-md">
         <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-indigo-600 mb-2">SocialSync</h1>
-            <p class="text-gray-600">Social Media Team Management</p>
+            <img src="images/Final_Logo.png" alt="BroMan Social" style="height: 60px; margin: 0 auto;">
+            <p class="text-gray-600 mt-3">Social Media Team Management</p>
         </div>
         
         <form id="loginForm" class="space-y-6">
