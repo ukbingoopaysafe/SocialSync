@@ -137,6 +137,20 @@ try {
             requireAuth();
             $user = getCurrentUser();
             
+            // Auto-publish check: Move SCHEDULED posts to PUBLISHED if due
+            try {
+                $duePosts = fetchAll("SELECT id, title, author_id FROM posts WHERE status = 'SCHEDULED' AND scheduled_date <= NOW()");
+                foreach ($duePosts as $duePost) {
+                    executeQuery("UPDATE posts SET status = 'PUBLISHED', published_date = NOW() WHERE id = ?", [$duePost['id']]);
+                    // Use author_id for activity log since it's system-triggered
+                    logActivity($duePost['id'], $duePost['author_id'], 'auto_published', 'SCHEDULED', 'PUBLISHED', 'Automatically published on schedule');
+                    notify($duePost['author_id'], 'published', 'Post Published', "Your post '{$duePost['title']}' has been automatically published!", $duePost['id'], null);
+                }
+            } catch (Exception $e) {
+                // Don't fail fetch_posts if auto-publish has an issue
+                error_log("Auto-publish error: " . $e->getMessage());
+            }
+            
             $where = [];
             $params = [];
             
@@ -170,6 +184,31 @@ try {
                     ORDER BY p.urgency DESC, p.updated_at DESC";
             
             sendResponse(true, fetchAll($sql, $params));
+            break;
+        
+        case 'get_calendar_posts':
+            requireAuth();
+            $month = intval($_GET['month'] ?? date('m'));
+            $year = intval($_GET['year'] ?? date('Y'));
+            
+            $startDate = "$year-$month-01";
+            $endDate = date('Y-m-t', strtotime($startDate));
+            
+            $posts = fetchAll("
+                SELECT p.id, p.title, p.platform, p.status, p.scheduled_date, p.published_date, 
+                       u.username as author_name, u.full_name as author_full_name
+                FROM posts p
+                LEFT JOIN users u ON p.author_id = u.id
+                WHERE (p.scheduled_date BETWEEN ? AND ?) 
+                   OR (p.published_date BETWEEN ? AND ?)
+                ORDER BY COALESCE(p.scheduled_date, p.published_date) ASC
+            ", [$startDate, $endDate, $startDate, $endDate]);
+            
+            sendResponse(true, [
+                'posts' => $posts,
+                'month' => $month,
+                'year' => $year
+            ]);
             break;
         
         case 'get_post':
@@ -311,6 +350,7 @@ try {
             $id = $input['id'] ?? 0;
             $newStatus = $input['status'] ?? '';
             $reason = $input['reason'] ?? null;
+            $scheduledDate = $input['scheduled_date'] ?? null;
             
             if (!$id || !$newStatus) sendResponse(false, null, 'ID and status required', 400);
             
@@ -342,6 +382,20 @@ try {
             // CHANGES_REQUESTED -> DRAFT (internal, same as just editing)
             if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'DRAFT' && ($isOwner || $isAdmin)) $allowed = true;
             
+            // APPROVED -> SCHEDULED (Admin schedules for publishing)
+            if ($oldStatus === 'APPROVED' && $newStatus === 'SCHEDULED' && $isAdmin) {
+                if (!$scheduledDate) {
+                    sendResponse(false, null, 'Scheduled date is required', 400);
+                }
+                $allowed = true;
+            }
+            
+            // SCHEDULED -> PUBLISHED (Admin or system publishes)
+            if ($oldStatus === 'SCHEDULED' && $newStatus === 'PUBLISHED' && $isAdmin) $allowed = true;
+            
+            // SCHEDULED -> APPROVED (Admin unschedules)
+            if ($oldStatus === 'SCHEDULED' && $newStatus === 'APPROVED' && $isAdmin) $allowed = true;
+            
             if (!$allowed) {
                 sendResponse(false, null, "Cannot change from $oldStatus to $newStatus", 403);
             }
@@ -355,11 +409,28 @@ try {
                 $updateParams[] = $user['id'];
             }
             
+            if ($newStatus === 'SCHEDULED' && $scheduledDate) {
+                $updateSql .= ", scheduled_date = ?";
+                $updateParams[] = $scheduledDate;
+            }
+            
+            if ($newStatus === 'PUBLISHED') {
+                $updateSql .= ", published_date = NOW()";
+            }
+            
             $updateSql .= " WHERE id = ?";
             $updateParams[] = $id;
             
             executeQuery($updateSql, $updateParams);
-            logActivity($id, $user['id'], 'status_changed', $oldStatus, $newStatus, $reason);
+            
+            // Enhanced activity logging
+            $description = $reason;
+            if ($newStatus === 'SCHEDULED' && $scheduledDate) {
+                $description = "Scheduled for " . date('M j, Y g:i A', strtotime($scheduledDate));
+            } elseif ($newStatus === 'PUBLISHED') {
+                $description = "Published to archive";
+            }
+            logActivity($id, $user['id'], 'status_changed', $oldStatus, $newStatus, $description);
             
             // Notifications
             if ($newStatus === 'PENDING_REVIEW') {
@@ -371,6 +442,10 @@ try {
                 notify($post['author_id'], 'approved', 'Post Approved', "Your post '{$post['title']}' was approved!", $id, $user['id']);
             } elseif ($newStatus === 'CHANGES_REQUESTED') {
                 notify($post['author_id'], 'changes_requested', 'Changes Requested', "Changes requested on '{$post['title']}': $reason", $id, $user['id']);
+            } elseif ($newStatus === 'SCHEDULED') {
+                notify($post['author_id'], 'scheduled', 'Post Scheduled', "Your post '{$post['title']}' is scheduled for publishing!", $id, $user['id']);
+            } elseif ($newStatus === 'PUBLISHED') {
+                notify($post['author_id'], 'published', 'Post Published', "Your post '{$post['title']}' has been published!", $id, $user['id']);
             }
             
             sendResponse(true, ['id' => $id, 'status' => $newStatus], 'Status updated');

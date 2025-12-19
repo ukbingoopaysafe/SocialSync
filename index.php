@@ -42,6 +42,7 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                 <div class="hidden md:flex gap-1 ml-4">
                     <button onclick="switchTab('dashboard')" id="tabDashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300">Dashboard</button>
                     <button onclick="switchTab('board')" id="tabBoard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300">Board</button>
+                    <a href="calendar.php" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-gold-400 flex items-center gap-1"><i class="fa-regular fa-calendar"></i> Calendar</a>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -137,6 +138,22 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     </div>
                     <div id="postsAPPROVED" class="space-y-3 min-h-[200px]"></div>
                 </div>
+                
+                <!-- SCHEDULED -->
+                <div class="flex-shrink-0 w-80 bg-indigo-50 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <h3 class="font-bold text-indigo-700 flex items-center gap-2">📅 Scheduled <span id="countSCHEDULED" class="text-sm font-normal bg-indigo-200 px-2 py-0.5 rounded-full">0</span></h3>
+                    </div>
+                    <div id="postsSCHEDULED" class="space-y-3 min-h-[200px]"></div>
+                </div>
+                
+                <!-- PUBLISHED -->
+                <div class="flex-shrink-0 w-80 bg-slate-100 rounded-xl p-4">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <h3 class="font-bold text-slate-600 flex items-center gap-2">📤 Published <span id="countPUBLISHED" class="text-sm font-normal bg-slate-200 px-2 py-0.5 rounded-full">0</span></h3>
+                    </div>
+                    <div id="postsPUBLISHED" class="space-y-3 min-h-[200px]"></div>
+                </div>
             </div>
         </div>
     </main>
@@ -214,6 +231,9 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     <button id="viewEditBtn" onclick="switchToEditMode()" class="text-slate-300 hover:text-gold-400 hover:bg-white/10 p-2 rounded-lg transition-all" title="Edit Post">
                         <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
+                    <button id="viewDeleteBtn" onclick="deletePost()" class="text-slate-300 hover:text-red-400 hover:bg-white/10 p-2 rounded-lg transition-all" title="Delete Post">
+                        <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
                     <button onclick="closeViewModal()" class="text-2xl hover:text-gold-400">&times;</button>
                 </div>
             </div>
@@ -287,18 +307,12 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     <label class="block text-sm font-semibold mb-1.5">Content <span class="text-red-500">*</span></label>
                     <textarea id="editContent" rows="5" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500"></textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-1.5">Platform</label>
-                        <select id="editPlatform" class="w-full px-4 py-3 border rounded-xl">
-                            <option>Facebook</option><option>Instagram</option><option>LinkedIn</option>
-                            <option>X</option><option>TikTok</option><option>YouTube</option><option>Snapchat</option><option>Website</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold mb-1.5">Scheduled Date</label>
-                        <input type="datetime-local" id="editScheduled" class="w-full px-4 py-3 border rounded-xl">
-                    </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Platform</label>
+                    <select id="editPlatform" class="w-full px-4 py-3 border rounded-xl">
+                        <option>Facebook</option><option>Instagram</option><option>LinkedIn</option>
+                        <option>X</option><option>TikTok</option><option>YouTube</option><option>Snapchat</option><option>Website</option>
+                    </select>
                 </div>
                 <div class="flex items-center gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -336,25 +350,45 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
         </div>
     </div>
 
+    <!-- ==================== SCHEDULE MODAL ==================== -->
+    <div id="scheduleModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">📅 Schedule for Publishing</h3>
+            <p class="text-slate-600 text-sm mb-4">Select when this post should be published. The post will automatically move to Published at the scheduled time.</p>
+            <div class="mb-4">
+                <label class="block text-sm font-semibold mb-2">Publish Date & Time</label>
+                <input type="datetime-local" id="scheduleDateTime" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex gap-3">
+                <button onclick="confirmSchedule()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl">Schedule Post</button>
+                <button onclick="closeScheduleModal()" class="px-6 bg-slate-200 hover:bg-slate-300 py-3 rounded-xl font-semibold">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Container -->
     <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
 <script>
 const app = { user: null, posts: [], currentPost: null };
-const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED'];
+const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
 const STATUS_COLORS = {
     'IDEA': 'bg-purple-500',
     'DRAFT': 'bg-blue-500',
     'PENDING_REVIEW': 'bg-yellow-500',
     'CHANGES_REQUESTED': 'bg-amber-500',
-    'APPROVED': 'bg-green-500'
+    'APPROVED': 'bg-green-500',
+    'SCHEDULED': 'bg-indigo-500',
+    'PUBLISHED': 'bg-slate-500'
 };
 const STATUS_LABELS = {
     'IDEA': '💡 Idea',
     'DRAFT': '✏️ Draft',
     'PENDING_REVIEW': '⏳ Pending Review',
     'CHANGES_REQUESTED': '⚠️ Changes Requested',
-    'APPROVED': '✅ Approved'
+    'APPROVED': '✅ Approved',
+    'SCHEDULED': '📅 Scheduled',
+    'PUBLISHED': '📤 Published'
 };
 const PLATFORM_COLORS = {
     Facebook: 'bg-blue-600', Instagram: 'bg-gradient-to-r from-purple-500 to-pink-500', LinkedIn: 'bg-blue-700',
@@ -445,7 +479,7 @@ async function loadPosts() {
 }
 
 function renderBoard() {
-    const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], APPROVED: [] };
+    const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
     
     app.posts.forEach(p => {
         if (p.status === 'CHANGES_REQUESTED') grouped.DRAFT.push(p);
@@ -622,6 +656,10 @@ async function openViewModal(id) {
     const canEdit = isAdmin || (isOwner && canEditStatus);
     document.getElementById('viewEditBtn').classList.toggle('hidden', !canEdit);
     
+    // Delete button visibility - Admin can delete any, Staff can delete own drafts/ideas
+    const canDelete = isAdmin || (isOwner && ['DRAFT', 'IDEA'].includes(p.status));
+    document.getElementById('viewDeleteBtn').classList.toggle('hidden', !canDelete);
+    
     document.getElementById('viewModal').classList.remove('hidden');
 }
 
@@ -646,8 +684,21 @@ function renderActionButtons(p) {
         }
     } else if (p.status === 'APPROVED') {
         if (isAdmin) {
-            buttons.push(`<div class="flex-1 text-center py-3 px-6 bg-green-100 text-green-700 font-semibold rounded-xl">✅ This post is approved and ready!</div>`);
+            buttons.push(`<button onclick="openScheduleModal()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2"><i class="fa-regular fa-calendar"></i> 📅 Schedule for Publishing</button>`);
         }
+    } else if (p.status === 'SCHEDULED') {
+        // Show scheduled time
+        const schedDate = p.scheduled_date ? new Date(p.scheduled_date) : null;
+        const schedStr = schedDate ? schedDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
+        buttons.push(`<div class="flex-1 text-center py-3 px-6 bg-indigo-100 text-indigo-700 font-semibold rounded-xl"><i class="fa-regular fa-clock mr-2"></i>Scheduled: ${schedStr}</div>`);
+        if (isAdmin) {
+            buttons.push(`<button onclick="publishNow()" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2">🚀 Publish Now</button>`);
+            buttons.push(`<button onclick="unschedulePost()" class="bg-slate-400 hover:bg-slate-500 text-white font-semibold py-3 px-4 rounded-xl text-sm">Unschedule</button>`);
+        }
+    } else if (p.status === 'PUBLISHED') {
+        const pubDate = p.published_date ? new Date(p.published_date) : null;
+        const pubStr = pubDate ? pubDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
+        buttons.push(`<div class="flex-1 text-center py-3 px-6 bg-slate-100 text-slate-600 font-semibold rounded-xl">📤 Published: ${pubStr}</div>`);
     }
     
     container.innerHTML = buttons.join('') || '<div class="text-slate-400 text-center py-2">No actions available</div>';
@@ -691,6 +742,24 @@ async function addViewComment() {
     if (data.success) {
         document.getElementById('viewNewComment').value = '';
         openViewModal(app.currentPost.id); // Refresh
+    }
+}
+
+async function deletePost() {
+    if (!app.currentPost) return;
+    
+    const postTitle = app.currentPost.title || 'this post';
+    if (!confirm(`Are you sure you want to delete "${postTitle}"?\n\nThis action cannot be undone.`)) {
+        return;
+    }
+    
+    const data = await api(`delete_post&id=${app.currentPost.id}`, 'DELETE');
+    if (data.success) {
+        toast('Post deleted', 'success');
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Failed to delete post', 'error');
     }
 }
 
@@ -761,6 +830,75 @@ async function confirmRequestChanges() {
     }
 }
 
+// ==================== SCHEDULE MODAL ====================
+function openScheduleModal() {
+    // Set default to tomorrow at 9 AM
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    document.getElementById('scheduleDateTime').value = tomorrow.toISOString().slice(0, 16);
+    document.getElementById('scheduleModal').classList.remove('hidden');
+}
+
+function closeScheduleModal() {
+    document.getElementById('scheduleModal').classList.add('hidden');
+}
+
+async function confirmSchedule() {
+    const dateTime = document.getElementById('scheduleDateTime').value;
+    if (!dateTime) { toast('Please select a date and time', 'error'); return; }
+    if (!app.currentPost) return;
+    
+    const scheduledDate = new Date(dateTime);
+    if (scheduledDate <= new Date()) {
+        toast('Please select a future date and time', 'error');
+        return;
+    }
+    
+    const data = await api('update_status', 'POST', { 
+        id: app.currentPost.id, 
+        status: 'SCHEDULED',
+        scheduled_date: dateTime
+    });
+    
+    if (data.success) {
+        toast('Post scheduled!', 'success');
+        closeScheduleModal();
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Error', 'error');
+    }
+}
+
+async function publishNow() {
+    if (!app.currentPost) return;
+    if (!confirm('Publish this post now?')) return;
+    
+    const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'PUBLISHED' });
+    if (data.success) {
+        toast('Post published!', 'success');
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Error', 'error');
+    }
+}
+
+async function unschedulePost() {
+    if (!app.currentPost) return;
+    if (!confirm('Unschedule this post? It will return to Approved status.')) return;
+    
+    const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'APPROVED' });
+    if (data.success) {
+        toast('Post unscheduled', 'success');
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Error', 'error');
+    }
+}
+
 // ==================== EDIT MODAL ====================
 function switchToEditMode() {
     if (!app.currentPost) {
@@ -782,7 +920,6 @@ function openEditModal(post) {
     document.getElementById('editTitle').value = post.title || '';
     document.getElementById('editContent').value = post.content || '';
     document.getElementById('editPlatform').value = post.platform || 'Facebook';
-    document.getElementById('editScheduled').value = post.scheduled_date ? post.scheduled_date.slice(0, 16) : '';
     document.getElementById('editUrgent').checked = post.urgency == 1;
     
     // Media gallery

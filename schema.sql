@@ -51,13 +51,15 @@ CREATE TABLE posts (
     content TEXT NOT NULL,
     platform ENUM('Facebook', 'Instagram', 'LinkedIn', 'X', 'TikTok', 'YouTube', 'Snapchat', 'Website') NOT NULL,
     
-    -- Simplified Workflow Status (2-Role System)
+    -- Workflow Status (Full Publishing Pipeline)
     status ENUM(
         'IDEA',
         'DRAFT',
         'PENDING_REVIEW',
         'CHANGES_REQUESTED',
-        'APPROVED'
+        'APPROVED',
+        'SCHEDULED',
+        'PUBLISHED'
     ) NOT NULL DEFAULT 'DRAFT',
     
     -- Workflow metadata
