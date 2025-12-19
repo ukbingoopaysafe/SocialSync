@@ -14,67 +14,111 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: { extend: { colors: {
-                gold: { 400: '#facc15', 500: '#D4AF37', 600: '#ca8a04' },
-                navy: { 800: '#0f2847', 900: '#0a1628', 950: '#050d17' }
+                brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' }
             }}}
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .post-card { transition: all 0.2s; cursor: pointer; }
-        .post-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        .upload-zone { border: 2px dashed #cbd5e1; transition: all 0.2s; }
-        .upload-zone:hover, .upload-zone.drag-over { border-color: #D4AF37; background: rgba(212,175,55,0.05); }
-        .status-badge { font-size: 0.7rem; padding: 0.25rem 0.75rem; border-radius: 9999px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
+        
+        /* Modern Card Style */
+        .post-card { 
+            background: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .post-card:hover { 
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        /* Clean Upload Zone */
+        .upload-zone { 
+            border: 2px dashed #e2e8f0; 
+            border-radius: 12px;
+            transition: all 0.15s ease;
+            background: #fafafa;
+        }
+        .upload-zone:hover, .upload-zone.drag-over { 
+            border-color: #0ea5e9; 
+            background: #f0f9ff;
+        }
+        
+        /* Refined Status Badge */
+        .status-badge { 
+            font-size: 0.65rem; 
+            padding: 0.2rem 0.6rem; 
+            border-radius: 6px; 
+            font-weight: 500; 
+            text-transform: uppercase; 
+            letter-spacing: 0.03em;
+        }
+        
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Button Transitions */
+        button, a { transition: all 0.15s ease; }
+        
+        /* Modal Backdrop */
+        .modal-backdrop { backdrop-filter: blur(4px); }
     </style>
 </head>
-<body class="bg-slate-100">
+<body class="bg-slate-50 text-slate-700">
     
     <!-- Header -->
-    <header class="bg-navy-900 shadow-xl sticky top-0 z-40">
-        <div class="max-w-full mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <img src="images/Final_Logo%20White.png" alt="BroMan Social" style="height: 40px;">
-                <div class="hidden md:flex gap-1 ml-4">
-                    <button onclick="switchTab('dashboard')" id="tabDashboard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300">Dashboard</button>
-                    <button onclick="switchTab('board')" id="tabBoard" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300">Board</button>
-                    <a href="calendar.php" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-gold-400 flex items-center gap-1"><i class="fa-regular fa-calendar"></i> Calendar</a>
-                </div>
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-full mx-auto px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <a href="index.php" class="flex items-center">
+                    <img src="images/Final_Logo.png" alt="BroMan Social" class="h-9">
+                </a>
+                <nav class="hidden md:flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                    <button onclick="switchTab('dashboard')" id="tabDashboard" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white">Dashboard</button>
+                    <button onclick="switchTab('board')" id="tabBoard" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white">Board</button>
+                    <a href="calendar.php" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white flex items-center gap-2"><i class="fa-regular fa-calendar text-slate-400"></i> Calendar</a>
+                </nav>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-4">
                 <div class="relative">
-                    <button onclick="toggleNotifications()" class="p-2 text-slate-300 hover:text-gold-500 relative">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        <span id="notifBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                    <button onclick="toggleNotifications()" class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg relative">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-medium">0</span>
                     </button>
-                    <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border z-50">
-                        <div class="px-4 py-3 bg-navy-900 text-white rounded-t-xl flex justify-between">
-                            <span class="font-semibold">Notifications</span>
-                            <button onclick="markAllRead()" class="text-xs text-gold-400 hover:underline">Mark all read</button>
+                    <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50">
+                        <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                            <span class="font-semibold text-slate-800">Notifications</span>
+                            <button onclick="markAllRead()" class="text-xs text-brand-500 hover:underline">Mark all read</button>
                         </div>
                         <div id="notifList" class="max-h-80 overflow-y-auto"></div>
                     </div>
                 </div>
-                <button onclick="openCreateModal()" class="bg-gold-500 hover:bg-gold-600 text-navy-900 px-4 py-2 rounded-lg font-semibold text-sm shadow-lg flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <button onclick="openCreateModal()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                     New Post
                 </button>
                 <div id="adminLink" class="hidden">
-                    <a href="users.php" class="text-slate-300 hover:text-gold-400 text-sm flex items-center gap-1">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <a href="users.php" class="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-1.5 hover:bg-slate-100 px-3 py-2 rounded-lg">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         Users
                     </a>
                 </div>
-                <div class="flex items-center gap-2 ml-2 pl-4 border-l border-navy-700">
+                <div class="flex items-center gap-3 ml-2 pl-4 border-l border-slate-200">
                     <div class="text-right hidden sm:block">
-                        <div id="userName" class="text-white text-sm font-medium"></div>
-                        <div id="userRole" class="text-gold-400 text-xs capitalize"></div>
+                        <div id="userName" class="text-slate-800 text-sm font-medium"></div>
+                        <div id="userRole" class="text-slate-400 text-xs capitalize"></div>
                     </div>
-                    <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
+                    <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Logout"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
                 </div>
             </div>
         </div>
@@ -108,49 +152,67 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
             
             <div class="flex gap-4 overflow-x-auto pb-4">
                 <!-- IDEAS -->
-                <div class="flex-shrink-0 w-80 bg-purple-50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="font-bold text-purple-700 flex items-center gap-2">💡 Ideas <span id="countIDEA" class="text-sm font-normal bg-purple-200 px-2 py-0.5 rounded-full">0</span></h3>
+                <div class="flex-shrink-0 w-80">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+                            Ideas <span id="countIDEA" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
+                        </h3>
                     </div>
                     <div id="postsIDEA" class="space-y-3 min-h-[200px]"></div>
                 </div>
                 
                 <!-- DRAFTS -->
-                <div class="flex-shrink-0 w-80 bg-blue-50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="font-bold text-blue-700 flex items-center gap-2">✏️ Drafts <span id="countDRAFT" class="text-sm font-normal bg-blue-200 px-2 py-0.5 rounded-full">0</span></h3>
+                <div class="flex-shrink-0 w-80">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                            Drafts <span id="countDRAFT" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
+                        </h3>
                     </div>
                     <div id="postsDRAFT" class="space-y-3 min-h-[200px]"></div>
                 </div>
                 
                 <!-- PENDING REVIEW -->
-                <div class="flex-shrink-0 w-80 bg-yellow-50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="font-bold text-yellow-700 flex items-center gap-2">⏳ Pending Review <span id="countPENDING_REVIEW" class="text-sm font-normal bg-yellow-200 px-2 py-0.5 rounded-full">0</span></h3>
+                <div class="flex-shrink-0 w-80">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            Pending Review <span id="countPENDING_REVIEW" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
+                        </h3>
                     </div>
                     <div id="postsPENDING_REVIEW" class="space-y-3 min-h-[200px]"></div>
                 </div>
                 
                 <!-- APPROVED -->
-                <div class="flex-shrink-0 w-80 bg-green-50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="font-bold text-green-700 flex items-center gap-2">✅ Approved <span id="countAPPROVED" class="text-sm font-normal bg-green-200 px-2 py-0.5 rounded-full">0</span></h3>
+                <div class="flex-shrink-0 w-80">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            Approved <span id="countAPPROVED" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
+                        </h3>
                     </div>
                     <div id="postsAPPROVED" class="space-y-3 min-h-[200px]"></div>
                 </div>
                 
                 <!-- SCHEDULED -->
-                <div class="flex-shrink-0 w-80 bg-indigo-50 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="font-bold text-indigo-700 flex items-center gap-2">📅 Scheduled <span id="countSCHEDULED" class="text-sm font-normal bg-indigo-200 px-2 py-0.5 rounded-full">0</span></h3>
+                <div class="flex-shrink-0 w-80">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                            Scheduled <span id="countSCHEDULED" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
+                        </h3>
                     </div>
                     <div id="postsSCHEDULED" class="space-y-3 min-h-[200px]"></div>
                 </div>
                 
                 <!-- PUBLISHED -->
-                <div class="flex-shrink-0 w-80 bg-slate-100 rounded-xl p-4">
-                    <div class="flex items-center justify-between mb-4 px-1">
-                        <h3 class="font-bold text-slate-600 flex items-center gap-2">📤 Published <span id="countPUBLISHED" class="text-sm font-normal bg-slate-200 px-2 py-0.5 rounded-full">0</span></h3>
+                <div class="flex-shrink-0 w-80">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            Published <span id="countPUBLISHED" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
+                        </h3>
                     </div>
                     <div id="postsPUBLISHED" class="space-y-3 min-h-[200px]"></div>
                 </div>
@@ -211,30 +273,30 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     </label>
                 </div>
                 <div class="flex gap-3 pt-4">
-                    <button type="submit" class="flex-1 bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-3.5 rounded-xl text-lg shadow-lg">Create Post</button>
-                    <button type="button" onclick="closeCreateModal()" class="px-8 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-semibold">Cancel</button>
+                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Create Post</button>
+                    <button type="button" onclick="closeCreateModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- ==================== VIEW POST MODAL (Read-Only) ==================== -->
-    <div id="viewModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8">
+    <div id="viewModal" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-start justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl my-8 border border-slate-200">
             <!-- Header -->
-            <div class="bg-navy-900 text-white px-6 py-4 flex justify-between items-center rounded-t-2xl">
+            <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100">
                 <div class="flex items-center gap-3">
-                    <span id="viewStatusBadge" class="status-badge bg-blue-500 text-white">DRAFT</span>
-                    <span id="viewPlatformBadge" class="text-sm text-slate-300"></span>
+                    <span id="viewStatusBadge" class="status-badge bg-sky-100 text-sky-700">DRAFT</span>
+                    <span id="viewPlatformBadge" class="text-sm text-slate-500"></span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button id="viewEditBtn" onclick="switchToEditMode()" class="text-slate-300 hover:text-gold-400 hover:bg-white/10 p-2 rounded-lg transition-all" title="Edit Post">
+                <div class="flex items-center gap-1">
+                    <button id="viewEditBtn" onclick="switchToEditMode()" class="text-slate-400 hover:text-brand-500 hover:bg-slate-100 p-2 rounded-lg transition-all" title="Edit Post">
                         <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     </button>
-                    <button id="viewDeleteBtn" onclick="deletePost()" class="text-slate-300 hover:text-red-400 hover:bg-white/10 p-2 rounded-lg transition-all" title="Delete Post">
+                    <button id="viewDeleteBtn" onclick="deletePost()" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all" title="Delete Post">
                         <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
-                    <button onclick="closeViewModal()" class="text-2xl hover:text-gold-400">&times;</button>
+                    <button onclick="closeViewModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg ml-2 text-xl font-light">&times;</button>
                 </div>
             </div>
             
@@ -251,14 +313,14 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     <div class="flex items-center gap-4 text-sm text-slate-500">
                         <span id="viewAuthor" class="flex items-center gap-1"></span>
                         <span id="viewDate"></span>
-                        <span id="viewUrgentBadge" class="hidden text-red-500 font-semibold">🔥 URGENT</span>
+                        <span id="viewUrgentBadge" class="hidden text-red-600 font-medium text-xs bg-red-50 px-2 py-0.5 rounded">URGENT</span>
                     </div>
                 </div>
                 
                 <!-- Changes Requested Notice -->
-                <div id="viewChangesNotice" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-                    <div class="font-semibold text-amber-700 mb-1">⚠️ Changes Requested</div>
-                    <div id="viewChangesReason" class="text-amber-600 text-sm"></div>
+                <div id="viewChangesNotice" class="hidden bg-slate-50 border-l-4 border-slate-400 rounded-r-md p-4 mb-6">
+                    <div class="font-medium text-slate-700 text-sm mb-1">Revision Requested</div>
+                    <div id="viewChangesReason" class="text-slate-500 text-sm"></div>
                 </div>
                 
                 <!-- Content -->
@@ -282,9 +344,13 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                 </div>
                 
                 <!-- Activity Log (Collapsible) -->
-                <details class="border-t pt-6 mt-6">
-                    <summary class="font-bold text-lg cursor-pointer hover:text-gold-600">📋 Activity History</summary>
-                    <div id="viewActivity" class="mt-4 space-y-2 max-h-48 overflow-y-auto"></div>
+                <details class="border-t pt-6 mt-6" open>
+                    <summary class="font-semibold text-slate-700 cursor-pointer hover:text-slate-900 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Activity Timeline
+                        <span id="activityStats" class="text-xs font-normal text-slate-400 ml-2"></span>
+                    </summary>
+                    <div id="viewActivity" class="mt-4 space-y-3 max-h-64 overflow-y-auto border-l-2 border-slate-200 ml-2 pl-4"></div>
                 </details>
             </div>
         </div>
@@ -330,19 +396,19 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     </div>
                 </div>
                 <div class="flex gap-3 pt-4">
-                    <button type="submit" class="flex-1 bg-gold-500 hover:bg-gold-600 text-navy-900 font-bold py-3.5 rounded-xl">Save Changes</button>
-                    <button type="button" onclick="closeEditModal()" class="px-8 bg-slate-200 hover:bg-slate-300 text-slate-700 py-3.5 rounded-xl font-semibold">Cancel</button>
+                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Save Changes</button>
+                    <button type="button" onclick="closeEditModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- ==================== REQUEST CHANGES MODAL ==================== -->
-    <div id="changesModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-            <h3 class="text-xl font-bold mb-4 flex items-center gap-2">↩️ Request Changes</h3>
-            <p class="text-slate-600 text-sm mb-4">Please explain what changes are needed. This feedback will be visible to the post author.</p>
-            <textarea id="changesReasonInput" rows="4" class="w-full px-4 py-3 border rounded-xl mb-4" placeholder="What changes are needed?"></textarea>
+    <div id="changesModal" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 border border-slate-200">
+            <h3 class="text-lg font-semibold mb-4 text-slate-800">Request Changes</h3>
+            <p class="text-slate-500 text-sm mb-4">Please explain what changes are needed. This feedback will be visible to the post author.</p>
+            <textarea id="changesReasonInput" rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-lg mb-4 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none" placeholder="What changes are needed?"></textarea>
             <div class="flex gap-3">
                 <button onclick="confirmRequestChanges()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl">Request Changes</button>
                 <button onclick="closeChangesModal()" class="px-6 bg-slate-200 hover:bg-slate-300 py-3 rounded-xl font-semibold">Cancel</button>
@@ -373,22 +439,22 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
 const app = { user: null, posts: [], currentPost: null };
 const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
 const STATUS_COLORS = {
-    'IDEA': 'bg-purple-500',
-    'DRAFT': 'bg-blue-500',
-    'PENDING_REVIEW': 'bg-yellow-500',
-    'CHANGES_REQUESTED': 'bg-amber-500',
-    'APPROVED': 'bg-green-500',
-    'SCHEDULED': 'bg-indigo-500',
-    'PUBLISHED': 'bg-slate-500'
+    'IDEA': 'bg-violet-100 text-violet-700',
+    'DRAFT': 'bg-sky-100 text-sky-700',
+    'PENDING_REVIEW': 'bg-amber-100 text-amber-700',
+    'CHANGES_REQUESTED': 'bg-orange-100 text-orange-700',
+    'APPROVED': 'bg-emerald-100 text-emerald-700',
+    'SCHEDULED': 'bg-indigo-100 text-indigo-700',
+    'PUBLISHED': 'bg-slate-100 text-slate-600'
 };
 const STATUS_LABELS = {
-    'IDEA': '💡 Idea',
-    'DRAFT': '✏️ Draft',
-    'PENDING_REVIEW': '⏳ Pending Review',
-    'CHANGES_REQUESTED': '⚠️ Changes Requested',
-    'APPROVED': '✅ Approved',
-    'SCHEDULED': '📅 Scheduled',
-    'PUBLISHED': '📤 Published'
+    'IDEA': 'Idea',
+    'DRAFT': 'Draft',
+    'PENDING_REVIEW': 'In Review',
+    'CHANGES_REQUESTED': 'Changes',
+    'APPROVED': 'Approved',
+    'SCHEDULED': 'Scheduled',
+    'PUBLISHED': 'Published'
 };
 const PLATFORM_COLORS = {
     Facebook: 'bg-blue-600', Instagram: 'bg-gradient-to-r from-purple-500 to-pink-500', LinkedIn: 'bg-blue-700',
@@ -454,9 +520,9 @@ async function loadDashboard() {
         document.getElementById('statApproved').textContent = s.approved || 0;
         
         document.getElementById('recentActivity').innerHTML = (s.recent_activity || []).map(a => `
-            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
-                <div class="w-8 h-8 bg-gold-100 text-gold-600 rounded-full flex items-center justify-center font-bold text-sm">${a.username[0].toUpperCase()}</div>
-                <div><div class="text-sm"><strong>${a.username}</strong> ${a.action} on "${a.post_title}"</div>
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div class="w-8 h-8 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center font-medium text-sm">${a.username[0].toUpperCase()}</div>
+                <div><div class="text-sm"><span class="font-medium text-slate-700">${a.username}</span> <span class="text-slate-500">${a.action}</span> on "${a.post_title}"</div>
                 <div class="text-xs text-slate-400">${formatDate(a.created_at)}</div></div>
             </div>
         `).join('') || '<p class="text-slate-400 text-center py-4">No recent activity</p>';
@@ -514,8 +580,8 @@ function cardHTML(post) {
     
     return `
         <div class="post-card bg-white rounded-xl shadow-sm p-4 border border-slate-200" onclick="openViewModal(${post.id})">
-            ${post.urgency == 1 ? '<div class="text-red-500 text-xs font-bold mb-2">🔥 URGENT</div>' : ''}
-            ${hasChanges ? '<div class="text-amber-500 text-xs font-bold mb-2">⚠️ Changes Requested</div>' : ''}
+            ${post.urgency == 1 ? '<div class="text-red-600 text-xs font-medium mb-2 bg-red-50 inline-block px-2 py-0.5 rounded">URGENT</div>' : ''}
+            ${hasChanges ? '<div class="text-slate-600 text-xs font-medium mb-2 bg-slate-100 inline-block px-2 py-0.5 rounded">Revision Requested</div>' : ''}
             ${mediaHtml}
             <h4 class="font-semibold text-slate-800 mb-1 line-clamp-2">${escapeHtml(post.title)}</h4>
             <p class="text-slate-500 text-sm mb-3 line-clamp-2">${escapeHtml(post.content)}</p>
@@ -669,39 +735,44 @@ function renderActionButtons(p) {
     const isOwner = p.author_id == app.user.id;
     let buttons = [];
     
+    // Premium button base styles
+    const btnPrimary = 'flex-1 bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm transition-colors';
+    const btnSuccess = 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm transition-colors';
+    const btnWarning = 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm border border-slate-200 transition-colors';
+    const btnSecondary = 'bg-white hover:bg-slate-50 text-slate-600 font-medium py-2.5 px-4 rounded-md text-sm border border-slate-200 transition-colors';
+    
     if (p.status === 'IDEA') {
         if (isAdmin) {
-            buttons.push(`<button onclick="approveIdea()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Convert to Draft</button>`);
+            buttons.push(`<button onclick="approveIdea()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Convert to Draft</button>`);
         }
     } else if (p.status === 'DRAFT' || p.status === 'CHANGES_REQUESTED') {
         if (isOwner || isAdmin) {
-            buttons.push(`<button onclick="submitForReview()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg> 🚀 Submit for Review</button>`);
+            buttons.push(`<button onclick="submitForReview()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>Submit for Review</button>`);
         }
     } else if (p.status === 'PENDING_REVIEW') {
         if (isAdmin) {
-            buttons.push(`<button onclick="approvePost()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> ✅ Approve</button>`);
-            buttons.push(`<button onclick="openChangesModal()" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg> ↩️ Request Changes</button>`);
+            buttons.push(`<button onclick="approvePost()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Approve</button>`);
+            buttons.push(`<button onclick="openChangesModal()" class="${btnWarning}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Request Changes</button>`);
         }
     } else if (p.status === 'APPROVED') {
         if (isAdmin) {
-            buttons.push(`<button onclick="openScheduleModal()" class="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2"><i class="fa-regular fa-calendar"></i> 📅 Schedule for Publishing</button>`);
+            buttons.push(`<button onclick="openScheduleModal()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Schedule for Publishing</button>`);
         }
     } else if (p.status === 'SCHEDULED') {
-        // Show scheduled time
         const schedDate = p.scheduled_date ? new Date(p.scheduled_date) : null;
         const schedStr = schedDate ? schedDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
-        buttons.push(`<div class="flex-1 text-center py-3 px-6 bg-indigo-100 text-indigo-700 font-semibold rounded-xl"><i class="fa-regular fa-clock mr-2"></i>Scheduled: ${schedStr}</div>`);
+        buttons.push(`<div class="flex-1 text-center py-2.5 px-5 bg-slate-50 text-slate-600 font-medium rounded-md text-sm border border-slate-200"><svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Scheduled: ${schedStr}</div>`);
         if (isAdmin) {
-            buttons.push(`<button onclick="publishNow()" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2">🚀 Publish Now</button>`);
-            buttons.push(`<button onclick="unschedulePost()" class="bg-slate-400 hover:bg-slate-500 text-white font-semibold py-3 px-4 rounded-xl text-sm">Unschedule</button>`);
+            buttons.push(`<button onclick="publishNow()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>Publish Now</button>`);
+            buttons.push(`<button onclick="unschedulePost()" class="${btnSecondary}">Unschedule</button>`);
         }
     } else if (p.status === 'PUBLISHED') {
         const pubDate = p.published_date ? new Date(p.published_date) : null;
         const pubStr = pubDate ? pubDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
-        buttons.push(`<div class="flex-1 text-center py-3 px-6 bg-slate-100 text-slate-600 font-semibold rounded-xl">📤 Published: ${pubStr}</div>`);
+        buttons.push(`<div class="flex-1 text-center py-2.5 px-5 bg-slate-50 text-slate-500 font-medium rounded-md text-sm border border-slate-200"><svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Published: ${pubStr}</div>`);
     }
     
-    container.innerHTML = buttons.join('') || '<div class="text-slate-400 text-center py-2">No actions available</div>';
+    container.innerHTML = buttons.join('') || '<div class="text-slate-400 text-center py-2 text-sm">No actions available</div>';
 }
 
 function renderViewComments(comments) {
@@ -721,18 +792,69 @@ function renderViewComments(comments) {
 }
 
 function renderViewActivity(activities) {
-    document.getElementById('viewActivity').innerHTML = activities.map(a => `
-        <div class="flex gap-3 items-start text-sm">
-            <div class="w-2 h-2 bg-gold-500 rounded-full mt-1.5 flex-shrink-0"></div>
+    // Calculate stats
+    const revisionCount = activities.filter(a => a.action === 'status_changed' && a.new_value === 'CHANGES_REQUESTED').length;
+    const statsEl = document.getElementById('activityStats');
+    if (revisionCount > 0) {
+        statsEl.textContent = `(${revisionCount} revision${revisionCount > 1 ? 's' : ''} requested)`;
+    } else {
+        statsEl.textContent = `(${activities.length} event${activities.length !== 1 ? 's' : ''})`;
+    }
+    
+    // Action icons and labels mapping
+    const actionConfig = {
+        'created': { icon: '✦', color: 'text-emerald-500', label: 'created this post' },
+        'updated': { icon: '✎', color: 'text-blue-500', label: 'updated the content' },
+        'status_changed': { icon: '→', color: 'text-amber-500', label: 'changed status' },
+        'comment_added': { icon: '💬', color: 'text-indigo-500', label: 'added a comment' },
+        'media_uploaded': { icon: '📎', color: 'text-purple-500', label: 'uploaded media' },
+        'media_deleted': { icon: '🗑', color: 'text-red-500', label: 'removed media' },
+        'rejected': { icon: '✕', color: 'text-red-500', label: 'rejected' },
+        'approved': { icon: '✓', color: 'text-emerald-500', label: 'approved' },
+        'scheduled': { icon: '📅', color: 'text-indigo-500', label: 'scheduled' },
+        'published': { icon: '🚀', color: 'text-slate-600', label: 'published' }
+    };
+    
+    const statusLabels = {
+        'IDEA': 'Idea', 'DRAFT': 'Draft', 'PENDING_REVIEW': 'Pending Review',
+        'CHANGES_REQUESTED': 'Changes Requested', 'APPROVED': 'Approved',
+        'SCHEDULED': 'Scheduled', 'PUBLISHED': 'Published'
+    };
+    
+    document.getElementById('viewActivity').innerHTML = activities.map(a => {
+        const config = actionConfig[a.action] || { icon: '•', color: 'text-slate-400', label: a.action };
+        
+        // Build detailed description
+        let details = '';
+        if (a.action === 'status_changed' && a.old_value && a.new_value) {
+            const fromLabel = statusLabels[a.old_value] || a.old_value;
+            const toLabel = statusLabels[a.new_value] || a.new_value;
+            details = `<span class="text-slate-500">${fromLabel}</span> <span class="text-slate-400">→</span> <span class="font-medium text-slate-700">${toLabel}</span>`;
+            if (a.description && a.new_value === 'CHANGES_REQUESTED') {
+                details += `<div class="mt-1 text-sm text-slate-500 bg-slate-50 p-2 rounded border-l-2 border-amber-300 italic">"${escapeHtml(a.description)}"</div>`;
+            } else if (a.description) {
+                details += `<span class="text-slate-400 ml-1">· ${escapeHtml(a.description)}</span>`;
+            }
+        } else if (a.description) {
+            details = `<span class="text-slate-500">${escapeHtml(a.description)}</span>`;
+        }
+        
+        return `
+        <div class="relative flex gap-3 items-start text-sm pb-3">
+            <div class="absolute -left-5 top-0.5 w-2 h-2 bg-slate-300 rounded-full"></div>
             <div class="flex-1">
-                <span class="font-medium">${a.username}</span> 
-                <span class="text-slate-600">${a.action}</span>
-                ${a.description ? `<span class="text-slate-400">- ${escapeHtml(a.description)}</span>` : ''}
-                <div class="text-xs text-slate-400">${formatDate(a.created_at)}</div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="${config.color} font-medium">${config.icon}</span>
+                    <span class="font-medium text-slate-800">${a.username}</span>
+                    <span class="text-slate-500">${config.label}</span>
+                </div>
+                ${details ? `<div class="mt-1">${details}</div>` : ''}
+                <div class="text-xs text-slate-400 mt-1">${formatDate(a.created_at)}</div>
             </div>
         </div>
-    `).join('') || '<p class="text-slate-400 text-center">No activity</p>';
+    `}).join('') || '<p class="text-slate-400 text-center py-4">No activity recorded</p>';
 }
+
 
 async function addViewComment() {
     const content = document.getElementById('viewNewComment').value.trim();
@@ -1006,10 +1128,15 @@ async function loadNotifications() {
         }
         
         document.getElementById('notifList').innerHTML = data.data.notifications.slice(0, 10).map(n => `
-            <div class="p-3 border-b ${n.is_read ? 'bg-white' : 'bg-gold-50'} hover:bg-slate-50 cursor-pointer" onclick="notifClick(${n.id}, ${n.post_id})">
-                <div class="font-semibold text-sm">${n.title}</div>
-                <div class="text-xs text-slate-500 line-clamp-2">${n.message}</div>
-                <div class="text-xs text-slate-400 mt-1">${formatDate(n.created_at)}</div>
+            <div class="p-3 border-b border-slate-100 cursor-pointer transition-colors ${n.is_read ? 'bg-white hover:bg-slate-50' : 'bg-blue-50 hover:bg-blue-100 border-l-4 border-l-brand-500'}" onclick="notifClick(${n.id}, ${n.post_id})">
+                <div class="flex items-start gap-2">
+                    ${!n.is_read ? '<span class="w-2 h-2 bg-brand-500 rounded-full mt-1.5 flex-shrink-0"></span>' : ''}
+                    <div class="flex-1">
+                        <div class="${n.is_read ? 'font-medium text-slate-600' : 'font-semibold text-slate-800'} text-sm">${n.title}</div>
+                        <div class="text-xs ${n.is_read ? 'text-slate-400' : 'text-slate-600'} line-clamp-2">${n.message}</div>
+                        <div class="text-xs text-slate-400 mt-1">${formatDate(n.created_at)}</div>
+                    </div>
+                </div>
             </div>
         `).join('') || '<p class="p-4 text-slate-400 text-center">No notifications</p>';
     }

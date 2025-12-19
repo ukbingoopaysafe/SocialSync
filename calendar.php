@@ -18,68 +18,67 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: { extend: { colors: {
-                gold: { 400: '#facc15', 500: '#D4AF37', 600: '#ca8a04' },
-                navy: { 800: '#0f2847', 900: '#0a1628', 950: '#050d17' }
+                brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' }
             }}}
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
         .calendar-day { min-height: 120px; }
-        .calendar-post { transition: all 0.2s; cursor: pointer; }
-        .calendar-post:hover { transform: scale(1.02); }
+        .calendar-post { transition: all 0.15s; cursor: pointer; }
+        .calendar-post:hover { background: #e2e8f0; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-700">
     
     <!-- Header -->
-    <header class="bg-navy-900 shadow-xl sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="index.php">
-                    <img src="images/Final_Logo%20White.png" alt="BroMan Social" style="height: 40px;">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <a href="index.php" class="flex items-center">
+                    <img src="images/Final_Logo.png" alt="BroMan Social" class="h-9">
                 </a>
-                <h1 class="text-white text-xl font-bold hidden sm:block">📅 Content Calendar</h1>
+                <h1 class="text-slate-800 text-lg font-semibold hidden sm:block">Content Calendar</h1>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="index.php" class="text-slate-300 hover:text-gold-400 text-sm flex items-center gap-1">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+            <div class="flex items-center gap-4">
+                <a href="index.php" class="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-2 hover:bg-slate-100 px-3 py-2 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
                     Back to Board
                 </a>
             </div>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-6 py-8">
         <!-- Calendar Controls -->
         <div class="flex items-center justify-between mb-6">
-            <button onclick="prevMonth()" class="px-4 py-2 bg-white rounded-lg shadow hover:bg-slate-50 font-semibold">
+            <button onclick="prevMonth()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-medium text-slate-600">
                 <i class="fa-solid fa-chevron-left mr-2"></i>Previous
             </button>
-            <h2 id="currentMonth" class="text-2xl font-bold text-navy-900"></h2>
-            <button onclick="nextMonth()" class="px-4 py-2 bg-white rounded-lg shadow hover:bg-slate-50 font-semibold">
+            <h2 id="currentMonth" class="text-xl font-semibold text-slate-800"></h2>
+            <button onclick="nextMonth()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-medium text-slate-600">
                 Next<i class="fa-solid fa-chevron-right ml-2"></i>
             </button>
         </div>
 
         <!-- Legend -->
-        <div class="flex flex-wrap gap-4 mb-6 text-sm">
-            <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-indigo-500"></span> Scheduled</div>
-            <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-slate-500"></span> Published</div>
-            <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-blue-600"></span> Facebook</div>
-            <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-pink-500"></span> Instagram</div>
-            <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-black"></span> X</div>
-            <div class="flex items-center gap-2"><span class="w-4 h-4 rounded bg-red-600"></span> YouTube</div>
+        <div class="flex flex-wrap gap-4 mb-6 text-sm text-slate-600">
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-indigo-400"></span> Scheduled</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-slate-400"></span> Published</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-blue-500"></span> Facebook</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-pink-500"></span> Instagram</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-slate-800"></span> X</div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 rounded bg-red-500"></span> YouTube</div>
         </div>
 
         <!-- Calendar Grid -->
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <!-- Day Headers -->
-            <div class="grid grid-cols-7 bg-navy-900 text-white text-center text-sm font-semibold">
+            <div class="grid grid-cols-7 bg-slate-100 text-slate-600 text-center text-sm font-medium">
                 <div class="py-3">Sunday</div>
                 <div class="py-3">Monday</div>
                 <div class="py-3">Tuesday</div>
@@ -89,26 +88,26 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                 <div class="py-3">Saturday</div>
             </div>
             <!-- Calendar Days -->
-            <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-200">
+            <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100">
                 <!-- Days will be rendered here -->
             </div>
         </div>
     </main>
 
     <!-- Post Preview Modal -->
-    <div id="previewModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 border border-slate-200">
             <div class="flex justify-between items-start mb-4">
-                <h3 id="previewTitle" class="text-xl font-bold"></h3>
-                <button onclick="closePreview()" class="text-2xl text-slate-400 hover:text-slate-600">&times;</button>
+                <h3 id="previewTitle" class="text-lg font-semibold text-slate-800"></h3>
+                <button onclick="closePreview()" class="text-xl text-slate-400 hover:text-slate-600">&times;</button>
             </div>
-            <div id="previewContent" class="text-slate-600 mb-4"></div>
+            <div id="previewContent" class="text-slate-500 mb-4"></div>
             <div class="flex items-center justify-between text-sm">
                 <span id="previewPlatform" class="px-3 py-1 rounded-full text-white"></span>
                 <span id="previewDate" class="text-slate-400"></span>
             </div>
-            <div class="mt-4 pt-4 border-t">
-                <a id="previewLink" href="#" class="block w-full text-center bg-gold-500 hover:bg-gold-600 text-navy-900 font-semibold py-2.5 rounded-xl">
+            <div class="mt-4 pt-4 border-t border-slate-100">
+                <a id="previewLink" href="#" class="block w-full text-center bg-brand-500 hover:bg-brand-600 text-white font-medium py-2.5 rounded-lg">
                     View Full Post
                 </a>
             </div>

@@ -29,33 +29,32 @@ if (!$currentUser || $currentUser['role'] !== 'admin') {
     <title>User Management - BroMan Social</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: { extend: { colors: {
-                gold: { 400: '#facc15', 500: '#D4AF37', 600: '#ca8a04' },
-                navy: { 800: '#0f2847', 900: '#0a1628', 950: '#050d17' }
+                brand: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' }
             }}}
         }
     </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-700">
     
     <!-- Header -->
-    <header class="bg-navy-900 shadow-xl sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="index.php">
-                    <img src="images/Final_Logo%20White.png" alt="BroMan Social" style="height: 40px;">
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <a href="index.php" class="flex items-center">
+                    <img src="images/Final_Logo.png" alt="BroMan Social" class="h-9">
                 </a>
-                <h1 class="text-white text-xl font-bold hidden sm:block">User Management</h1>
+                <h1 class="text-slate-800 text-lg font-semibold hidden sm:block">User Management</h1>
             </div>
-            <div class="flex items-center gap-3">
-                <a href="index.php" class="text-slate-300 hover:text-gold-400 text-sm flex items-center gap-1">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
+            <div class="flex items-center gap-4">
+                <a href="index.php" class="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-2 hover:bg-slate-100 px-3 py-2 rounded-lg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
                     Back to Board
                 </a>
                 <div class="flex items-center gap-2 ml-2 pl-4 border-l border-navy-700">
