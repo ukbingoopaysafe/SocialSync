@@ -108,27 +108,253 @@ try {
         // ===== DASHBOARD =====
         
         case 'get_dashboard_stats':
+        case 'get_analytics':
             requireAuth();
             $user = getCurrentUser();
-            $stats = [];
+            $isAdmin = $user['role'] === 'admin';
+            $days = isset($_GET['days']) ? intval($_GET['days']) : 30;
+            $dateFrom = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+            $datePrev = date('Y-m-d H:i:s', strtotime("-" . ($days * 2) . " days"));
             
-            $stats['total_posts'] = fetchOne("SELECT COUNT(*) as c FROM posts")['c'];
-            $stats['ideas'] = fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'IDEA'")['c'];
-            $stats['drafts'] = fetchOne("SELECT COUNT(*) as c FROM posts WHERE status IN ('DRAFT', 'CHANGES_REQUESTED')")['c'];
-            $stats['pending'] = fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'PENDING_REVIEW'")['c'];
-            $stats['approved'] = fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'APPROVED'")['c'];
+            $analytics = [];
             
-            if ($user['role'] === 'staff') {
-                $stats['my_posts'] = fetchOne("SELECT COUNT(*) as c FROM posts WHERE author_id = ?", [$user['id']])['c'];
+            // === OVERVIEW KPIs WITH TRENDS ===
+            $currentPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'PUBLISHED' AND published_date >= ?", [$dateFrom])['c'];
+            $prevPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'PUBLISHED' AND published_date >= ? AND published_date < ?", [$datePrev, $dateFrom])['c'];
+            
+            $currentCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE created_at >= ?", [$dateFrom])['c'];
+            $prevCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE created_at >= ? AND created_at < ?", [$datePrev, $dateFrom])['c'];
+            
+            $submitted = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'PENDING_REVIEW' AND created_at >= ?", [$dateFrom])['c'];
+            $approved = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'APPROVED' AND created_at >= ?", [$dateFrom])['c'];
+            $approvalRate = $submitted > 0 ? round(($approved / $submitted) * 100) : 0;
+            
+            $prevSubmitted = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'PENDING_REVIEW' AND created_at >= ? AND created_at < ?", [$datePrev, $dateFrom])['c'];
+            $prevApproved = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'APPROVED' AND created_at >= ? AND created_at < ?", [$datePrev, $dateFrom])['c'];
+            $prevApprovalRate = $prevSubmitted > 0 ? round(($prevApproved / $prevSubmitted) * 100) : 0;
+            
+            $analytics['overview'] = [
+                'total_posts' => (int)fetchOne("SELECT COUNT(*) as c FROM posts")['c'],
+                'published_period' => $currentPublished,
+                'published_trend' => $prevPublished > 0 ? round((($currentPublished - $prevPublished) / $prevPublished) * 100) : ($currentPublished > 0 ? 100 : 0),
+                'created_period' => $currentCreated,
+                'created_trend' => $prevCreated > 0 ? round((($currentCreated - $prevCreated) / $prevCreated) * 100) : ($currentCreated > 0 ? 100 : 0),
+                'scheduled_upcoming' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'SCHEDULED' AND scheduled_date > NOW()")['c'],
+                'pending_review' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'PENDING_REVIEW'")['c'],
+                'approval_rate' => $approvalRate,
+                'approval_trend' => $approvalRate - $prevApprovalRate,
+            ];
+            
+            // === BOTTLENECK DETECTION (avg time per stage) ===
+            $bottlenecks = [];
+            $stageTransitions = [
+                ['from' => 'DRAFT', 'to' => 'PENDING_REVIEW', 'label' => 'Drafting'],
+                ['from' => 'PENDING_REVIEW', 'to' => 'APPROVED', 'label' => 'Review'],
+                ['from' => 'APPROVED', 'to' => 'SCHEDULED', 'label' => 'Scheduling'],
+                ['from' => 'SCHEDULED', 'to' => 'PUBLISHED', 'label' => 'Publishing'],
+            ];
+            
+            foreach ($stageTransitions as $trans) {
+                $avgHours = fetchOne(
+                    "SELECT AVG(TIMESTAMPDIFF(HOUR, a1.created_at, a2.created_at)) as avg_hours
+                     FROM activity_log a1
+                     JOIN activity_log a2 ON a1.post_id = a2.post_id 
+                        AND a2.action = 'status_changed' AND a2.new_value = ?
+                        AND a2.created_at > a1.created_at
+                     WHERE a1.action = 'status_changed' AND a1.new_value = ?
+                     AND a1.created_at >= ?",
+                    [$trans['to'], $trans['from'], $dateFrom]
+                );
+                $hours = round($avgHours['avg_hours'] ?? 0, 1);
+                $bottlenecks[] = [
+                    'stage' => $trans['label'],
+                    'from' => $trans['from'],
+                    'to' => $trans['to'],
+                    'avg_hours' => $hours,
+                    'avg_days' => round($hours / 24, 1),
+                    'is_bottleneck' => $hours > 48 // More than 2 days = bottleneck
+                ];
+            }
+            $analytics['bottlenecks'] = $bottlenecks;
+            
+            // === POSTS BY STATUS (Funnel) ===
+            $analytics['by_status'] = [];
+            $statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+            foreach ($statuses as $status) {
+                $analytics['by_status'][$status] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = ?", [$status])['c'];
+            }
+            $analytics['by_status']['CHANGES_REQUESTED'] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'CHANGES_REQUESTED'")['c'];
+            
+            // === POSTS BY PLATFORM ===
+            $analytics['by_platform'] = fetchAll("SELECT platform, COUNT(*) as count FROM posts GROUP BY platform ORDER BY count DESC");
+            
+            // === TIME-BASED INSIGHTS ===
+            $bestDay = fetchOne(
+                "SELECT DAYNAME(created_at) as day, COUNT(*) as count 
+                 FROM posts WHERE status = 'PUBLISHED' 
+                 GROUP BY DAYOFWEEK(created_at) ORDER BY count DESC LIMIT 1"
+            );
+            $bestHour = fetchOne(
+                "SELECT HOUR(created_at) as hour, COUNT(*) as count 
+                 FROM posts WHERE status = 'PUBLISHED' 
+                 GROUP BY HOUR(created_at) ORDER BY count DESC LIMIT 1"
+            );
+            $analytics['time_insights'] = [
+                'best_day' => $bestDay['day'] ?? 'N/A',
+                'best_day_count' => (int)($bestDay['count'] ?? 0),
+                'best_hour' => isset($bestHour['hour']) ? sprintf('%02d:00', $bestHour['hour']) : 'N/A',
+                'best_hour_count' => (int)($bestHour['count'] ?? 0),
+            ];
+            
+            // === USER PERFORMANCE WITH SCORES (DETAILED) ===
+            $userQuery = $isAdmin 
+                ? "SELECT u.id, u.username, u.full_name, u.role,
+                      COUNT(DISTINCT p.id) as total_posts,
+                      SUM(CASE WHEN p.status = 'PUBLISHED' THEN 1 ELSE 0 END) as published,
+                      SUM(CASE WHEN p.status = 'SCHEDULED' THEN 1 ELSE 0 END) as scheduled,
+                      SUM(CASE WHEN p.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending,
+                      SUM(CASE WHEN p.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') THEN 1 ELSE 0 END) as approved,
+                      (SELECT COUNT(*) FROM activity_log al WHERE al.user_id = u.id AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.created_at >= ?) as posts_this_period,
+                      (SELECT MAX(created_at) FROM activity_log al2 WHERE al2.user_id = u.id) as last_activity
+                   FROM users u LEFT JOIN posts p ON p.author_id = u.id WHERE u.is_active = 1 GROUP BY u.id ORDER BY total_posts DESC"
+                : "SELECT u.id, u.username, u.full_name, u.role,
+                      COUNT(DISTINCT p.id) as total_posts,
+                      SUM(CASE WHEN p.status = 'PUBLISHED' THEN 1 ELSE 0 END) as published,
+                      SUM(CASE WHEN p.status = 'SCHEDULED' THEN 1 ELSE 0 END) as scheduled,
+                      SUM(CASE WHEN p.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending,
+                      SUM(CASE WHEN p.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') THEN 1 ELSE 0 END) as approved,
+                      (SELECT COUNT(*) FROM activity_log al WHERE al.user_id = u.id AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.created_at >= ?) as posts_this_period,
+                      (SELECT MAX(created_at) FROM activity_log al2 WHERE al2.user_id = u.id) as last_activity
+                   FROM users u LEFT JOIN posts p ON p.author_id = u.id WHERE u.id = ? GROUP BY u.id";
+            
+            $userParams = $isAdmin ? [$dateFrom] : [$dateFrom, $user['id']];
+            $users = fetchAll($userQuery, $userParams);
+            
+            // Calculate productivity score for each user
+            foreach ($users as &$u) {
+                $total = (int)$u['total_posts'];
+                $published = (int)$u['published'];
+                $revisions = (int)$u['revisions_received'];
+                
+                // Score: 40% approval rate + 40% publish rate + 20% low revisions
+                $approvalScore = $total > 0 ? (($u['approved'] / $total) * 40) : 0;
+                $publishScore = $total > 0 ? (($published / $total) * 40) : 0;
+                $revisionScore = $total > 0 ? max(0, 20 - ($revisions / $total) * 20) : 20;
+                
+                $u['productivity_score'] = round($approvalScore + $publishScore + $revisionScore);
+                $u['approval_rate'] = $total > 0 ? round(($u['approved'] / $total) * 100) : 0;
+            }
+            $analytics['user_performance'] = $users;
+            
+            // === SMART RECOMMENDATIONS ===
+            $recommendations = [];
+            
+            // Bottleneck recommendation
+            $maxBottleneck = null;
+            foreach ($bottlenecks as $b) {
+                if ($b['is_bottleneck'] && (!$maxBottleneck || $b['avg_hours'] > $maxBottleneck['avg_hours'])) {
+                    $maxBottleneck = $b;
+                }
+            }
+            if ($maxBottleneck) {
+                $recommendations[] = [
+                    'type' => 'warning',
+                    'icon' => '⏱️',
+                    'title' => 'Bottleneck Detected',
+                    'message' => "Posts spend avg {$maxBottleneck['avg_days']} days in {$maxBottleneck['stage']}. Consider faster review cycles.",
+                ];
             }
             
-            $stats['recent_activity'] = fetchAll(
-                "SELECT al.*, u.username, p.title as post_title FROM activity_log al 
-                 JOIN users u ON al.user_id = u.id JOIN posts p ON al.post_id = p.id 
-                 ORDER BY al.created_at DESC LIMIT 10"
+            // High performer recommendation
+            if ($isAdmin && count($users) > 1) {
+                usort($users, fn($a, $b) => $b['productivity_score'] - $a['productivity_score']);
+                $topUser = $users[0];
+                if ($topUser['productivity_score'] >= 70) {
+                    $recommendations[] = [
+                        'type' => 'success',
+                        'icon' => '⭐',
+                        'title' => 'Top Performer',
+                        'message' => "{$topUser['full_name']} has {$topUser['productivity_score']}% productivity score with {$topUser['published']} published posts.",
+                    ];
+                }
+            }
+            
+            // Pending review alert
+            $pending = $analytics['overview']['pending_review'];
+            if ($pending >= 3) {
+                $recommendations[] = [
+                    'type' => 'alert',
+                    'icon' => '📋',
+                    'title' => 'Review Backlog',
+                    'message' => "{$pending} posts waiting for review. Schedule time to clear the queue.",
+                ];
+            }
+            
+            // Best time insight
+            if ($bestDay['day'] ?? false) {
+                $recommendations[] = [
+                    'type' => 'info',
+                    'icon' => '💡',
+                    'title' => 'Optimal Publishing',
+                    'message' => "Most content gets published on {$bestDay['day']}s. Plan your workflow accordingly.",
+                ];
+            }
+            
+            $analytics['recommendations'] = $recommendations;
+            
+            // === WEEKLY TRENDS ===
+            $analytics['weekly_trends'] = fetchAll(
+                "SELECT YEARWEEK(created_at, 1) as week, DATE_FORMAT(MIN(created_at), '%b %d') as week_start,
+                    COUNT(*) as created, SUM(CASE WHEN status = 'PUBLISHED' THEN 1 ELSE 0 END) as published
+                 FROM posts WHERE created_at >= DATE_SUB(NOW(), INTERVAL 8 WEEK)
+                 GROUP BY YEARWEEK(created_at, 1) ORDER BY week"
             );
             
-            sendResponse(true, $stats);
+            // === REVISION ANALYTICS ===
+            $analytics['revision_stats'] = [
+                'total_revisions' => (int)fetchOne("SELECT COUNT(*) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'CHANGES_REQUESTED' AND created_at >= ?", [$dateFrom])['c'],
+                'by_platform' => fetchAll(
+                    "SELECT p.platform, COUNT(*) as revisions 
+                     FROM activity_log al JOIN posts p ON al.post_id = p.id 
+                     WHERE al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED' AND al.created_at >= ?
+                     GROUP BY p.platform ORDER BY revisions DESC", [$dateFrom]
+                ),
+            ];
+            
+            // === RECENT ACTIVITY - ENHANCED ===
+            $analytics['recent_activity'] = fetchAll(
+                "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platform, p.id as post_id
+                 FROM activity_log al 
+                 JOIN users u ON al.user_id = u.id 
+                 JOIN posts p ON al.post_id = p.id 
+                 ORDER BY al.created_at DESC LIMIT 25"
+            );
+            
+            // === UPCOMING SCHEDULED ===
+            $analytics['upcoming_scheduled'] = fetchAll(
+                "SELECT p.id, p.title, p.platform, p.scheduled_date, u.username as author
+                 FROM posts p JOIN users u ON p.author_id = u.id
+                 WHERE p.status = 'SCHEDULED' AND p.scheduled_date > NOW()
+                 ORDER BY p.scheduled_date ASC LIMIT 5"
+            );
+            
+            // === CONTENT HEALTH SCORE ===
+            $healthScore = 100;
+            if ($pending >= 5) $healthScore -= 20;
+            elseif ($pending >= 3) $healthScore -= 10;
+            if ($maxBottleneck) $healthScore -= 15;
+            if ($approvalRate < 50) $healthScore -= 20;
+            elseif ($approvalRate < 70) $healthScore -= 10;
+            
+            $analytics['health'] = [
+                'score' => max(0, $healthScore),
+                'status' => $healthScore >= 80 ? 'healthy' : ($healthScore >= 50 ? 'warning' : 'critical'),
+                'label' => $healthScore >= 80 ? 'Healthy Pipeline' : ($healthScore >= 50 ? 'Needs Attention' : 'Critical Issues'),
+            ];
+            
+            sendResponse(true, $analytics);
             break;
         
         // ===== POSTS =====

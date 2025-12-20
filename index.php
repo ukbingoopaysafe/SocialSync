@@ -14,6 +14,7 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -125,17 +126,149 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
     </header>
 
     <main class="max-w-full mx-auto px-4 py-6">
-        <!-- Dashboard View -->
-        <div id="dashboardView" class="hidden">
-            <h2 class="text-2xl font-bold text-navy-900 mb-6">Dashboard</h2>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                <div class="bg-white rounded-xl p-5 border-l-4 border-slate-400"><div id="statTotal" class="text-3xl font-bold">0</div><div class="text-sm text-slate-500">Total Posts</div></div>
-                <div class="bg-white rounded-xl p-5 border-l-4 border-purple-500"><div id="statIdeas" class="text-3xl font-bold">0</div><div class="text-sm text-slate-500">Ideas</div></div>
-                <div class="bg-white rounded-xl p-5 border-l-4 border-blue-500"><div id="statDrafts" class="text-3xl font-bold">0</div><div class="text-sm text-slate-500">Drafts</div></div>
-                <div class="bg-white rounded-xl p-5 border-l-4 border-yellow-500"><div id="statPending" class="text-3xl font-bold">0</div><div class="text-sm text-slate-500">Pending Review</div></div>
-                <div class="bg-white rounded-xl p-5 border-l-4 border-green-500"><div id="statApproved" class="text-3xl font-bold">0</div><div class="text-sm text-slate-500">Approved</div></div>
+        <!-- Dashboard View - Advanced Analytics -->
+        <div id="dashboardView" class="hidden max-w-7xl mx-auto">
+            <!-- Header with Health Score -->
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-4">
+                    <div id="healthRing" class="relative w-16 h-16">
+                        <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-200" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path id="healthPath" class="text-emerald-500" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span id="healthScore" class="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700">0</span>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Analytics Dashboard</h2>
+                        <p id="healthLabel" class="text-slate-500 text-sm">Content Health Score</p>
+                    </div>
+                </div>
+                <select id="analyticsPeriod" onchange="loadDashboard()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white shadow-sm">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                </select>
             </div>
-            <div class="bg-white rounded-xl p-6"><h3 class="text-lg font-bold mb-4">Recent Activity</h3><div id="recentActivity" class="space-y-3"></div></div>
+            
+            <!-- Smart Recommendations -->
+            <div id="recommendationsSection" class="mb-6 space-y-3"></div>
+            
+            <!-- Overview KPIs with Trends -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Total Posts</span>
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpiTotal" class="text-3xl font-bold text-slate-800">0</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Published</span>
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpiPublished" class="text-3xl font-bold text-emerald-600">0</span>
+                        <span id="kpiPublishedTrend" class="text-xs font-medium px-1.5 py-0.5 rounded"></span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Scheduled</span>
+                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpiScheduled" class="text-3xl font-bold text-indigo-600">0</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Pending</span>
+                        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpiPending" class="text-3xl font-bold text-amber-600">0</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Approval Rate</span>
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span id="kpiApprovalRate" class="text-3xl font-bold text-blue-600">0%</span>
+                        <span id="kpiApprovalTrend" class="text-xs font-medium px-1.5 py-0.5 rounded"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Time Insights + Bottleneck Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
+                    <div class="text-indigo-100 text-xs font-medium uppercase tracking-wide mb-2">Best Day to Publish</div>
+                    <div id="bestDay" class="text-2xl font-bold">-</div>
+                    <div id="bestDayCount" class="text-indigo-200 text-sm"></div>
+                </div>
+                <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-lg">
+                    <div class="text-amber-100 text-xs font-medium uppercase tracking-wide mb-2">Peak Hour</div>
+                    <div id="bestHour" class="text-2xl font-bold">-</div>
+                    <div id="bestHourCount" class="text-amber-200 text-sm"></div>
+                </div>
+                <div class="lg:col-span-2 bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+                    <div class="text-slate-500 text-xs font-medium uppercase tracking-wide mb-3">Workflow Bottlenecks</div>
+                    <div id="bottleneckBars" class="space-y-2"></div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Content Pipeline Funnel - IMPROVED -->
+                <div class="lg:col-span-2 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <h3 class="font-semibold text-slate-800 mb-6">Content Pipeline</h3>
+                    <div id="workflowFunnel" class="grid grid-cols-6 gap-3 h-44"></div>
+                </div>
+                
+                <!-- Platform Distribution -->
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <h3 class="font-semibold text-slate-800 mb-4">Platform Distribution</h3>
+                    <div class="relative h-32">
+                        <canvas id="platformChart"></canvas>
+                    </div>
+                    <div id="platformLegend" class="mt-4 space-y-2 text-sm"></div>
+                </div>
+            </div>
+            
+            <!-- Team Performance with Score + Scheduled -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- User Performance - DETAILED -->
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-slate-800">Team Performance</h3>
+                        <span id="teamMemberCount" class="text-xs text-slate-400"></span>
+                    </div>
+                    <div id="userPerformanceCards" class="space-y-4 max-h-[500px] overflow-y-auto pr-2"></div>
+                </div>
+                
+                <!-- Upcoming Scheduled -->
+                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-semibold text-slate-800">Upcoming Scheduled</h3>
+                        <a href="calendar.php" class="text-brand-500 text-sm hover:underline">View Calendar →</a>
+                    </div>
+                    <div id="upcomingScheduled" class="space-y-3"></div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity - DETAILED -->
+            <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-slate-800">Recent Activity</h3>
+                    <span id="activityCount" class="text-xs text-slate-400"></span>
+                </div>
+                <div id="recentActivity" class="space-y-4 max-h-[600px] overflow-y-auto pr-2"></div>
+            </div>
         </div>
 
         <!-- Board View -->
@@ -509,23 +642,323 @@ function switchTab(tab) {
     if (tab === 'dashboard') loadDashboard();
 }
 
+let platformChart = null;
+
 async function loadDashboard() {
-    const data = await api('get_dashboard_stats');
-    if (data.success) {
-        const s = data.data;
-        document.getElementById('statTotal').textContent = s.total_posts || 0;
-        document.getElementById('statIdeas').textContent = s.ideas || 0;
-        document.getElementById('statDrafts').textContent = s.drafts || 0;
-        document.getElementById('statPending').textContent = s.pending || 0;
-        document.getElementById('statApproved').textContent = s.approved || 0;
+    try {
+        const days = document.getElementById('analyticsPeriod')?.value || 30;
+        const data = await api(`get_dashboard_stats&days=${days}`);
+        if (!data.success) return;
         
-        document.getElementById('recentActivity').innerHTML = (s.recent_activity || []).map(a => `
-            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <div class="w-8 h-8 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center font-medium text-sm">${a.username[0].toUpperCase()}</div>
-                <div><div class="text-sm"><span class="font-medium text-slate-700">${a.username}</span> <span class="text-slate-500">${a.action}</span> on "${a.post_title}"</div>
-                <div class="text-xs text-slate-400">${formatDate(a.created_at)}</div></div>
+        const d = data.data;
+        
+        // === Health Score Ring ===
+        const health = d.health || { score: 0, status: 'healthy', label: 'Loading...' };
+        const healthPath = document.getElementById('healthPath');
+        if (!healthPath) return;
+        const healthColors = { healthy: '#10b981', warning: '#f59e0b', critical: '#ef4444' };
+        healthPath.setAttribute('stroke-dasharray', `${health.score}, 100`);
+        healthPath.style.stroke = healthColors[health.status];
+        document.getElementById('healthScore').textContent = health.score;
+        document.getElementById('healthLabel').textContent = health.label;
+    
+    // === Smart Recommendations ===
+    const recColors = { warning: 'bg-amber-50 border-amber-200', success: 'bg-emerald-50 border-emerald-200', alert: 'bg-red-50 border-red-200', info: 'bg-blue-50 border-blue-200' };
+    const recTextColors = { warning: 'text-amber-800', success: 'text-emerald-800', alert: 'text-red-800', info: 'text-blue-800' };
+    document.getElementById('recommendationsSection').innerHTML = (d.recommendations || []).slice(0, 3).map(r => `
+        <div class="flex items-start gap-3 p-4 rounded-xl border ${recColors[r.type] || 'bg-slate-50 border-slate-200'}">
+            <span class="text-2xl">${r.icon}</span>
+            <div>
+                <div class="font-semibold ${recTextColors[r.type] || 'text-slate-800'}">${r.title}</div>
+                <div class="text-sm text-slate-600">${r.message}</div>
             </div>
-        `).join('') || '<p class="text-slate-400 text-center py-4">No recent activity</p>';
+        </div>
+    `).join('');
+    
+    // === KPIs with Trends ===
+    document.getElementById('kpiTotal').textContent = d.overview?.total_posts || 0;
+    document.getElementById('kpiPublished').textContent = d.overview?.published_period || 0;
+    document.getElementById('kpiScheduled').textContent = d.overview?.scheduled_upcoming || 0;
+    document.getElementById('kpiPending').textContent = d.overview?.pending_review || 0;
+    document.getElementById('kpiApprovalRate').textContent = (d.overview?.approval_rate || 0) + '%';
+    
+    // Trend badges
+    const pubTrend = d.overview?.published_trend || 0;
+    const pubTrendEl = document.getElementById('kpiPublishedTrend');
+    if (pubTrend !== 0) {
+        pubTrendEl.textContent = (pubTrend > 0 ? '↑' : '↓') + Math.abs(pubTrend) + '%';
+        pubTrendEl.className = `text-xs font-medium px-1.5 py-0.5 rounded ${pubTrend > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`;
+    } else {
+        pubTrendEl.textContent = '';
+    }
+    
+    const appTrend = d.overview?.approval_trend || 0;
+    const appTrendEl = document.getElementById('kpiApprovalTrend');
+    if (appTrend !== 0) {
+        appTrendEl.textContent = (appTrend > 0 ? '↑' : '↓') + Math.abs(appTrend) + '%';
+        appTrendEl.className = `text-xs font-medium px-1.5 py-0.5 rounded ${appTrend > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`;
+    } else {
+        appTrendEl.textContent = '';
+    }
+    
+    // === Time Insights ===
+    const timeInsights = d.time_insights || {};
+    document.getElementById('bestDay').textContent = timeInsights.best_day || '-';
+    document.getElementById('bestDayCount').textContent = timeInsights.best_day_count ? `${timeInsights.best_day_count} posts` : '';
+    document.getElementById('bestHour').textContent = timeInsights.best_hour || '-';
+    document.getElementById('bestHourCount').textContent = timeInsights.best_hour_count ? `${timeInsights.best_hour_count} posts` : '';
+    
+    // === Bottleneck Bars ===
+    const bottlenecks = d.bottlenecks || [];
+    const maxHours = Math.max(...bottlenecks.map(b => b.avg_hours || 0), 48);
+    document.getElementById('bottleneckBars').innerHTML = bottlenecks.map(b => {
+        const pct = Math.min((b.avg_hours / maxHours) * 100, 100);
+        const color = b.is_bottleneck ? 'bg-red-500' : 'bg-emerald-500';
+        return `
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 w-20">${b.stage}</span>
+                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="${color} h-full rounded-full transition-all" style="width: ${pct}%"></div>
+                </div>
+                <span class="text-xs font-medium ${b.is_bottleneck ? 'text-red-600' : 'text-slate-600'} w-16 text-right">${b.avg_days}d</span>
+            </div>
+        `;
+    }).join('') || '<p class="text-slate-400 text-sm">No data</p>';
+    
+    // === Workflow Funnel ===
+    const statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+    const colors = ['#8b5cf6', '#0ea5e9', '#f59e0b', '#10b981', '#6366f1', '#64748b'];
+    const maxCount = Math.max(...statuses.map(s => d.by_status?.[s] || 0), 1);
+    const statusLabels = ['Ideas', 'Drafts', 'Review', 'Approved', 'Scheduled', 'Published'];
+    const gradients = [
+        'from-purple-400 to-purple-600',
+        'from-sky-400 to-sky-600', 
+        'from-amber-400 to-amber-600',
+        'from-emerald-400 to-emerald-600',
+        'from-indigo-400 to-indigo-600',
+        'from-slate-400 to-slate-600'
+    ];
+    
+    document.getElementById('workflowFunnel').innerHTML = statuses.map((s, i) => {
+        const count = d.by_status?.[s] || 0;
+        const height = Math.max((count / maxCount) * 100, 15);
+        return `
+            <div class="flex flex-col h-full">
+                <div class="flex-1 flex flex-col justify-end">
+                    <div class="bg-gradient-to-t ${gradients[i]} rounded-lg shadow-sm flex flex-col items-center justify-end p-3 transition-all hover:scale-105" style="height: ${height}%">
+                        <span class="text-2xl font-bold text-white drop-shadow">${count}</span>
+                    </div>
+                </div>
+                <div class="text-center mt-2">
+                    <span class="text-xs font-medium text-slate-500">${statusLabels[i]}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // === Platform Chart ===
+    const platformData = d.by_platform || [];
+    const platformColors = {
+        Facebook: '#1877f2', Instagram: '#e4405f', LinkedIn: '#0077b5',
+        X: '#000000', TikTok: '#000000', YouTube: '#ff0000', 
+        Snapchat: '#fffc00', Website: '#6366f1'
+    };
+    
+    const ctx = document.getElementById('platformChart')?.getContext('2d');
+    if (ctx && platformData.length > 0) {
+        if (platformChart) platformChart.destroy();
+        platformChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: platformData.map(p => p.platform),
+                datasets: [{
+                    data: platformData.map(p => p.count),
+                    backgroundColor: platformData.map(p => platformColors[p.platform] || '#94a3b8'),
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                cutout: '65%'
+            }
+        });
+        
+        document.getElementById('platformLegend').innerHTML = platformData.slice(0, 4).map(p => `
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded" style="background: ${platformColors[p.platform] || '#94a3b8'}"></span>
+                    <span class="text-slate-600">${p.platform}</span>
+                </div>
+                <span class="font-medium">${p.count}</span>
+            </div>
+        `).join('');
+    }
+    
+    // === User Performance Cards - DETAILED ===
+    const teamMembers = d.user_performance || [];
+    document.getElementById('teamMemberCount').textContent = teamMembers.length > 0 ? `${teamMembers.length} members` : '';
+    
+    document.getElementById('userPerformanceCards').innerHTML = teamMembers.map(u => {
+        const score = u.productivity_score || 0;
+        const scoreColor = score >= 70 ? 'text-emerald-600' : (score >= 40 ? 'text-amber-600' : 'text-red-600');
+        const scoreBg = score >= 70 ? 'stroke-emerald-500' : (score >= 40 ? 'stroke-amber-500' : 'stroke-red-500');
+        const roleColor = u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700';
+        const lastActivity = u.last_activity ? formatDate(u.last_activity) : 'No activity';
+        
+        return `
+        <div class="p-4 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-shadow">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-brand-400 to-brand-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
+                        ${(u.full_name || u.username)[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="font-semibold text-slate-800">${u.full_name || u.username}</div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-slate-400">@${u.username}</span>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium ${roleColor}">${u.role === 'admin' ? 'Admin' : 'Staff'}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative w-14 h-14">
+                    <svg class="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" stroke-width="3"/>
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" class="${scoreBg}" stroke-width="3" stroke-dasharray="${score}, 100" stroke-linecap="round"/>
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <span class="text-sm font-bold ${scoreColor}">${score}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                <div class="bg-slate-50 rounded-lg p-2">
+                    <div class="text-lg font-bold text-slate-700">${u.total_posts || 0}</div>
+                    <div class="text-xs text-slate-400">Posts</div>
+                </div>
+                <div class="bg-emerald-50 rounded-lg p-2">
+                    <div class="text-lg font-bold text-emerald-600">${u.published || 0}</div>
+                    <div class="text-xs text-slate-400">Published</div>
+                </div>
+                <div class="bg-indigo-50 rounded-lg p-2">
+                    <div class="text-lg font-bold text-indigo-600">${u.scheduled || 0}</div>
+                    <div class="text-xs text-slate-400">Scheduled</div>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-4">
+                    <span class="text-slate-500">Pending: <span class="font-medium text-amber-600">${u.pending || 0}</span></span>
+                    <span class="text-slate-500">Revisions: <span class="font-medium text-red-600">${u.revisions_received || 0}</span></span>
+                    <span class="text-slate-500">Rate: <span class="font-medium text-emerald-600">${u.approval_rate || 0}%</span></span>
+                </div>
+                <span class="text-slate-400">${lastActivity}</span>
+            </div>
+        </div>
+    `}).join('') || '<p class="text-slate-400 text-center py-8">No team data available</p>';
+    
+    // === Upcoming Scheduled ===
+    document.getElementById('upcomingScheduled').innerHTML = (d.upcoming_scheduled || []).map(p => {
+        const schedDate = new Date(p.scheduled_date);
+        return `
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100" onclick="openViewModal(${p.id})">
+                <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex flex-col items-center justify-center text-xs">
+                    <span class="font-bold">${schedDate.getDate()}</span>
+                    <span class="text-[10px]">${schedDate.toLocaleString('en', {month: 'short'})}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-medium text-slate-700 truncate">${escapeHtml(p.title)}</div>
+                    <div class="text-xs text-slate-400">${p.platform} · ${schedDate.toLocaleTimeString('en', {hour: '2-digit', minute: '2-digit'})}</div>
+                </div>
+            </div>
+        `;
+    }).join('') || '<p class="text-slate-400 text-center py-6">No upcoming scheduled posts</p>';
+    
+    // === Recent Activity - DETAILED ===
+    const actionConfig = {
+        'created': { icon: '✚', bg: 'bg-emerald-100', text: 'text-emerald-600', label: 'Created new post' },
+        'updated': { icon: '✎', bg: 'bg-blue-100', text: 'text-blue-600', label: 'Updated content' },
+        'status_changed': { icon: '⟳', bg: 'bg-amber-100', text: 'text-amber-600', label: 'Changed status' },
+        'comment_added': { icon: '💬', bg: 'bg-indigo-100', text: 'text-indigo-600', label: 'Added comment' },
+        'media_uploaded': { icon: '📎', bg: 'bg-purple-100', text: 'text-purple-600', label: 'Uploaded media' },
+        'deleted': { icon: '✕', bg: 'bg-red-100', text: 'text-red-600', label: 'Deleted post' },
+    };
+    
+    const activityStatusLabels = {
+        'IDEA': 'Idea', 'DRAFT': 'Draft', 'PENDING_REVIEW': 'Pending Review',
+        'CHANGES_REQUESTED': 'Changes Requested', 'APPROVED': 'Approved',
+        'SCHEDULED': 'Scheduled', 'PUBLISHED': 'Published'
+    };
+    
+    const activityStatusColors = {
+        'IDEA': 'bg-purple-500', 'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
+        'CHANGES_REQUESTED': 'bg-orange-500', 'APPROVED': 'bg-emerald-500',
+        'SCHEDULED': 'bg-indigo-500', 'PUBLISHED': 'bg-slate-600'
+    };
+    
+    const platformIcons = {
+        'Facebook': '📘', 'Instagram': '📸', 'LinkedIn': '💼', 'X': 'X', 
+        'TikTok': '🎵', 'YouTube': '▶️', 'Snapchat': '👻', 'Website': '🌐'
+    };
+    
+    document.getElementById('recentActivity').innerHTML = (d.recent_activity || []).map(a => {
+        const config = actionConfig[a.action] || { icon: '•', bg: 'bg-slate-100', text: 'text-slate-500', label: a.action };
+        
+        // Status transition for status_changed
+        let statusTransition = '';
+        if (a.action === 'status_changed' && a.old_value && a.new_value) {
+            statusTransition = `
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="px-2 py-1 rounded text-xs font-medium bg-slate-200 text-slate-600">${activityStatusLabels[a.old_value] || a.old_value}</span>
+                    <span class="text-slate-400">→</span>
+                    <span class="px-2 py-1 rounded text-xs font-medium text-white ${activityStatusColors[a.new_value] || 'bg-slate-500'}">${activityStatusLabels[a.new_value] || a.new_value}</span>
+                </div>`;
+        } else if (a.action === 'status_changed' && a.new_value) {
+            statusTransition = `
+                <div class="mt-2">
+                    <span class="px-2 py-1 rounded text-xs font-medium text-white ${activityStatusColors[a.new_value] || 'bg-slate-500'}">${activityStatusLabels[a.new_value] || a.new_value}</span>
+                </div>`;
+        }
+        
+        // Description/reason if available
+        let description = '';
+        if (a.description) {
+            description = `<div class="mt-2 text-sm text-slate-600 bg-slate-100 p-2 rounded-lg border-l-2 border-amber-400 italic">"${escapeHtml(a.description)}"</div>`;
+        }
+        
+        // Platform badge
+        const platformBadge = a.platform ? `<span class="text-xs text-slate-500">${platformIcons[a.platform] || '📱'} ${a.platform}</span>` : '';
+        
+        return `
+        <div class="p-4 bg-white hover:bg-slate-50 rounded-xl transition-colors border border-slate-200 shadow-sm cursor-pointer" onclick="openViewModal(${a.post_id})">
+            <div class="flex items-start gap-3">
+                <div class="w-12 h-12 ${config.bg} rounded-xl flex items-center justify-center text-xl ${config.text} flex-shrink-0">${config.icon}</div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-bold text-slate-800">${a.full_name || a.username}</span>
+                        <span class="text-xs text-slate-400">${formatDate(a.created_at)}</span>
+                    </div>
+                    <div class="text-sm text-slate-500 mt-0.5">${config.label}</div>
+                    <div class="mt-2 p-2 bg-slate-50 rounded-lg">
+                        <div class="font-medium text-slate-700">${escapeHtml(a.post_title)}</div>
+                        <div class="flex items-center gap-3 mt-1">
+                            ${platformBadge}
+                        </div>
+                    </div>
+                    ${statusTransition}
+                    ${description}
+                </div>
+            </div>
+        </div>
+    `}).join('') || '<p class="text-slate-400 text-center py-8">No recent activity</p>';
+    
+    // Update activity count
+    const activityCount = (d.recent_activity || []).length;
+    document.getElementById('activityCount').textContent = activityCount > 0 ? `Showing ${activityCount} activities` : '';
+    } catch (err) {
+        console.error('loadDashboard ERROR:', err);
     }
 }
 
