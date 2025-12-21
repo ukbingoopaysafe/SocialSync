@@ -39,6 +39,16 @@ define('MAX_UPLOAD_SIZE', 5242880);       // 5MB in bytes
 // Week Start Day (1 = Monday, 0 = Sunday)
 define('WEEK_START_DAY', 1);
 
+// Security: Rate Limiting
+define('RATE_LIMIT_LOGIN_MAX', 5);         // Max login attempts per window
+define('RATE_LIMIT_LOGIN_WINDOW', 60);     // Window in seconds (1 minute)
+define('RATE_LIMIT_API_MAX', 100);         // Max API requests per window
+define('RATE_LIMIT_API_WINDOW', 60);       // Window in seconds (1 minute)
+
+// Security: CSRF Protection
+define('CSRF_TOKEN_LENGTH', 32);           // Token length in bytes
+define('CSRF_TOKEN_LIFETIME', 3600);       // Token lifetime in seconds (1 hour)
+
 // Environment (development / production)
 define('ENVIRONMENT', 'production');
 

@@ -6,6 +6,7 @@
 
 require_once 'config.php';
 require_once 'db.php';
+require_once 'includes/security.php';
 
 session_name(SESSION_NAME);
 session_start();
@@ -13,7 +14,7 @@ session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . BASE_URL);
 header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-TOKEN');
 header('Access-Control-Allow-Credentials: true');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -73,8 +74,11 @@ try {
         // ===== AUTH =====
         
         case 'login':
+            // Rate limiting for login to prevent brute force
+            enforceRateLimit('login');
+            
             $input = json_decode(file_get_contents('php://input'), true);
-            $username = trim($input['username'] ?? '');
+            $username = sanitizeString(trim($input['username'] ?? ''), 50);
             $password = $input['password'] ?? '';
             $companyId = (int)($input['company_id'] ?? 1); // Default to BroMan
             
@@ -709,8 +713,8 @@ try {
             if (strpos($contentType, 'multipart/form-data') !== false) {
                 // Multipart form data (supports file upload)
                 $id = $_POST['id'] ?? null;
-                $title = trim($_POST['title'] ?? '');
-                $content = trim($_POST['content'] ?? '');
+                $title = sanitizeString(trim($_POST['title'] ?? ''), 255);
+                $content = sanitizeString(trim($_POST['content'] ?? ''));
                 // Handle platforms as array or string
                 $platforms = $_POST['platforms'] ?? $_POST['platform'] ?? [];
                 if (is_string($platforms)) $platforms = json_decode($platforms, true) ?: [$platforms];
@@ -722,8 +726,8 @@ try {
                 // JSON request (backwards compatible)
                 $input = json_decode(file_get_contents('php://input'), true);
                 $id = $input['id'] ?? null;
-                $title = trim($input['title'] ?? '');
-                $content = trim($input['content'] ?? '');
+                $title = sanitizeString(trim($input['title'] ?? ''), 255);
+                $content = sanitizeString(trim($input['content'] ?? ''));
                 // Handle platforms as array or string
                 $platforms = $input['platforms'] ?? $input['platform'] ?? [];
                 if (is_string($platforms)) $platforms = [$platforms];
@@ -1034,10 +1038,11 @@ try {
             $user = getCurrentUser();
             $input = json_decode(file_get_contents('php://input'), true);
             
-            $postId = $input['post_id'] ?? 0;
-            $content = trim($input['content'] ?? '');
+            $postId = (int)($input['post_id'] ?? 0);
+            $content = sanitizeString(trim($input['content'] ?? ''));
             
             if (!$postId || !$content) sendResponse(false, null, 'Post ID and content required', 400);
+            if (mb_strlen($content) > 5000) sendResponse(false, null, 'Comment too long (max 5000 chars)', 400);
             
             executeQuery("INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)", [$postId, $user['id'], $content]);
             logActivity($postId, $user['id'], 'comment_added');

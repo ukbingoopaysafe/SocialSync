@@ -1,9 +1,11 @@
 <?php
 require_once 'config.php';
 require_once 'db.php';
+require_once 'includes/security.php';
 session_name(SESSION_NAME);
 session_start();
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
+$csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,6 +14,7 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BroMan Social</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -922,6 +925,11 @@ window.addEventListener('hashchange', function() {
 
 async function api(action, method = 'GET', body = null) {
     const opts = { method, headers: {} };
+    // Add CSRF token for non-GET requests
+    if (method !== 'GET') {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        if (csrfToken) opts.headers['X-CSRF-TOKEN'] = csrfToken;
+    }
     if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
     const res = await fetch(`api.php?action=${action}`, opts);
     return res.json();
@@ -1553,7 +1561,12 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
         formData.append(`files[${i}]`, file);
     });
     
-    const res = await fetch('api.php?action=save_post', { method: 'POST', body: formData });
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const res = await fetch('api.php?action=save_post', { 
+        method: 'POST', 
+        body: formData,
+        headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}
+    });
     const data = await res.json();
     
     if (data.success) {
@@ -2022,7 +2035,12 @@ async function uploadEditFile(e) {
         const fd = new FormData();
         fd.append('file', file);
         fd.append('post_id', postId);
-        const res = await fetch('api.php?action=upload_media', { method: 'POST', body: fd });
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const res = await fetch('api.php?action=upload_media', { 
+            method: 'POST', 
+            body: fd,
+            headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}
+        });
         const data = await res.json();
         if (data.success) {
             toast('Media uploaded!', 'success');

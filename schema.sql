@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 21, 2025 at 01:28 PM
+-- Generation Time: Dec 21, 2025 at 02:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -142,6 +142,28 @@ CREATE TABLE `posts` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `rate_limits`
+--
+
+CREATE TABLE `rate_limits` (
+  `id` int(11) NOT NULL,
+  `identifier` varchar(255) NOT NULL COMMENT 'IP or action:IP composite key',
+  `action` varchar(50) NOT NULL COMMENT 'Action type (login, api, upload)',
+  `attempts` int(11) DEFAULT 1,
+  `first_attempt` timestamp NOT NULL DEFAULT current_timestamp(),
+  `last_attempt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `rate_limits`
+--
+
+INSERT INTO `rate_limits` (`id`, `identifier`, `action`, `attempts`, `first_attempt`, `last_attempt`) VALUES
+(1, 'login:::1', 'login', 1, '2025-12-21 13:36:24', '2025-12-21 13:36:24');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `sessions`
 --
 
@@ -178,8 +200,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `password_hash`, `full_name`, `avatar_url`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 'yassin', '$2y$10$cp2rKBKbcM3gyoO6hOObvuNakH8NRR7nKMlbyewuZW6ePiDbLly3O', 'M. Yassin', NULL, 'admin', 1, '2025-12-21 14:00:40', '2025-12-21 11:46:09', '2025-12-21 12:04:11'),
-(2, 'john', '$2y$10$lPDDQNwS5sJiUvZvEGDBV.HcZDgVUOCxFGV.lOHVmB8R8Z3T.RzPq', 'John', NULL, 'admin', 1, NULL, '2025-12-21 12:01:09', '2025-12-21 12:09:24'),
-(3, 'nada', '$2y$10$mFvhqCMWYmDPq0pMcwbyreRniMgsmfCAIMNtk99TXhYKbQkfVa3Ra', 'Nada Mohammed', NULL, 'staff', 1, '2025-12-21 11:48:47', '2025-12-18 16:29:57', '2025-12-21 12:09:24'),
+(2, 'john', '$2y$10$lPDDQNwS5sJiUvZvEGDBV.HcZDgVUOCxFGV.lOHVmB8R8Z3T.RzPq', 'John', NULL, 'admin', 1, '2025-12-21 15:36:24', '2025-12-21 12:01:09', '2025-12-21 13:36:24'),
+(3, 'nada', '$2y$10$mFvhqCMWYmDPq0pMcwbyreRniMgsmfCAIMNtk99TXhYKbQkfVa3Ra', 'Nada Mohammed', NULL, 'staff', 1, '2025-12-21 15:33:49', '2025-12-18 16:29:57', '2025-12-21 13:33:49'),
 (4, 'sara', '$2y$10$KnVJTnErch2HpZDBoOPvGO3gdR7C9vMITj.rsyGVBtXrrr7R6Taea', 'Sara Alaa', NULL, 'staff', 1, '2025-12-21 11:41:51', '2025-12-18 14:08:00', '2025-12-21 12:08:51');
 
 --
@@ -239,6 +261,14 @@ ALTER TABLE `posts`
   ADD KEY `idx_posts_company` (`company_id`);
 
 --
+-- Indexes for table `rate_limits`
+--
+ALTER TABLE `rate_limits`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_identifier_action` (`identifier`,`action`),
+  ADD KEY `idx_cleanup` (`last_attempt`);
+
+--
 -- Indexes for table `sessions`
 --
 ALTER TABLE `sessions`
@@ -295,6 +325,12 @@ ALTER TABLE `notifications`
 --
 ALTER TABLE `posts`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `rate_limits`
+--
+ALTER TABLE `rate_limits`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `sessions`
