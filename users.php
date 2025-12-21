@@ -20,6 +20,7 @@ if (!$currentUser || $currentUser['role'] !== 'admin') {
     header('Location: index.php');
     exit;
 }
+$pageTitle = 'User Management';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -41,33 +42,9 @@ if (!$currentUser || $currentUser['role'] !== 'admin') {
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-700">
+<body class="bg-slate-100 min-h-screen text-slate-700">
     
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-6">
-                <a href="index.php" class="flex items-center">
-                    <img src="images/Final_Logo.png" alt="BroMan Social" class="h-9">
-                </a>
-                <h1 class="text-slate-800 text-lg font-semibold hidden sm:block">User Management</h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <a href="index.php" class="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-2 hover:bg-slate-100 px-3 py-2 rounded-lg">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                    Back to Board
-                </a>
-                <div class="flex items-center gap-2 ml-2 pl-4 border-l border-navy-700">
-                    <div class="text-right hidden sm:block">
-                        <div class="text-white text-sm font-medium"><?= htmlspecialchars($currentUser['full_name'] ?: $currentUser['username']) ?></div>
-                        <div class="text-gold-400 text-xs capitalize"><?= $currentUser['role'] ?></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 py-8">
+    <?php include 'includes/sidebar.php'; ?>
         <!-- Stats & Actions -->
         <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div class="flex gap-4">
@@ -432,8 +409,8 @@ function toast(msg, type = 'info') {
     setTimeout(() => t.remove(), 3000);
 }
 
-// Initialize
 loadUsers();
 </script>
+<?php include 'includes/sidebar_footer.php'; ?>
 </body>
 </html>

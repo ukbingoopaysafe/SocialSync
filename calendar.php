@@ -8,6 +8,7 @@ require_once 'db.php';
 session_name(SESSION_NAME);
 session_start();
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
+$pageTitle = 'Calendar';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -33,27 +34,10 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
         .calendar-post:hover { background: #e2e8f0; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-700">
+<body class="bg-slate-100 min-h-screen text-slate-700">
     
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-6">
-                <a href="index.php" class="flex items-center">
-                    <img src="images/Final_Logo.png" alt="BroMan Social" class="h-9">
-                </a>
-                <h1 class="text-slate-800 text-lg font-semibold hidden sm:block">Content Calendar</h1>
-            </div>
-            <div class="flex items-center gap-4">
-                <a href="index.php" class="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-2 hover:bg-slate-100 px-3 py-2 rounded-lg">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"/></svg>
-                    Back to Board
-                </a>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-6 py-8">
+    <?php include 'includes/sidebar.php'; ?>
+        
         <!-- Calendar Controls -->
         <div class="flex items-center justify-between mb-6">
             <button onclick="prevMonth()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 font-medium text-slate-600">
@@ -225,8 +209,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Initialize
 loadCalendar();
 </script>
+<?php include 'includes/sidebar_footer.php'; ?>
 </body>
 </html>

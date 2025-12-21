@@ -73,59 +73,120 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
         
         /* Modal Backdrop */
         .modal-backdrop { backdrop-filter: blur(4px); }
+        
+        /* Platform Checkbox Styling */
+        .platform-checkbox:has(input:checked) {
+            background: #ecfdf5;
+            border-color: #10b981;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+        .platform-checkbox:has(input:checked)::after {
+            content: '✓';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #10b981;
+            color: white;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .platform-checkbox { position: relative; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-700">
+<body class="bg-slate-100 text-slate-700">
     
-    <!-- Header -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div class="max-w-full mx-auto px-6 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-6">
-                <a href="index.php" class="flex items-center">
-                    <img src="images/Final_Logo.png" alt="BroMan Social" class="h-9">
-                </a>
-                <nav class="hidden md:flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-                    <button onclick="switchTab('dashboard')" id="tabDashboard" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white">Dashboard</button>
-                    <button onclick="switchTab('board')" id="tabBoard" class="tab-btn px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white">Board</button>
-                    <a href="calendar.php" class="px-4 py-2 rounded-md text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white flex items-center gap-2"><i class="fa-regular fa-calendar text-slate-400"></i> Calendar</a>
-                </nav>
+    <!-- New Layout: Sidebar + Main -->
+    <div class="flex min-h-screen">
+        
+        <!-- Dark Sidebar -->
+        <aside id="sidebar" class="w-16 hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col fixed h-full z-50 group">
+            <!-- Logo -->
+            <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-4">
+                <img src="images/Final_Logo White.png" alt="BroMan" class="h-8 hidden group-hover:block">
+                <img src="images/Final_Logo White.png" alt="BroMan" class="h-7 group-hover:hidden">
             </div>
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <button onclick="toggleNotifications()" class="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg relative">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-medium">0</span>
-                    </button>
-                    <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50">
-                        <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
-                            <span class="font-semibold text-slate-800">Notifications</span>
-                            <button onclick="markAllRead()" class="text-xs text-brand-500 hover:underline">Mark all read</button>
-                        </div>
-                        <div id="notifList" class="max-h-80 overflow-y-auto"></div>
-                    </div>
-                </div>
-                <button onclick="openCreateModal()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    New Post
+            
+            <!-- Navigation -->
+            <nav class="flex-1 py-4 px-2 space-y-1">
+                <button onclick="switchTab('dashboard')" id="tabDashboard" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Dashboard</span>
+                </button>
+                <button onclick="switchTab('board')" id="tabBoard" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Board</span>
+                </button>
+                <button onclick="switchTab('calendar')" id="tabCalendar" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Calendar</span>
                 </button>
                 <div id="adminLink" class="hidden">
-                    <a href="users.php" class="text-slate-500 hover:text-slate-700 text-sm flex items-center gap-1.5 hover:bg-slate-100 px-3 py-2 rounded-lg">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        Users
-                    </a>
+                    <button onclick="switchTab('users')" id="tabUsers" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Users</span>
+                    </button>
                 </div>
-                <div class="flex items-center gap-3 ml-2 pl-4 border-l border-slate-200">
-                    <div class="text-right hidden sm:block">
-                        <div id="userName" class="text-slate-800 text-sm font-medium"></div>
-                        <div id="userRole" class="text-slate-400 text-xs capitalize"></div>
-                    </div>
-                    <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" title="Logout"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg></button>
-                </div>
+            </nav>
+            
+            <!-- Bottom Actions -->
+            <div class="p-2 border-t border-slate-700/50">
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Logout</span>
+                </button>
             </div>
-        </div>
-    </header>
-
-    <main class="max-w-full mx-auto px-4 py-6">
+        </aside>
+        
+        <!-- Main Content Area -->
+        <div class="flex-1 ml-16">
+            <!-- Top Header -->
+            <header class="h-14 bg-[#0a1628] border-b border-slate-700/50 sticky top-0 z-40 flex items-center justify-between px-6">
+                <div class="flex items-center gap-4">
+                    <h1 id="pageTitle" class="text-lg font-semibold text-white">Dashboard</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <!-- Search -->
+                    <div class="relative">
+                        <input type="text" id="globalSearch" placeholder="Search..." class="w-64 pl-10 pr-4 py-2 bg-white/10 border-0 rounded-lg text-sm text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:bg-white/20 transition-colors">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <!-- New Post Button -->
+                    <button onclick="openCreateModal()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        New Post
+                    </button>
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" class="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg relative">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-medium">0</span>
+                        </button>
+                        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50">
+                            <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
+                                <span class="font-semibold text-slate-800">Notifications</span>
+                                <button onclick="markAllRead()" class="text-xs text-brand-500 hover:underline">Mark all read</button>
+                            </div>
+                            <div id="notifList" class="max-h-80 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                    <!-- User -->
+                    <div class="flex items-center gap-2 pl-4 border-l border-slate-700/50">
+                        <div class="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white font-medium text-sm" id="userAvatar">U</div>
+                        <div class="hidden sm:block">
+                            <div id="userName" class="text-white text-sm font-medium"></div>
+                            <div id="userRole" class="text-slate-400 text-xs capitalize"></div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Content -->
+            <main class="p-6">
         <!-- Dashboard View - Advanced Analytics -->
         <div id="dashboardView" class="hidden max-w-7xl mx-auto">
             <!-- Header with Health Score -->
@@ -273,82 +334,162 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
 
         <!-- Board View -->
         <div id="boardView" class="hidden">
+            <!-- Filters Row -->
             <div class="mb-4 flex flex-wrap gap-3 items-center">
-                <select id="platformFilter" onchange="loadPosts()" class="px-3 py-2 border rounded-lg text-sm bg-white">
+                <select id="platformFilter" onchange="loadPosts()" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                     <option value="">All Platforms</option>
                     <option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="LinkedIn">LinkedIn</option>
                     <option value="X">X</option><option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Snapchat">Snapchat</option><option value="Website">Website</option>
                 </select>
-                <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="myPostsFilter" onchange="loadPosts()" class="rounded"> My Posts</label>
-                <input type="text" id="searchInput" placeholder="Search..." onkeyup="debounceSearch()" class="px-3 py-2 border rounded-lg text-sm flex-1 max-w-xs">
+                <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+                    <input type="checkbox" id="myPostsFilter" onchange="loadPosts()" class="rounded border-slate-300 text-brand-500 focus:ring-brand-500">
+                    My Posts
+                </label>
+                <div class="relative flex-1 max-w-xs">
+                    <input type="text" id="searchInput" placeholder="Search posts..." onkeyup="debounceSearch()" class="w-full px-4 py-2 pl-10 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                    <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
             </div>
             
-            <div class="flex gap-4 overflow-x-auto pb-4">
-                <!-- IDEAS -->
-                <div class="flex-shrink-0 w-80">
-                    <div class="flex items-center justify-between mb-3 px-1">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-violet-400"></span>
-                            Ideas <span id="countIDEA" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
-                        </h3>
-                    </div>
-                    <div id="postsIDEA" class="space-y-3 min-h-[200px]"></div>
+            <!-- Status Tabs -->
+            <div class="bg-white rounded-xl border border-slate-200 mb-6 overflow-hidden">
+                <div class="flex flex-wrap border-b border-slate-200">
+                    <button onclick="setStatusFilter('')" id="tabAll" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-gradient-to-r from-violet-400 to-slate-400"></span>
+                        All <span id="countAll" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="setStatusFilter('IDEA')" id="tabIDEA" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-violet-400"></span>
+                        Ideas <span id="countIDEA" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="setStatusFilter('DRAFT')" id="tabDRAFT" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+                        Drafts <span id="countDRAFT" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="setStatusFilter('PENDING_REVIEW')" id="tabPENDING_REVIEW" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        Pending <span id="countPENDING_REVIEW" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="setStatusFilter('APPROVED')" id="tabAPPROVED" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        Approved <span id="countAPPROVED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="setStatusFilter('SCHEDULED')" id="tabSCHEDULED" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                        Scheduled <span id="countSCHEDULED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                    <button onclick="setStatusFilter('PUBLISHED')" id="tabPUBLISHED" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                        Published <span id="countPUBLISHED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
                 </div>
-                
-                <!-- DRAFTS -->
-                <div class="flex-shrink-0 w-80">
-                    <div class="flex items-center justify-between mb-3 px-1">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
-                            Drafts <span id="countDRAFT" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
-                        </h3>
+            </div>
+            
+            <!-- Posts Grid -->
+            <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <!-- Posts will be rendered here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16">
+                <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <p class="text-slate-500 text-lg mb-2">No posts found</p>
+                <p class="text-slate-400 text-sm">Try adjusting your filters or create a new post</p>
+            </div>
+        </div>
+
+        <!-- Calendar View -->
+        <div id="calendarView" class="hidden">
+            <!-- Calendar Header with Stats -->
+            <div class="bg-white rounded-xl border border-slate-200 p-4 mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <button onclick="prevMonth()" class="p-2 bg-slate-100 border border-slate-200 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <h2 id="currentMonth" class="text-xl font-bold text-slate-800 min-w-[180px] text-center"></h2>
+                        <button onclick="nextMonth()" class="p-2 bg-slate-100 border border-slate-200 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <button onclick="goToToday()" class="px-3 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-medium transition-colors">
+                            Today
+                        </button>
                     </div>
-                    <div id="postsDRAFT" class="space-y-3 min-h-[200px]"></div>
-                </div>
-                
-                <!-- PENDING REVIEW -->
-                <div class="flex-shrink-0 w-80">
-                    <div class="flex items-center justify-between mb-3 px-1">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                            Pending Review <span id="countPENDING_REVIEW" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
-                        </h3>
+                    <!-- Month Stats -->
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 rounded-lg border border-indigo-200">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                            <span class="text-sm text-indigo-700"><span id="scheduledCount" class="font-bold">0</span> Scheduled</span>
+                        </div>
+                        <div class="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg border border-emerald-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span class="text-sm text-emerald-700"><span id="publishedCount" class="font-bold">0</span> Published</span>
+                        </div>
                     </div>
-                    <div id="postsPENDING_REVIEW" class="space-y-3 min-h-[200px]"></div>
                 </div>
-                
-                <!-- APPROVED -->
-                <div class="flex-shrink-0 w-80">
-                    <div class="flex items-center justify-between mb-3 px-1">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            Approved <span id="countAPPROVED" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
-                        </h3>
+            </div>
+            
+            <!-- Platform Legend -->
+            <div class="flex flex-wrap gap-3 mb-4 text-xs">
+                <span class="text-slate-500 font-medium">Platforms:</span>
+                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-blue-600 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-facebook"></i></span> Facebook</div>
+                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-instagram"></i></span> Instagram</div>
+                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-blue-700 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-linkedin"></i></span> LinkedIn</div>
+                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-black text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-x-twitter"></i></span> X</div>
+                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-red-600 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-youtube"></i></span> YouTube</div>
+                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-yellow-400 text-slate-800 flex items-center justify-center text-[10px]"><i class="fa-brands fa-snapchat"></i></span> Snapchat</div>
+            </div>
+            
+            <!-- Calendar Grid -->
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                <div class="grid grid-cols-7 bg-gradient-to-r from-slate-700 to-slate-800">
+                    <div class="py-3 text-center text-sm font-medium text-white">Sun</div>
+                    <div class="py-3 text-center text-sm font-medium text-white">Mon</div>
+                    <div class="py-3 text-center text-sm font-medium text-white">Tue</div>
+                    <div class="py-3 text-center text-sm font-medium text-white">Wed</div>
+                    <div class="py-3 text-center text-sm font-medium text-white">Thu</div>
+                    <div class="py-3 text-center text-sm font-medium text-white">Fri</div>
+                    <div class="py-3 text-center text-sm font-medium text-white">Sat</div>
+                </div>
+                <div id="calendarGrid" class="grid grid-cols-7"></div>
+            </div>
+        </div>
+
+        <!-- Users View (Admin Only) -->
+        <div id="usersView" class="hidden">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div class="flex gap-4">
+                    <div class="bg-white rounded-xl px-6 py-4 border border-slate-200">
+                        <div id="totalUsersCount" class="text-2xl font-bold text-slate-800">0</div>
+                        <div class="text-sm text-slate-500">Total Users</div>
                     </div>
-                    <div id="postsAPPROVED" class="space-y-3 min-h-[200px]"></div>
-                </div>
-                
-                <!-- SCHEDULED -->
-                <div class="flex-shrink-0 w-80">
-                    <div class="flex items-center justify-between mb-3 px-1">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                            Scheduled <span id="countSCHEDULED" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
-                        </h3>
+                    <div class="bg-white rounded-xl px-6 py-4 border border-slate-200">
+                        <div id="activeUsersCount" class="text-2xl font-bold text-emerald-600">0</div>
+                        <div class="text-sm text-slate-500">Active</div>
                     </div>
-                    <div id="postsSCHEDULED" class="space-y-3 min-h-[200px]"></div>
-                </div>
-                
-                <!-- PUBLISHED -->
-                <div class="flex-shrink-0 w-80">
-                    <div class="flex items-center justify-between mb-3 px-1">
-                        <h3 class="font-semibold text-slate-700 flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-                            Published <span id="countPUBLISHED" class="text-xs font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md">0</span>
-                        </h3>
+                    <div class="bg-white rounded-xl px-6 py-4 border border-slate-200">
+                        <div id="adminUsersCount" class="text-2xl font-bold text-purple-600">0</div>
+                        <div class="text-sm text-slate-500">Admins</div>
                     </div>
-                    <div id="postsPUBLISHED" class="space-y-3 min-h-[200px]"></div>
                 </div>
+                <button onclick="openAddUserModal()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    Add User
+                </button>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <table class="w-full">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Created</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
             </div>
         </div>
     </main>
@@ -370,13 +511,50 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     <textarea id="createContent" rows="4" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500" placeholder="Write your post content..."></textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold mb-1.5">Platform <span class="text-red-500">*</span></label>
-                        <select id="createPlatform" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500">
-                            <option value="">Select platform</option>
-                            <option>Facebook</option><option>Instagram</option><option>LinkedIn</option>
-                            <option>X</option><option>TikTok</option><option>YouTube</option><option>Snapchat</option><option>Website</option>
-                        </select>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-semibold mb-2">Platforms <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal">(Select one or more)</span></label>
+                        <div class="grid grid-cols-4 gap-2" id="createPlatformsGrid">
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="Facebook" class="hidden">
+                                <span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-facebook"></i></span>
+                                <span class="text-sm">Facebook</span>
+                            </label>
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-pink-50 hover:border-pink-300 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="Instagram" class="hidden">
+                                <span class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-instagram"></i></span>
+                                <span class="text-sm">Instagram</span>
+                            </label>
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="LinkedIn" class="hidden">
+                                <span class="w-6 h-6 bg-blue-700 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-linkedin"></i></span>
+                                <span class="text-sm">LinkedIn</span>
+                            </label>
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="X" class="hidden">
+                                <span class="w-6 h-6 bg-black text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-x-twitter"></i></span>
+                                <span class="text-sm">X</span>
+                            </label>
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="TikTok" class="hidden">
+                                <span class="w-6 h-6 bg-slate-800 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-tiktok"></i></span>
+                                <span class="text-sm">TikTok</span>
+                            </label>
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-red-50 hover:border-red-300 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="YouTube" class="hidden">
+                                <span class="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-youtube"></i></span>
+                                <span class="text-sm">YouTube</span>
+                            </label>
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-yellow-50 hover:border-yellow-300 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="Snapchat" class="hidden">
+                                <span class="w-6 h-6 bg-yellow-400 text-slate-800 rounded flex items-center justify-center text-xs"><i class="fa-brands fa-snapchat"></i></span>
+                                <span class="text-sm">Snapchat</span>
+                            </label>
+                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-all">
+                                <input type="checkbox" name="createPlatforms" value="Website" class="hidden">
+                                <span class="w-6 h-6 bg-indigo-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-solid fa-globe"></i></span>
+                                <span class="text-sm">Website</span>
+                            </label>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1.5">Start As</label>
@@ -386,16 +564,18 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                         </select>
                     </div>
                 </div>
-                <!-- Media Upload -->
+                <!-- Media Upload (Multiple) -->
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Attach Media (Optional)</label>
-                    <div class="upload-zone rounded-xl p-6 text-center cursor-pointer" onclick="document.getElementById('createFileInput').click()">
-                        <input type="file" id="createFileInput" class="hidden" accept="image/*,video/*" onchange="previewCreateFile(event)">
-                        <div id="createPreviewArea" class="hidden mb-3"></div>
-                        <div id="createUploadPrompt">
-                            <svg class="w-10 h-10 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            <p class="text-slate-500 text-sm">Click or drag to upload</p>
-                            <p class="text-slate-400 text-xs mt-1">Max 10MB • JPG, PNG, GIF, MP4</p>
+                    <label class="block text-sm font-semibold mb-1.5">Attach Media (Optional) <span class="text-xs text-slate-400 font-normal">Multiple files allowed</span></label>
+                    <div id="createMediaGallery" class="grid grid-cols-4 gap-2 mb-3"></div>
+                    <div class="upload-zone rounded-xl p-4 text-center cursor-pointer border-2 border-dashed border-slate-300 hover:border-sky-400 transition-colors" onclick="document.getElementById('createFileInput').click()">
+                        <input type="file" id="createFileInput" class="hidden" accept="image/*,video/*" multiple onchange="previewCreateFiles(event)">
+                        <div class="flex items-center justify-center gap-3">
+                            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                            <div class="text-left">
+                                <p class="text-slate-600 text-sm font-medium">Click to add media</p>
+                                <p class="text-slate-400 text-xs">Max 10MB each • JPG, PNG, GIF, MP4</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -507,11 +687,49 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
                     <textarea id="editContent" rows="5" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500"></textarea>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Platform</label>
-                    <select id="editPlatform" class="w-full px-4 py-3 border rounded-xl">
-                        <option>Facebook</option><option>Instagram</option><option>LinkedIn</option>
-                        <option>X</option><option>TikTok</option><option>YouTube</option><option>Snapchat</option><option>Website</option>
-                    </select>
+                    <label class="block text-sm font-semibold mb-2">Platforms <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal">(Select one or more)</span></label>
+                    <div class="grid grid-cols-4 gap-2" id="editPlatformsGrid">
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="Facebook" class="hidden">
+                            <span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-facebook"></i></span>
+                            <span class="text-sm">Facebook</span>
+                        </label>
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-pink-50 hover:border-pink-300 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="Instagram" class="hidden">
+                            <span class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-instagram"></i></span>
+                            <span class="text-sm">Instagram</span>
+                        </label>
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="LinkedIn" class="hidden">
+                            <span class="w-6 h-6 bg-blue-700 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-linkedin"></i></span>
+                            <span class="text-sm">LinkedIn</span>
+                        </label>
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="X" class="hidden">
+                            <span class="w-6 h-6 bg-black text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-x-twitter"></i></span>
+                            <span class="text-sm">X</span>
+                        </label>
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="TikTok" class="hidden">
+                            <span class="w-6 h-6 bg-slate-800 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-tiktok"></i></span>
+                            <span class="text-sm">TikTok</span>
+                        </label>
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-red-50 hover:border-red-300 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="YouTube" class="hidden">
+                            <span class="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-youtube"></i></span>
+                            <span class="text-sm">YouTube</span>
+                        </label>
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-yellow-50 hover:border-yellow-300 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="Snapchat" class="hidden">
+                            <span class="w-6 h-6 bg-yellow-400 text-slate-800 rounded flex items-center justify-center text-xs"><i class="fa-brands fa-snapchat"></i></span>
+                            <span class="text-sm">Snapchat</span>
+                        </label>
+                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-all">
+                            <input type="checkbox" name="editPlatforms" value="Website" class="hidden">
+                            <span class="w-6 h-6 bg-indigo-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-solid fa-globe"></i></span>
+                            <span class="text-sm">Website</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="flex items-center gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
@@ -568,6 +786,77 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
     <!-- Toast Container -->
     <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="bg-[#0a1628] text-white px-6 py-4 flex justify-between rounded-t-2xl">
+                <h2 class="text-xl font-bold">✏️ Edit User</h2>
+                <button onclick="closeEditUserModal()" class="text-2xl hover:text-sky-400">&times;</button>
+            </div>
+            <form id="editUserForm" class="p-6 space-y-4">
+                <input type="hidden" id="editUserId">
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Username</label>
+                    <input type="text" id="editUserUsername" disabled class="w-full px-4 py-3 border rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="editUserFullName" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Role <span class="text-red-500">*</span></label>
+                    <select id="editUserRole" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500">
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">New Password <span class="text-slate-400 text-xs">(leave blank to keep current)</span></label>
+                    <input type="password" id="editUserPassword" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Save Changes</button>
+                    <button type="button" onclick="closeEditUserModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div class="bg-[#0a1628] text-white px-6 py-4 flex justify-between rounded-t-2xl">
+                <h2 class="text-xl font-bold">➕ Add New User</h2>
+                <button onclick="closeAddUserModal()" class="text-2xl hover:text-sky-400">&times;</button>
+            </div>
+            <form id="addUserForm" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Username <span class="text-red-500">*</span></label>
+                    <input type="text" id="addUserUsername" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Full Name <span class="text-red-500">*</span></label>
+                    <input type="text" id="addUserFullName" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Full Name">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Role <span class="text-red-500">*</span></label>
+                    <select id="addUserRole" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500">
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-1.5">Password <span class="text-red-500">*</span></label>
+                    <input type="password" id="addUserPassword" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Create User</button>
+                    <button type="button" onclick="closeAddUserModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 <script>
 const app = { user: null, posts: [], currentPost: null };
 const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
@@ -609,8 +898,26 @@ async function init() {
     await loadUser();
     await loadPosts();
     loadNotifications();
-    switchTab('board');
+    
+    // Get tab from URL hash or default to 'board'
+    const validTabs = ['dashboard', 'board', 'calendar', 'users'];
+    let initialTab = window.location.hash.replace('#', '');
+    if (!validTabs.includes(initialTab)) initialTab = 'board';
+    
+    // Check if non-admin trying to access users tab
+    if (initialTab === 'users' && app.user?.role !== 'admin') initialTab = 'board';
+    
+    switchTab(initialTab);
 }
+
+// Handle browser back/forward buttons
+window.addEventListener('hashchange', function() {
+    const validTabs = ['dashboard', 'board', 'calendar', 'users'];
+    let tab = window.location.hash.replace('#', '');
+    if (!validTabs.includes(tab)) tab = 'board';
+    if (tab === 'users' && app.user?.role !== 'admin') tab = 'board';
+    switchTab(tab);
+});
 
 async function api(action, method = 'GET', body = null) {
     const opts = { method, headers: {} };
@@ -625,6 +932,7 @@ async function loadUser() {
         app.user = data.data;
         document.getElementById('userName').textContent = data.data.full_name || data.data.username;
         document.getElementById('userRole').textContent = data.data.role;
+        document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
         if (data.data.role === 'admin') document.getElementById('adminLink').classList.remove('hidden');
     } else {
         location.href = 'login.php';
@@ -634,12 +942,30 @@ async function loadUser() {
 async function logout() { await api('logout', 'POST'); location.href = 'login.php'; }
 
 function switchTab(tab) {
-    ['dashboard', 'board'].forEach(t => {
-        document.getElementById(t + 'View').classList.toggle('hidden', t !== tab);
-        document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).className = 
-            `tab-btn px-4 py-2 rounded-lg text-sm font-medium ${t === tab ? 'bg-gold-500 text-navy-900' : 'text-slate-300 hover:text-white'}`;
+    const allTabs = ['dashboard', 'board', 'calendar', 'users'];
+    const titles = { dashboard: 'Dashboard', board: 'Content Board', calendar: 'Calendar', users: 'User Management' };
+    
+    allTabs.forEach(t => {
+        const view = document.getElementById(t + 'View');
+        if (view) view.classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+        if (btn) {
+            btn.className = t === tab 
+                ? 'sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-white bg-white/10 transition-colors'
+                : 'sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors';
+        }
     });
+    
+    document.getElementById('pageTitle').textContent = titles[tab] || tab;
+    
+    // Update URL hash without triggering hashchange event
+    if (window.location.hash !== '#' + tab) {
+        history.replaceState(null, '', '#' + tab);
+    }
+    
     if (tab === 'dashboard') loadDashboard();
+    if (tab === 'calendar') loadCalendar();
+    if (tab === 'users') loadUsers();
 }
 
 let platformChart = null;
@@ -977,6 +1303,9 @@ async function loadPosts() {
     if (data.success) { app.posts = data.data; renderBoard(); }
 }
 
+// Current status filter for board tabs
+let currentStatusFilter = '';
+
 function renderBoard() {
     const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
     
@@ -985,21 +1314,113 @@ function renderBoard() {
         else if (grouped[p.status]) grouped[p.status].push(p);
     });
     
+    // Update all tab counts
+    let totalCount = 0;
     STATUS_LIST.forEach(status => {
-        const container = document.getElementById('posts' + status);
+        const count = grouped[status]?.length || 0;
+        totalCount += count;
         const countEl = document.getElementById('count' + status);
-        if (!container) return;
+        if (countEl) countEl.textContent = count;
+    });
+    
+    // Update "All" tab count
+    const countAllEl = document.getElementById('countAll');
+    if (countAllEl) countAllEl.textContent = totalCount;
+    
+    // Filter posts based on current status filter
+    let filteredPosts = [];
+    if (currentStatusFilter === '') {
+        // Show all posts
+        STATUS_LIST.forEach(status => {
+            filteredPosts = filteredPosts.concat(grouped[status] || []);
+        });
+    } else {
+        filteredPosts = grouped[currentStatusFilter] || [];
+    }
+    
+    // Render posts in grid
+    const grid = document.getElementById('postsGrid');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (filteredPosts.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+    } else {
+        emptyState.classList.add('hidden');
+        grid.innerHTML = filteredPosts.map(p => cardHTML(p)).join('');
+    }
+    
+    // Update active tab styling
+    updateActiveTab();
+}
+
+function setStatusFilter(status) {
+    currentStatusFilter = status;
+    renderBoard();
+}
+
+function updateActiveTab() {
+    const tabs = ['All', 'IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+    const statusColors = {
+        '': 'border-slate-600',
+        'IDEA': 'border-violet-500',
+        'DRAFT': 'border-sky-500',
+        'PENDING_REVIEW': 'border-amber-500',
+        'APPROVED': 'border-emerald-500',
+        'SCHEDULED': 'border-indigo-500',
+        'PUBLISHED': 'border-slate-500'
+    };
+    
+    tabs.forEach(tab => {
+        const tabId = tab === 'All' ? 'tabAll' : 'tab' + tab;
+        const tabEl = document.getElementById(tabId);
+        if (!tabEl) return;
         
-        const posts = grouped[status] || [];
-        countEl.textContent = posts.length;
-        container.innerHTML = posts.map(p => cardHTML(p)).join('') || '<p class="text-center text-slate-400 text-sm py-8">No posts</p>';
+        const isActive = (tab === 'All' && currentStatusFilter === '') || currentStatusFilter === tab;
+        const borderColor = statusColors[tab === 'All' ? '' : tab] || 'border-slate-600';
+        
+        if (isActive) {
+            tabEl.className = `status-tab px-4 py-3 text-sm font-semibold border-b-2 ${borderColor} bg-slate-50 transition-colors flex items-center gap-2 text-slate-800`;
+        } else {
+            tabEl.className = 'status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2 text-slate-600';
+        }
     });
 }
 
 function cardHTML(post) {
     const hasChanges = post.status === 'CHANGES_REQUESTED';
-    const platformColor = PLATFORM_COLORS[post.platform] || 'bg-slate-500';
-    const platformIcon = PLATFORM_ICONS[post.platform] || 'fa-solid fa-share-nodes';
+    
+    // Parse platforms - handle JSON string, array, or legacy single platform
+    let platforms = [];
+    if (post.platforms) {
+        platforms = typeof post.platforms === 'string' ? JSON.parse(post.platforms) : post.platforms;
+    } else if (post.platform) {
+        platforms = [post.platform];
+    }
+    
+    // Status badge colors
+    const statusBadgeColors = {
+        'IDEA': 'bg-violet-100 text-violet-700 border-violet-200',
+        'DRAFT': 'bg-sky-100 text-sky-700 border-sky-200',
+        'PENDING_REVIEW': 'bg-amber-100 text-amber-700 border-amber-200',
+        'CHANGES_REQUESTED': 'bg-orange-100 text-orange-700 border-orange-200',
+        'APPROVED': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'SCHEDULED': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+        'PUBLISHED': 'bg-slate-100 text-slate-600 border-slate-200'
+    };
+    
+    const statusBadgeLabels = {
+        'IDEA': '💡 Idea',
+        'DRAFT': '📝 Draft',
+        'PENDING_REVIEW': '🔍 Pending',
+        'CHANGES_REQUESTED': '🔄 Changes',
+        'APPROVED': '✅ Approved',
+        'SCHEDULED': '📅 Scheduled',
+        'PUBLISHED': '🚀 Published'
+    };
+    
+    const statusBadgeColor = statusBadgeColors[post.status] || 'bg-slate-100 text-slate-600';
+    const statusBadgeLabel = statusBadgeLabels[post.status] || post.status;
     
     // Handle media (image vs video)
     let mediaHtml = '';
@@ -1011,15 +1432,25 @@ function cardHTML(post) {
         }
     }
     
+    // Generate platform badges HTML
+    const platformBadgesHtml = platforms.map(p => {
+        const color = PLATFORM_COLORS[p] || 'bg-slate-500';
+        const icon = PLATFORM_ICONS[p] || 'fa-solid fa-share-nodes';
+        return `<span class="text-[10px] px-1.5 py-0.5 rounded text-white ${color}"><i class="${icon}"></i></span>`;
+    }).join('');
+    
     return `
         <div class="post-card bg-white rounded-xl shadow-sm p-4 border border-slate-200" onclick="openViewModal(${post.id})">
-            ${post.urgency == 1 ? '<div class="text-red-600 text-xs font-medium mb-2 bg-red-50 inline-block px-2 py-0.5 rounded">URGENT</div>' : ''}
-            ${hasChanges ? '<div class="text-slate-600 text-xs font-medium mb-2 bg-slate-100 inline-block px-2 py-0.5 rounded">Revision Requested</div>' : ''}
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-medium px-2 py-1 rounded-md border ${statusBadgeColor}">${statusBadgeLabel}</span>
+                ${post.urgency == 1 ? '<span class="text-red-600 text-xs font-bold bg-red-50 px-2 py-0.5 rounded">🔥 URGENT</span>' : ''}
+            </div>
+            ${hasChanges ? '<div class="text-orange-600 text-xs font-medium mb-2 bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-200">⚠️ Revision Requested</div>' : ''}
             ${mediaHtml}
             <h4 class="font-semibold text-slate-800 mb-1 line-clamp-2">${escapeHtml(post.title)}</h4>
             <p class="text-slate-500 text-sm mb-3 line-clamp-2">${escapeHtml(post.content)}</p>
             <div class="flex items-center justify-between">
-                <span class="text-xs px-2 py-1 rounded-lg text-white ${platformColor}"><i class="${platformIcon} mr-1"></i>${post.platform}</span>
+                <div class="flex items-center gap-1">${platformBadgesHtml}</div>
                 <span class="text-xs text-slate-400">${post.author_name}</span>
             </div>
             ${post.comment_count > 0 ? `<div class="text-xs text-slate-400 mt-2 flex items-center gap-1"><i class="fa-regular fa-comment"></i> ${post.comment_count}</div>` : ''}
@@ -1028,54 +1459,89 @@ function cardHTML(post) {
 }
 
 // ==================== CREATE MODAL ====================
+// Store selected files for create form
+let createMediaFiles = [];
+
 function openCreateModal() {
     document.getElementById('createForm').reset();
-    document.getElementById('createPreviewArea').classList.add('hidden');
-    document.getElementById('createUploadPrompt').classList.remove('hidden');
+    // Clear all platform checkboxes
+    document.querySelectorAll('input[name="createPlatforms"]').forEach(cb => cb.checked = false);
+    // Clear media gallery
+    createMediaFiles = [];
+    renderCreateMediaGallery();
     document.getElementById('createFileInput').value = '';
     document.getElementById('createModal').classList.remove('hidden');
 }
 
 function closeCreateModal() {
     document.getElementById('createModal').classList.add('hidden');
+    createMediaFiles = [];
 }
 
-function previewCreateFile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    const preview = document.getElementById('createPreviewArea');
-    const prompt = document.getElementById('createUploadPrompt');
-    
-    if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.innerHTML = `<img src="${e.target.result}" class="max-h-40 mx-auto rounded-lg">`;
-            preview.classList.remove('hidden');
-            prompt.classList.add('hidden');
-        };
-        reader.readAsDataURL(file);
-    } else {
-        preview.innerHTML = `<div class="text-slate-600"><svg class="w-10 h-10 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>${file.name}</div>`;
-        preview.classList.remove('hidden');
-        prompt.classList.add('hidden');
+function previewCreateFiles(e) {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+        if (file.size > 10 * 1024 * 1024) {
+            toast(`File ${file.name} exceeds 10MB limit`, 'error');
+            return;
+        }
+        createMediaFiles.push(file);
+    });
+    renderCreateMediaGallery();
+    e.target.value = ''; // Allow selecting same file again
+}
+
+function renderCreateMediaGallery() {
+    const gallery = document.getElementById('createMediaGallery');
+    if (createMediaFiles.length === 0) {
+        gallery.innerHTML = '';
+        return;
     }
+    
+    gallery.innerHTML = createMediaFiles.map((file, index) => {
+        const isVideo = file.type.startsWith('video/');
+        const url = URL.createObjectURL(file);
+        const mediaEl = isVideo 
+            ? `<video src="${url}" class="w-full h-20 object-cover rounded-lg" muted></video>`
+            : `<img src="${url}" class="w-full h-20 object-cover rounded-lg">`;
+        return `
+            <div class="relative group">
+                ${mediaEl}
+                <button type="button" onclick="removeCreateMedia(${index})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 text-sm font-bold shadow-lg">×</button>
+                ${isVideo ? '<span class="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded">VIDEO</span>' : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function removeCreateMedia(index) {
+    createMediaFiles.splice(index, 1);
+    renderCreateMediaGallery();
 }
 
 document.getElementById('createForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Collect selected platforms from checkboxes
+    const selectedPlatforms = Array.from(document.querySelectorAll('input[name="createPlatforms"]:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedPlatforms.length === 0) {
+        toast('Please select at least one platform', 'error');
+        return;
+    }
+    
     const formData = new FormData();
     formData.append('title', document.getElementById('createTitle').value);
     formData.append('content', document.getElementById('createContent').value);
-    formData.append('platform', document.getElementById('createPlatform').value);
+    formData.append('platforms', JSON.stringify(selectedPlatforms));
     formData.append('status', document.getElementById('createStatus').value);
     formData.append('urgency', document.getElementById('createUrgent').checked ? '1' : '0');
     
-    const fileInput = document.getElementById('createFileInput');
-    if (fileInput.files[0]) {
-        formData.append('file', fileInput.files[0]);
-    }
+    // Append all media files
+    createMediaFiles.forEach((file, i) => {
+        formData.append(`files[${i}]`, file);
+    });
     
     const res = await fetch('api.php?action=save_post', { method: 'POST', body: formData });
     const data = await res.json();
@@ -1102,9 +1568,19 @@ async function openViewModal(id) {
     statusBadge.textContent = STATUS_LABELS[p.status] || p.status;
     statusBadge.className = `status-badge ${STATUS_COLORS[p.status] || 'bg-slate-500'} text-white`;
     
-    // Platform badge with icon
-    const platformIcon = PLATFORM_ICONS[p.platform] || 'fa-solid fa-share-nodes';
-    document.getElementById('viewPlatformBadge').innerHTML = `<span class="px-2 py-0.5 rounded text-white text-xs ${PLATFORM_COLORS[p.platform] || 'bg-slate-500'}"><i class="${platformIcon} mr-1"></i>${p.platform}</span>`;
+    // Platform badges with icons (multi-platform support)
+    let platforms = [];
+    if (p.platforms) {
+        platforms = typeof p.platforms === 'string' ? JSON.parse(p.platforms) : p.platforms;
+    } else if (p.platform) {
+        platforms = [p.platform];
+    }
+    const platformBadgesHtml = platforms.map(plat => {
+        const icon = PLATFORM_ICONS[plat] || 'fa-solid fa-share-nodes';
+        const color = PLATFORM_COLORS[plat] || 'bg-slate-500';
+        return `<span class="px-2 py-0.5 rounded text-white text-xs ${color}"><i class="${icon} mr-1"></i>${plat}</span>`;
+    }).join(' ');
+    document.getElementById('viewPlatformBadge').innerHTML = platformBadgesHtml;
     
     // Title and meta
     document.getElementById('viewTitle').textContent = p.title;
@@ -1115,15 +1591,32 @@ async function openViewModal(id) {
     // Content
     document.getElementById('viewContent').textContent = p.content;
     
-    // Media
+    // Media Gallery (show all media, not just primary)
     const mediaContainer = document.getElementById('viewMediaContainer');
     const mediaWrapper = document.getElementById('viewMediaWrapper');
     if (p.media && p.media.length > 0) {
-        const primary = p.media.find(m => m.is_primary) || p.media[0];
-        if (isVideoFile(primary.file_path)) {
-            mediaWrapper.innerHTML = `<video src="${primary.file_path}" controls class="w-full max-h-96 rounded-xl bg-slate-100"></video>`;
+        if (p.media.length === 1) {
+            // Single media - show large
+            const m = p.media[0];
+            if (isVideoFile(m.file_path)) {
+                mediaWrapper.innerHTML = `<video src="${m.file_path}" controls class="w-full max-h-96 rounded-xl bg-slate-100"></video>`;
+            } else {
+                mediaWrapper.innerHTML = `<img src="${m.file_path}" class="w-full max-h-96 object-contain rounded-xl bg-slate-100">`;
+            }
         } else {
-            mediaWrapper.innerHTML = `<img src="${primary.file_path}" class="w-full max-h-96 object-contain rounded-xl bg-slate-100">`;
+            // Multiple media - show as gallery grid
+            mediaWrapper.innerHTML = `
+                <div class="grid grid-cols-${p.media.length <= 4 ? p.media.length : 4} gap-2">
+                    ${p.media.map(m => {
+                        if (isVideoFile(m.file_path)) {
+                            return `<div class="relative"><video src="${m.file_path}" class="w-full h-32 object-cover rounded-lg cursor-pointer" onclick="window.open('${m.file_path}', '_blank')" muted></video><span class="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] px-1 rounded">VIDEO</span></div>`;
+                        } else {
+                            return `<img src="${m.file_path}" class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90" onclick="window.open('${m.file_path}', '_blank')">`;
+                        }
+                    }).join('')}
+                </div>
+                <p class="text-xs text-slate-400 mt-2 text-center">${p.media.length} files • Click to view full size</p>
+            `;
         }
         mediaContainer.classList.remove('hidden');
     } else {
@@ -1474,7 +1967,19 @@ function openEditModal(post) {
     document.getElementById('editPostId').value = post.id;
     document.getElementById('editTitle').value = post.title || '';
     document.getElementById('editContent').value = post.content || '';
-    document.getElementById('editPlatform').value = post.platform || 'Facebook';
+    
+    // Set platform checkboxes
+    let platforms = [];
+    if (post.platforms) {
+        platforms = typeof post.platforms === 'string' ? JSON.parse(post.platforms) : post.platforms;
+    } else if (post.platform) {
+        platforms = [post.platform];
+    }
+    // Clear all checkboxes first
+    document.querySelectorAll('input[name="editPlatforms"]').forEach(cb => {
+        cb.checked = platforms.includes(cb.value);
+    });
+    
     document.getElementById('editUrgent').checked = post.urgency == 1;
     
     // Media gallery
@@ -1484,12 +1989,19 @@ function openEditModal(post) {
 }
 
 function renderEditMediaGallery(media) {
-    document.getElementById('editMediaGallery').innerHTML = media.map(m => `
-        <div class="relative group">
-            <img src="${m.file_path}" class="w-full h-20 object-cover rounded-lg">
-            <button type="button" onclick="deleteMedia(${m.id})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 text-sm font-bold shadow-lg">×</button>
-        </div>
-    `).join('') || '<p class="col-span-4 text-slate-400 text-sm">No media attached</p>';
+    document.getElementById('editMediaGallery').innerHTML = media.map(m => {
+        const isVideo = isVideoFile(m.file_path);
+        const mediaEl = isVideo 
+            ? `<video src="${m.file_path}" class="w-full h-20 object-cover rounded-lg" muted></video>`
+            : `<img src="${m.file_path}" class="w-full h-20 object-cover rounded-lg">`;
+        return `
+            <div class="relative group">
+                ${mediaEl}
+                <button type="button" onclick="deleteMedia(${m.id})" class="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full opacity-0 group-hover:opacity-100 text-sm font-bold shadow-lg">×</button>
+                ${isVideo ? '<span class="absolute bottom-1 left-1 bg-black/60 text-white text-[8px] px-1 rounded">VIDEO</span>' : ''}
+            </div>
+        `;
+    }).join('') || '<p class="col-span-4 text-slate-400 text-sm">No media attached</p>';
 }
 
 async function uploadEditFile(e) {
@@ -1529,12 +2041,21 @@ function closeEditModal() {
 document.getElementById('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Collect selected platforms
+    const selectedPlatforms = Array.from(document.querySelectorAll('input[name="editPlatforms"]:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedPlatforms.length === 0) {
+        toast('Please select at least one platform', 'error');
+        return;
+    }
+    
     const formData = {
         id: document.getElementById('editPostId').value,
         title: document.getElementById('editTitle').value,
         content: document.getElementById('editContent').value,
-        platform: document.getElementById('editPlatform').value,
-        scheduled_date: document.getElementById('editScheduled').value || null,
+        platforms: selectedPlatforms,
+        scheduled_date: document.getElementById('editScheduled')?.value || null,
         urgency: document.getElementById('editUrgent').checked
     };
     
@@ -1591,6 +2112,281 @@ function formatDate(str) { return str ? new Date(str).toLocaleString('en-US', { 
 let searchTimeout;
 function debounceSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(loadPosts, 500); }
 
+// ==================== CALENDAR FUNCTIONS ====================
+let calendarYear = new Date().getFullYear();
+let calendarMonth = new Date().getMonth();
+let calendarPosts = [];
+
+function prevMonth() { calendarMonth--; if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; } loadCalendar(); }
+function nextMonth() { calendarMonth++; if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; } loadCalendar(); }
+function goToToday() { 
+    const today = new Date();
+    calendarYear = today.getFullYear();
+    calendarMonth = today.getMonth();
+    loadCalendar();
+}
+
+async function loadCalendar() {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('currentMonth').textContent = `${monthNames[calendarMonth]} ${calendarYear}`;
+    
+    const data = await api(`fetch_calendar&year=${calendarYear}&month=${calendarMonth + 1}`);
+    calendarPosts = data.success ? data.data : [];
+    
+    // Update stats
+    const scheduledCount = calendarPosts.filter(p => p.status === 'SCHEDULED').length;
+    const publishedCount = calendarPosts.filter(p => p.status === 'PUBLISHED').length;
+    document.getElementById('scheduledCount').textContent = scheduledCount;
+    document.getElementById('publishedCount').textContent = publishedCount;
+    
+    renderCalendar();
+}
+
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+    const today = new Date();
+    
+    // Platform icons mapping
+    const platformIcons = {
+        'Facebook': '<i class="fa-brands fa-facebook"></i>',
+        'Instagram': '<i class="fa-brands fa-instagram"></i>',
+        'LinkedIn': '<i class="fa-brands fa-linkedin"></i>',
+        'X': '<i class="fa-brands fa-x-twitter"></i>',
+        'TikTok': '<i class="fa-brands fa-tiktok"></i>',
+        'YouTube': '<i class="fa-brands fa-youtube"></i>',
+        'Snapchat': '<i class="fa-brands fa-snapchat"></i>',
+        'Website': '<i class="fa-solid fa-globe"></i>'
+    };
+    
+    const platformColors = {
+        'Facebook': 'bg-blue-600',
+        'Instagram': 'bg-gradient-to-r from-purple-500 to-pink-500',
+        'LinkedIn': 'bg-blue-700',
+        'X': 'bg-black',
+        'TikTok': 'bg-slate-800',
+        'YouTube': 'bg-red-600',
+        'Snapchat': 'bg-yellow-400 text-slate-800',
+        'Website': 'bg-indigo-600'
+    };
+    
+    let html = '';
+    // Empty cells for days before month starts
+    for (let i = 0; i < firstDay; i++) {
+        html += '<div class="min-h-[130px] border-b border-r border-slate-200 bg-slate-50/50"></div>';
+    }
+    
+    // Days of month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = today.getFullYear() === calendarYear && today.getMonth() === calendarMonth && today.getDate() === day;
+        const isPast = new Date(dateStr) < new Date(today.toDateString());
+        const dayPosts = calendarPosts.filter(p => (p.scheduled_date || p.published_date || '').startsWith(dateStr));
+        
+        const dayBg = isToday ? 'bg-blue-50 ring-2 ring-blue-400 ring-inset' : (isPast ? 'bg-slate-50/30' : 'bg-white');
+        
+        html += `
+            <div class="min-h-[130px] border-b border-r border-slate-200 p-2 ${dayBg} hover:bg-slate-50 transition-colors">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-semibold ${isToday ? 'bg-blue-600 text-white px-2 py-0.5 rounded-full' : (isPast ? 'text-slate-400' : 'text-slate-700')}">${day}</span>
+                    ${dayPosts.length > 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">${dayPosts.length}</span>` : ''}
+                </div>
+                <div class="space-y-1.5 overflow-y-auto max-h-[90px] scrollbar-thin">
+                    ${dayPosts.map(p => {
+                        const time = p.scheduled_date ? new Date(p.scheduled_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : '';
+                        const statusStyle = p.status === 'SCHEDULED' 
+                            ? 'border-l-indigo-500 bg-indigo-50' 
+                            : 'border-l-emerald-500 bg-emerald-50';
+                        
+                        // Parse platforms
+                        let platforms = [];
+                        if (p.platforms) {
+                            platforms = typeof p.platforms === 'string' ? JSON.parse(p.platforms) : p.platforms;
+                        } else if (p.platform) {
+                            platforms = [p.platform];
+                        }
+                        
+                        // Generate platform icons for first 2 platforms
+                        const platformIconsHtml = platforms.slice(0, 2).map(plat => {
+                            const pIcon = platformIcons[plat] || '<i class="fa-solid fa-share-nodes"></i>';
+                            const pColor = platformColors[plat] || 'bg-slate-600';
+                            return `<span class="flex-shrink-0 w-4 h-4 ${pColor} text-white rounded flex items-center justify-center text-[8px]">${pIcon}</span>`;
+                        }).join('');
+                        const moreCount = platforms.length > 2 ? `<span class="text-[8px] text-slate-400">+${platforms.length - 2}</span>` : '';
+                        
+                        return `
+                            <div onclick="openViewModal(${p.id})" class="calendar-post group cursor-pointer p-1.5 rounded-md border-l-3 ${statusStyle} hover:shadow-sm transition-all">
+                                <div class="flex items-start gap-1.5">
+                                    <div class="flex items-center gap-0.5">${platformIconsHtml}${moreCount}</div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="text-xs font-medium text-slate-700 truncate group-hover:text-slate-900">${escapeHtml(p.title)}</div>
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            ${time ? `<span class="text-[10px] text-slate-500">${time}</span>` : ''}
+                                            <span class="text-[10px] ${p.status === 'SCHEDULED' ? 'text-indigo-600' : 'text-emerald-600'} font-medium">${p.status === 'SCHEDULED' ? '📅' : '✓'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    grid.innerHTML = html;
+}
+
+// ==================== USERS MANAGEMENT ====================
+let allUsers = [];
+
+async function loadUsers() {
+    if (app.user?.role !== 'admin') return;
+    
+    const data = await api('fetch_users');
+    if (data.success) {
+        allUsers = data.data;
+        document.getElementById('totalUsersCount').textContent = allUsers.length;
+        document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.is_active).length;
+        document.getElementById('adminUsersCount').textContent = allUsers.filter(u => u.role === 'admin').length;
+        renderUsersTable();
+    }
+}
+
+function renderUsersTable() {
+    document.getElementById('usersTableBody').innerHTML = allUsers.map(u => `
+        <tr class="hover:bg-slate-50">
+            <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center font-bold">
+                        ${(u.full_name || u.username)[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="font-medium text-slate-800">${escapeHtml(u.full_name || u.username)}</div>
+                        <div class="text-sm text-slate-400">@${u.username}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded-full text-xs font-medium ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'}">
+                    ${u.role}
+                </span>
+            </td>
+            <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded-full text-xs font-medium ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                    ${u.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td class="px-6 py-4 text-sm text-slate-500">${formatDate(u.created_at)}</td>
+            <td class="px-6 py-4 text-center">
+                <div class="flex items-center justify-center gap-2">
+                    <button onclick="openEditUserModal(${u.id})" class="px-3 py-1 text-xs rounded-lg bg-brand-100 text-brand-600 hover:bg-brand-200">
+                        Edit
+                    </button>
+                    <button onclick="toggleUserStatus(${u.id}, ${u.is_active ? 0 : 1})" class="px-3 py-1 text-xs rounded-lg ${u.is_active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}">
+                        ${u.is_active ? 'Deactivate' : 'Activate'}
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="5" class="text-center py-8 text-slate-400">No users found</td></tr>';
+}
+
+async function toggleUserStatus(id, active) {
+    const data = await api('update_user_status', 'POST', { id, is_active: active });
+    if (data.success) { toast(active ? 'User activated' : 'User deactivated', 'success'); loadUsers(); }
+    else toast(data.error || 'Failed to update user', 'error');
+}
+
+function openEditUserModal(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    document.getElementById('editUserId').value = user.id;
+    document.getElementById('editUserUsername').value = user.username;
+    document.getElementById('editUserFullName').value = user.full_name || '';
+    document.getElementById('editUserRole').value = user.role;
+    document.getElementById('editUserPassword').value = '';
+    
+    document.getElementById('editUserModal').classList.remove('hidden');
+}
+
+function closeEditUserModal() {
+    document.getElementById('editUserModal').classList.add('hidden');
+}
+
+document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        id: parseInt(document.getElementById('editUserId').value),
+        full_name: document.getElementById('editUserFullName').value.trim(),
+        role: document.getElementById('editUserRole').value,
+        password: document.getElementById('editUserPassword').value
+    };
+    
+    if (!data.full_name) {
+        toast('Full name is required', 'error');
+        return;
+    }
+    
+    const result = await api('update_user', 'POST', data);
+    if (result.success) {
+        toast('User updated successfully', 'success');
+        closeEditUserModal();
+        loadUsers();
+    } else {
+        toast(result.message || 'Failed to update user', 'error');
+    }
+});
+
+function openAddUserModal() {
+    document.getElementById('addUserUsername').value = '';
+    document.getElementById('addUserFullName').value = '';
+    document.getElementById('addUserRole').value = 'staff';
+    document.getElementById('addUserPassword').value = '';
+    document.getElementById('addUserModal').classList.remove('hidden');
+}
+
+function closeAddUserModal() {
+    document.getElementById('addUserModal').classList.add('hidden');
+}
+
+document.getElementById('addUserForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const data = {
+        username: document.getElementById('addUserUsername').value.trim(),
+        full_name: document.getElementById('addUserFullName').value.trim(),
+        role: document.getElementById('addUserRole').value,
+        password: document.getElementById('addUserPassword').value
+    };
+    
+    if (!data.username) {
+        toast('Username is required', 'error');
+        return;
+    }
+    if (!data.full_name) {
+        toast('Full name is required', 'error');
+        return;
+    }
+    if (!data.password) {
+        toast('Password is required', 'error');
+        return;
+    }
+    
+    const result = await api('create_user', 'POST', data);
+    if (result.success) {
+        toast('User created successfully', 'success');
+        closeAddUserModal();
+        loadUsers();
+    } else {
+        toast(result.message || 'Failed to create user', 'error');
+    }
+});
+
+
 function toast(msg, type = 'info') {
     const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
     const t = document.createElement('div');
@@ -1606,5 +2402,8 @@ document.addEventListener('click', e => {
 
 init();
 </script>
+            </main>
+        </div>
+    </div>
 </body>
 </html>

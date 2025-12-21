@@ -185,8 +185,8 @@ try {
             }
             $analytics['by_status']['CHANGES_REQUESTED'] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'CHANGES_REQUESTED'")['c'];
             
-            // === POSTS BY PLATFORM ===
-            $analytics['by_platform'] = fetchAll("SELECT platform, COUNT(*) as count FROM posts GROUP BY platform ORDER BY count DESC");
+            // === POSTS BY PLATFORM (disabled - multi-platform now) ===
+            $analytics['by_platform'] = []; // Multi-platform support - grouping by platform no longer applicable
             
             // === TIME-BASED INSIGHTS ===
             $bestDay = fetchOne(
@@ -315,17 +315,12 @@ try {
             // === REVISION ANALYTICS ===
             $analytics['revision_stats'] = [
                 'total_revisions' => (int)fetchOne("SELECT COUNT(*) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'CHANGES_REQUESTED' AND created_at >= ?", [$dateFrom])['c'],
-                'by_platform' => fetchAll(
-                    "SELECT p.platform, COUNT(*) as revisions 
-                     FROM activity_log al JOIN posts p ON al.post_id = p.id 
-                     WHERE al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED' AND al.created_at >= ?
-                     GROUP BY p.platform ORDER BY revisions DESC", [$dateFrom]
-                ),
+                'by_platform' => [], // Disabled after migration to multi-platform
             ];
             
             // === RECENT ACTIVITY - ENHANCED ===
             $analytics['recent_activity'] = fetchAll(
-                "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platform, p.id as post_id
+                "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platforms, p.id as post_id
                  FROM activity_log al 
                  JOIN users u ON al.user_id = u.id 
                  JOIN posts p ON al.post_id = p.id 
@@ -334,7 +329,7 @@ try {
             
             // === UPCOMING SCHEDULED ===
             $analytics['upcoming_scheduled'] = fetchAll(
-                "SELECT p.id, p.title, p.platform, p.scheduled_date, u.username as author
+                "SELECT p.id, p.title, p.platforms, p.scheduled_date, u.username as author
                  FROM posts p JOIN users u ON p.author_id = u.id
                  WHERE p.status = 'SCHEDULED' AND p.scheduled_date > NOW()
                  ORDER BY p.scheduled_date ASC LIMIT 5"
@@ -355,6 +350,128 @@ try {
             ];
             
             sendResponse(true, $analytics);
+            break;
+        
+        // ===== CALENDAR =====
+        
+        case 'fetch_calendar':
+            requireAuth();
+            $year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+            $month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
+            
+            $startDate = sprintf('%04d-%02d-01', $year, $month);
+            $endDate = date('Y-m-t', strtotime($startDate));
+            
+            $posts = fetchAll(
+                "SELECT id, title, status, platforms, scheduled_date, published_date 
+                 FROM posts 
+                 WHERE (status IN ('SCHEDULED', 'PUBLISHED'))
+                 AND (
+                     (scheduled_date BETWEEN ? AND ?)
+                     OR (published_date BETWEEN ? AND ?)
+                 )
+                 ORDER BY COALESCE(scheduled_date, published_date) ASC",
+                [$startDate, $endDate . ' 23:59:59', $startDate, $endDate . ' 23:59:59']
+            );
+            
+            sendResponse(true, $posts);
+            break;
+        
+        // ===== USERS MANAGEMENT =====
+        
+        case 'fetch_users':
+            requireAdmin();
+            $users = fetchAll(
+                "SELECT id, username, email, full_name, role, is_active, created_at, 
+                        (SELECT COUNT(*) FROM posts WHERE author_id = users.id) as post_count
+                 FROM users 
+                 ORDER BY created_at DESC"
+            );
+            sendResponse(true, $users);
+            break;
+        
+        case 'update_user_status':
+            requireAdmin();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $userId = $input['id'] ?? 0;
+            $isActive = $input['is_active'] ?? 0;
+            
+            if (!$userId) sendResponse(false, null, 'User ID required', 400);
+            
+            // Prevent deactivating yourself
+            if ($userId == $_SESSION['user_id'] && !$isActive) {
+                sendResponse(false, null, 'Cannot deactivate yourself', 400);
+            }
+            
+            executeQuery("UPDATE users SET is_active = ? WHERE id = ?", [$isActive, $userId]);
+            sendResponse(true, null, $isActive ? 'User activated' : 'User deactivated');
+            break;
+        
+        case 'update_user':
+            requireAdmin();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $userId = $input['id'] ?? 0;
+            $fullName = trim($input['full_name'] ?? '');
+            $role = $input['role'] ?? '';
+            $password = $input['password'] ?? '';
+            
+            if (!$userId) sendResponse(false, null, 'User ID required', 400);
+            if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
+            if (!in_array($role, ['admin', 'staff'])) sendResponse(false, null, 'Invalid role', 400);
+            
+            // Prevent changing your own role (security measure)
+            if ($userId == $_SESSION['user_id'] && $role !== 'admin') {
+                sendResponse(false, null, 'Cannot demote yourself', 400);
+            }
+            
+            // Check if user exists
+            $existingUser = fetchOne("SELECT id FROM users WHERE id = ?", [$userId]);
+            if (!$existingUser) sendResponse(false, null, 'User not found', 404);
+            
+            // Update user
+            if (!empty($password)) {
+                // Update with new password
+                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                executeQuery(
+                    "UPDATE users SET full_name = ?, role = ?, password_hash = ? WHERE id = ?",
+                    [$fullName, $role, $passwordHash, $userId]
+                );
+            } else {
+                // Update without changing password
+                executeQuery(
+                    "UPDATE users SET full_name = ?, role = ? WHERE id = ?",
+                    [$fullName, $role, $userId]
+                );
+            }
+            
+            sendResponse(true, null, 'User updated successfully');
+            break;
+        
+        case 'create_user':
+            requireAdmin();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $username = trim($input['username'] ?? '');
+            $fullName = trim($input['full_name'] ?? '');
+            $role = $input['role'] ?? 'staff';
+            $password = $input['password'] ?? '';
+            
+            if (empty($username)) sendResponse(false, null, 'Username is required', 400);
+            if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
+            if (empty($password)) sendResponse(false, null, 'Password is required', 400);
+            if (!in_array($role, ['admin', 'staff'])) sendResponse(false, null, 'Invalid role', 400);
+            
+            // Check if username already exists
+            $existingUser = fetchOne("SELECT id FROM users WHERE username = ?", [$username]);
+            if ($existingUser) sendResponse(false, null, 'Username already exists', 400);
+            
+            // Create user
+            $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+            executeQuery(
+                "INSERT INTO users (username, full_name, role, password_hash, is_active, created_at) VALUES (?, ?, ?, ?, 1, NOW())",
+                [$username, $fullName, $role, $passwordHash]
+            );
+            
+            sendResponse(true, ['id' => lastInsertId()], 'User created successfully');
             break;
         
         // ===== POSTS =====
@@ -385,8 +502,8 @@ try {
                 $params[] = $_GET['status'];
             }
             if (!empty($_GET['platform'])) {
-                $where[] = "p.platform = ?";
-                $params[] = $_GET['platform'];
+                $where[] = "p.platforms LIKE ?";
+                $params[] = '%"' . $_GET['platform'] . '"%';
             }
             if (!empty($_GET['my_posts']) && $_GET['my_posts'] === 'true') {
                 $where[] = "p.author_id = ?";
@@ -421,7 +538,7 @@ try {
             $endDate = date('Y-m-t', strtotime($startDate));
             
             $posts = fetchAll("
-                SELECT p.id, p.title, p.platform, p.status, p.scheduled_date, p.published_date, 
+                SELECT p.id, p.title, p.platforms, p.status, p.scheduled_date, p.published_date, 
                        u.username as author_name, u.full_name as author_full_name
                 FROM posts p
                 LEFT JOIN users u ON p.author_id = u.id
@@ -477,7 +594,9 @@ try {
                 $id = $_POST['id'] ?? null;
                 $title = trim($_POST['title'] ?? '');
                 $content = trim($_POST['content'] ?? '');
-                $platform = $_POST['platform'] ?? '';
+                // Handle platforms as array or string
+                $platforms = $_POST['platforms'] ?? $_POST['platform'] ?? [];
+                if (is_string($platforms)) $platforms = json_decode($platforms, true) ?: [$platforms];
                 $status = $_POST['status'] ?? 'DRAFT';
                 $urgency = !empty($_POST['urgency']);
                 $priority = $_POST['priority'] ?? 'normal';
@@ -488,16 +607,21 @@ try {
                 $id = $input['id'] ?? null;
                 $title = trim($input['title'] ?? '');
                 $content = trim($input['content'] ?? '');
-                $platform = $input['platform'] ?? '';
+                // Handle platforms as array or string
+                $platforms = $input['platforms'] ?? $input['platform'] ?? [];
+                if (is_string($platforms)) $platforms = [$platforms];
                 $status = $input['status'] ?? 'DRAFT';
                 $urgency = !empty($input['urgency']);
                 $priority = $input['priority'] ?? 'normal';
                 $scheduled_date = $input['scheduled_date'] ?? null;
             }
             
+            // Convert platforms array to JSON
+            $platformsJson = json_encode(array_values(array_filter($platforms)));
+            
             if (empty($title)) sendResponse(false, null, 'Title required', 400);
             if (empty($content)) sendResponse(false, null, 'Content required', 400);
-            if (empty($platform)) sendResponse(false, null, 'Platform required', 400);
+            if (empty($platforms)) sendResponse(false, null, 'At least one platform required', 400);
             
             // Staff can only create IDEA or DRAFT
             if ($user['role'] === 'staff' && !in_array($status, ['IDEA', 'DRAFT'])) {
@@ -521,23 +645,44 @@ try {
                 }
                 
                 executeQuery(
-                    "UPDATE posts SET title=?, content=?, platform=?, urgency=?, priority=?, scheduled_date=? WHERE id=?",
-                    [$title, $content, $platform, $urgency, $priority, $scheduled_date, $id]
+                    "UPDATE posts SET title=?, content=?, platforms=?, urgency=?, priority=?, scheduled_date=? WHERE id=?",
+                    [$title, $content, $platformsJson, $urgency, $priority, $scheduled_date, $id]
                 );
                 logActivity($id, $user['id'], 'updated', null, null, 'Content updated');
                 $postId = $id;
             } else {
                 executeQuery(
-                    "INSERT INTO posts (title, content, platform, status, urgency, priority, author_id, scheduled_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    [$title, $content, $platform, $status, $urgency, $priority, $user['id'], $scheduled_date]
+                    "INSERT INTO posts (title, content, platforms, status, urgency, priority, author_id, scheduled_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    [$title, $content, $platformsJson, $status, $urgency, $priority, $user['id'], $scheduled_date]
                 );
                 $postId = lastInsertId();
                 logActivity($postId, $user['id'], 'created', null, null, "Created as $status");
             }
             
-            // Handle file upload if present
-            if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-                $file = $_FILES['file'];
+            // Handle multiple file uploads (files[] array) or single file (legacy)
+            $uploadedFiles = [];
+            
+            // Check for files array (new multi-upload)
+            if (isset($_FILES['files']) && is_array($_FILES['files']['name'])) {
+                $fileCount = count($_FILES['files']['name']);
+                for ($i = 0; $i < $fileCount; $i++) {
+                    if ($_FILES['files']['error'][$i] === UPLOAD_ERR_OK) {
+                        $uploadedFiles[] = [
+                            'name' => $_FILES['files']['name'][$i],
+                            'tmp_name' => $_FILES['files']['tmp_name'][$i],
+                            'size' => $_FILES['files']['size'][$i],
+                            'type' => $_FILES['files']['type'][$i]
+                        ];
+                    }
+                }
+            }
+            // Legacy single file upload
+            elseif (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+                $uploadedFiles[] = $_FILES['file'];
+            }
+            
+            // Process all uploaded files
+            foreach ($uploadedFiles as $fileIndex => $file) {
                 $mime = mime_content_type($file['tmp_name']);
                 
                 if (in_array($mime, ALLOWED_TYPES) && $file['size'] <= MAX_FILE_SIZE) {
