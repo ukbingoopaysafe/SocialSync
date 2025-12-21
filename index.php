@@ -944,10 +944,16 @@ async function loadUser() {
         document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
         if (data.data.role === 'admin') document.getElementById('adminLink').classList.remove('hidden');
         
-        // Update company branding
+        // Update company branding (use white logo for dark sidebar)
         if (data.data.company_logo) {
-            document.getElementById('sidebarLogo').src = data.data.company_logo;
-            document.getElementById('sidebarLogoSmall').src = data.data.company_logo;
+            // Convert to white logo version for dark sidebar background
+            let sidebarLogo = data.data.company_logo;
+            // For BroMan, use white logo in sidebar
+            if (sidebarLogo.includes('Final_Logo.png')) {
+                sidebarLogo = sidebarLogo.replace('Final_Logo.png', 'Final_Logo White.png');
+            }
+            document.getElementById('sidebarLogo').src = sidebarLogo;
+            document.getElementById('sidebarLogoSmall').src = sidebarLogo;
         }
         if (data.data.company_name) {
             document.title = data.data.company_name + ' - Social Management';
