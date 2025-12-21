@@ -81,7 +81,7 @@ $pageTitle = 'User Management';
                     <thead class="bg-navy-900 text-white">
                         <tr>
                             <th class="text-left px-6 py-4 font-semibold">User</th>
-                            <th class="text-left px-6 py-4 font-semibold">Email</th>
+
                             <th class="text-left px-6 py-4 font-semibold">Role</th>
                             <th class="text-left px-6 py-4 font-semibold">Status</th>
                             <th class="text-left px-6 py-4 font-semibold">Last Login</th>
@@ -123,11 +123,7 @@ $pageTitle = 'User Management';
                                class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-gold-500">
                     </div>
                     
-                    <div class="col-span-2">
-                        <label class="block text-sm font-semibold mb-1">Email <span class="text-red-500">*</span></label>
-                        <input type="email" id="email" required 
-                               class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-gold-500">
-                    </div>
+
                     
                     <div class="col-span-2">
                         <label class="block text-sm font-semibold mb-1">
@@ -228,7 +224,6 @@ function renderUsers() {
     const search = document.getElementById('searchInput').value.toLowerCase();
     const filtered = users.filter(u => 
         u.username.toLowerCase().includes(search) ||
-        (u.email && u.email.toLowerCase().includes(search)) ||
         (u.full_name && u.full_name.toLowerCase().includes(search))
     );
     
@@ -255,7 +250,7 @@ function renderUsers() {
                     </div>
                 </div>
             </td>
-            <td class="px-6 py-4 text-slate-600">${escapeHtml(u.email)}</td>
+
             <td class="px-6 py-4">
                 <span class="px-3 py-1 rounded-full text-xs font-semibold ${u.role === 'admin' ? 'bg-gold-100 text-gold-700' : 'bg-blue-100 text-blue-700'}">
                     ${u.role.charAt(0).toUpperCase() + u.role.slice(1)}
@@ -313,7 +308,7 @@ async function editUser(id) {
     document.getElementById('userId').value = u.id;
     document.getElementById('username').value = u.username;
     document.getElementById('fullName').value = u.full_name || '';
-    document.getElementById('email').value = u.email;
+
     document.getElementById('password').value = '';
     document.getElementById('role').value = u.role;
     document.getElementById('isActive').checked = u.is_active == 1;
@@ -337,7 +332,7 @@ document.getElementById('userForm').addEventListener('submit', async (e) => {
         id: id || null,
         username: document.getElementById('username').value.trim(),
         full_name: document.getElementById('fullName').value.trim(),
-        email: document.getElementById('email').value.trim(),
+
         role: document.getElementById('role').value,
         is_active: document.getElementById('isActive').checked
     };

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 21, 2025 at 11:29 AM
+-- Generation Time: Dec 21, 2025 at 01:28 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -163,7 +163,6 @@ CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `email` varchar(100) NOT NULL,
   `full_name` varchar(100) DEFAULT NULL,
   `avatar_url` varchar(255) DEFAULT NULL,
   `role` enum('admin','staff') NOT NULL DEFAULT 'staff',
@@ -177,11 +176,11 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `password_hash`, `email`, `full_name`, `avatar_url`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 'admin', '$2y$10$Za0dwanLKlHDnLyKvPlnuugpdpfuSSyzh3IdCDfggkwEjg7LEXJpG', 'admin@broman.local', 'System Administrator', NULL, 'admin', 1, '2025-12-21 12:26:41', '2025-12-18 14:08:00', '2025-12-21 10:26:41'),
-(2, 'sara', '$2y$10$KnVJTnErch2HpZDBoOPvGO3gdR7C9vMITj.rsyGVBtXrrr7R6Taea', 'staff@broman.local', 'Sara Alaa', NULL, 'staff', 1, '2025-12-21 11:41:51', '2025-12-18 14:08:00', '2025-12-21 09:41:51'),
-(3, 'nada', '$2y$10$mFvhqCMWYmDPq0pMcwbyreRniMgsmfCAIMNtk99TXhYKbQkfVa3Ra', 'nada@broman.local', 'Nada Mohamed', NULL, 'staff', 1, '2025-12-21 11:48:47', '2025-12-18 16:29:57', '2025-12-21 09:48:47'),
-(4, 'mona', '$2y$10$V2ejU5hP7TYbkwVaMRuZNenDNVEhpGrQ2m.vNgpHFGTg3TK3r/jX2', '', 'Mona', NULL, 'staff', 1, '2025-12-21 11:33:06', '2025-12-20 20:28:25', '2025-12-21 09:33:06');
+INSERT INTO `users` (`id`, `username`, `password_hash`, `full_name`, `avatar_url`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
+(1, 'yassin', '$2y$10$cp2rKBKbcM3gyoO6hOObvuNakH8NRR7nKMlbyewuZW6ePiDbLly3O', 'M. Yassin', NULL, 'admin', 1, '2025-12-21 14:00:40', '2025-12-21 11:46:09', '2025-12-21 12:04:11'),
+(2, 'john', '$2y$10$lPDDQNwS5sJiUvZvEGDBV.HcZDgVUOCxFGV.lOHVmB8R8Z3T.RzPq', 'John', NULL, 'admin', 1, NULL, '2025-12-21 12:01:09', '2025-12-21 12:09:24'),
+(3, 'nada', '$2y$10$mFvhqCMWYmDPq0pMcwbyreRniMgsmfCAIMNtk99TXhYKbQkfVa3Ra', 'Nada Mohammed', NULL, 'staff', 1, '2025-12-21 11:48:47', '2025-12-18 16:29:57', '2025-12-21 12:09:24'),
+(4, 'sara', '$2y$10$KnVJTnErch2HpZDBoOPvGO3gdR7C9vMITj.rsyGVBtXrrr7R6Taea', 'Sara Alaa', NULL, 'staff', 1, '2025-12-21 11:41:51', '2025-12-18 14:08:00', '2025-12-21 12:08:51');
 
 --
 -- Indexes for dumped tables
@@ -254,7 +253,6 @@ ALTER TABLE `sessions`
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `username` (`username`),
-  ADD UNIQUE KEY `email` (`email`),
   ADD KEY `idx_username` (`username`),
   ADD KEY `idx_role` (`role`);
 
@@ -266,13 +264,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_log`
 --
 ALTER TABLE `activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=122;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `companies`
@@ -284,19 +282,19 @@ ALTER TABLE `companies`
 -- AUTO_INCREMENT for table `media_files`
 --
 ALTER TABLE `media_files`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `sessions`
@@ -308,7 +306,7 @@ ALTER TABLE `sessions`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables

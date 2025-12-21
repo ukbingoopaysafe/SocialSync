@@ -78,21 +78,21 @@ require_once 'db.php';
 
 // Create Creator Account
 $username1 = 'creator1';
-$email1 = 'creator@yourdomain.com';
+
 $password1 = 'your_secure_password_here';  // Change this!
 $hash1 = password_hash($password1, PASSWORD_DEFAULT);
 
-$sql = "INSERT INTO users (username, email, role, password_hash) VALUES (?, ?, 'creator', ?)";
-executeQuery($sql, [$username1, $email1, $hash1]);
+$sql = "INSERT INTO users (username, role, password_hash) VALUES (?, 'creator', ?)";
+executeQuery($sql, [$username1, $hash1]);
 
 // Create Approver Account
 $username2 = 'approver1';
-$email2 = 'approver@yourdomain.com';
+
 $password2 = 'your_secure_password_here';  // Change this!
 $hash2 = password_hash($password2, PASSWORD_DEFAULT);
 
-$sql = "INSERT INTO users (username, email, role, password_hash) VALUES (?, ?, 'approver', ?)";
-executeQuery($sql, [$username2, $email2, $hash2]);
+$sql = "INSERT INTO users (username, role, password_hash) VALUES (?, 'approver', ?)";
+executeQuery($sql, [$username2, $hash2]);
 
 echo "Users created successfully!";
 ?>

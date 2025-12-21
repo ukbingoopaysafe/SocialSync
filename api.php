@@ -37,7 +37,7 @@ function isAuthenticated() {
 
 function getCurrentUser() {
     if (!isAuthenticated()) return null;
-    return fetchOne("SELECT id, username, email, full_name, role, avatar_url FROM users WHERE id = ?", [$_SESSION['user_id']]);
+    return fetchOne("SELECT id, username, full_name, role, avatar_url FROM users WHERE id = ?", [$_SESSION['user_id']]);
 }
 
 function requireAuth() {
@@ -427,10 +427,11 @@ try {
         
         // ===== USERS MANAGEMENT =====
         
+        case 'get_users':
         case 'fetch_users':
             requireAdmin();
             $users = fetchAll(
-                "SELECT id, username, email, full_name, role, is_active, created_at, 
+                "SELECT id, username, full_name, role, is_active, created_at, 
                         (SELECT COUNT(*) FROM posts WHERE author_id = users.id) as post_count
                  FROM users 
                  ORDER BY created_at DESC"
@@ -497,6 +498,8 @@ try {
         
         case 'create_user':
             requireAdmin();
+        case 'create_user':
+            requireAdmin();
             $input = json_decode(file_get_contents('php://input'), true);
             $username = trim($input['username'] ?? '');
             $fullName = trim($input['full_name'] ?? '');
@@ -520,6 +523,64 @@ try {
             );
             
             sendResponse(true, ['id' => lastInsertId()], 'User created successfully');
+            break;
+        
+        case 'get_user_by_id':
+            requireAdmin();
+            $id = $_GET['id'] ?? 0;
+            if (!$id) sendResponse(false, null, 'User ID required', 400);
+            
+            $user = fetchOne(
+                "SELECT id, username, full_name, role, is_active, created_at, last_login 
+                 FROM users WHERE id = ?", [$id]
+            );
+            if (!$user) sendResponse(false, null, 'User not found', 404);
+            sendResponse(true, $user);
+            break;
+        
+        case 'save_user':
+            requireAdmin();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $id = $input['id'] ?? null;
+            $username = trim($input['username'] ?? '');
+            $fullName = trim($input['full_name'] ?? '');
+            $role = $input['role'] ?? 'staff';
+            $password = $input['password'] ?? '';
+            $isActive = isset($input['is_active']) ? (bool)$input['is_active'] : true;
+            
+            if (empty($username)) sendResponse(false, null, 'Username is required', 400);
+            if (!in_array($role, ['admin', 'staff'])) $role = 'staff';
+            
+            if ($id) {
+                // Update existing user
+                $existingUser = fetchOne("SELECT id FROM users WHERE id = ?", [$id]);
+                if (!$existingUser) sendResponse(false, null, 'User not found', 404);
+                
+                // Check for duplicate username
+                $dup = fetchOne("SELECT id FROM users WHERE username = ? AND id != ?", [$username, $id]);
+                if ($dup) sendResponse(false, null, 'Username already exists', 400);
+                
+                if (!empty($password)) {
+                    $hash = password_hash($password, PASSWORD_DEFAULT);
+                    executeQuery("UPDATE users SET username=?, full_name=?, role=?, password_hash=?, is_active=? WHERE id=?",
+                        [$username, $fullName, $role, $hash, $isActive, $id]);
+                } else {
+                    executeQuery("UPDATE users SET username=?, full_name=?, role=?, is_active=? WHERE id=?",
+                        [$username, $fullName, $role, $isActive, $id]);
+                }
+                sendResponse(true, ['id' => $id], 'User updated successfully');
+            } else {
+                // Create new user
+                if (empty($password)) sendResponse(false, null, 'Password is required for new users', 400);
+                
+                $dup = fetchOne("SELECT id FROM users WHERE username = ?", [$username]);
+                if ($dup) sendResponse(false, null, 'Username already exists', 400);
+                
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                executeQuery("INSERT INTO users (username, full_name, role, password_hash, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, NOW())",
+                    [$username, $fullName, $role, $hash, $isActive]);
+                sendResponse(true, ['id' => lastInsertId()], 'User created successfully', 201);
+            }
             break;
         
         // ===== POSTS =====
