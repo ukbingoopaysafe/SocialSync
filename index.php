@@ -107,8 +107,9 @@ if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
         <aside id="sidebar" class="w-16 hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col fixed h-full z-50 group">
             <!-- Logo -->
             <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-4">
-                <img src="images/Final_Logo White.png" alt="BroMan" class="h-8 hidden group-hover:block">
-                <img src="images/Final_Logo White.png" alt="BroMan" class="h-7 group-hover:hidden">
+                <!-- Dynamic Company Logo -->
+                <img id="sidebarLogo" src="images/Final_Logo White.png" alt="Company" class="h-8 hidden group-hover:block">
+                <img id="sidebarLogoSmall" src="images/Final_Logo White.png" alt="Company" class="h-7 group-hover:hidden">
             </div>
             
             <!-- Navigation -->
@@ -934,6 +935,15 @@ async function loadUser() {
         document.getElementById('userRole').textContent = data.data.role;
         document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
         if (data.data.role === 'admin') document.getElementById('adminLink').classList.remove('hidden');
+        
+        // Update company branding
+        if (data.data.company_logo) {
+            document.getElementById('sidebarLogo').src = data.data.company_logo;
+            document.getElementById('sidebarLogoSmall').src = data.data.company_logo;
+        }
+        if (data.data.company_name) {
+            document.title = data.data.company_name + ' - Social Management';
+        }
     } else {
         location.href = 'login.php';
     }

@@ -76,6 +76,7 @@ try {
             $input = json_decode(file_get_contents('php://input'), true);
             $username = trim($input['username'] ?? '');
             $password = $input['password'] ?? '';
+            $companyId = (int)($input['company_id'] ?? 1); // Default to BroMan
             
             if (empty($username) || empty($password)) sendResponse(false, null, 'Username and password required', 400);
             
@@ -85,13 +86,24 @@ try {
                 sendResponse(false, null, 'Invalid credentials', 401);
             }
             
+            // Validate company exists
+            $company = fetchOne("SELECT * FROM companies WHERE id = ?", [$companyId]);
+            if (!$company) {
+                $companyId = 1; // Fallback to default
+                $company = fetchOne("SELECT * FROM companies WHERE id = 1");
+            }
+            
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
+            $_SESSION['company_id'] = $companyId;
+            $_SESSION['company_name'] = $company['name'] ?? 'BroMan';
+            $_SESSION['company_logo'] = $company['logo_url'] ?? 'images/Final_Logo White.png';
             
             executeQuery("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
             
             unset($user['password_hash']);
+            $user['company'] = $company;
             sendResponse(true, $user, 'Login successful');
             break;
         
@@ -102,7 +114,32 @@ try {
         
         case 'get_user':
             requireAuth();
-            sendResponse(true, getCurrentUser());
+            $user = getCurrentUser();
+            // Add company info
+            $user['company_id'] = $_SESSION['company_id'] ?? 1;
+            $user['company_name'] = $_SESSION['company_name'] ?? 'BroMan';
+            $user['company_logo'] = $_SESSION['company_logo'] ?? 'images/Final_Logo White.png';
+            sendResponse(true, $user);
+            break;
+        
+        case 'get_companies':
+            // Public endpoint - no auth required for login page
+            $companies = fetchAll("SELECT id, name, slug, logo_url, primary_color FROM companies ORDER BY id");
+            if (empty($companies)) {
+                // Fallback if table doesn't exist yet - use colored logos for visibility
+                $companies = [
+                    ['id' => 1, 'name' => 'BroMan', 'slug' => 'broman', 'logo_url' => 'images/Final_Logo.png', 'primary_color' => '#1e3a5f'],
+                    ['id' => 2, 'name' => 'Cible', 'slug' => 'cible', 'logo_url' => 'images/Logo_Cible.png', 'primary_color' => '#2563eb']
+                ];
+            }
+            sendResponse(true, $companies);
+            break;
+        
+        case 'get_current_company':
+            requireAuth();
+            $companyId = $_SESSION['company_id'] ?? 1;
+            $company = fetchOne("SELECT * FROM companies WHERE id = ?", [$companyId]);
+            sendResponse(true, $company);
             break;
         
         // ===== DASHBOARD =====
@@ -118,29 +155,32 @@ try {
             
             $analytics = [];
             
-            // === OVERVIEW KPIs WITH TRENDS ===
-            $currentPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'PUBLISHED' AND published_date >= ?", [$dateFrom])['c'];
-            $prevPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'PUBLISHED' AND published_date >= ? AND published_date < ?", [$datePrev, $dateFrom])['c'];
+            // Get current company for data isolation
+            $companyId = $_SESSION['company_id'] ?? 1;
             
-            $currentCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE created_at >= ?", [$dateFrom])['c'];
-            $prevCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE created_at >= ? AND created_at < ?", [$datePrev, $dateFrom])['c'];
+            // === OVERVIEW KPIs WITH TRENDS (filtered by company) ===
+            $currentPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PUBLISHED' AND published_date >= ?", [$companyId, $dateFrom])['c'];
+            $prevPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PUBLISHED' AND published_date >= ? AND published_date < ?", [$companyId, $datePrev, $dateFrom])['c'];
             
-            $submitted = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'PENDING_REVIEW' AND created_at >= ?", [$dateFrom])['c'];
-            $approved = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'APPROVED' AND created_at >= ?", [$dateFrom])['c'];
+            $currentCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND created_at >= ?", [$companyId, $dateFrom])['c'];
+            $prevCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND created_at >= ? AND created_at < ?", [$companyId, $datePrev, $dateFrom])['c'];
+            
+            $submitted = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'PENDING_REVIEW' AND a.created_at >= ?", [$companyId, $dateFrom])['c'];
+            $approved = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'APPROVED' AND a.created_at >= ?", [$companyId, $dateFrom])['c'];
             $approvalRate = $submitted > 0 ? round(($approved / $submitted) * 100) : 0;
             
-            $prevSubmitted = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'PENDING_REVIEW' AND created_at >= ? AND created_at < ?", [$datePrev, $dateFrom])['c'];
-            $prevApproved = (int)fetchOne("SELECT COUNT(DISTINCT post_id) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'APPROVED' AND created_at >= ? AND created_at < ?", [$datePrev, $dateFrom])['c'];
+            $prevSubmitted = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'PENDING_REVIEW' AND a.created_at >= ? AND a.created_at < ?", [$companyId, $datePrev, $dateFrom])['c'];
+            $prevApproved = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'APPROVED' AND a.created_at >= ? AND a.created_at < ?", [$companyId, $datePrev, $dateFrom])['c'];
             $prevApprovalRate = $prevSubmitted > 0 ? round(($prevApproved / $prevSubmitted) * 100) : 0;
             
             $analytics['overview'] = [
-                'total_posts' => (int)fetchOne("SELECT COUNT(*) as c FROM posts")['c'],
+                'total_posts' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ?", [$companyId])['c'],
                 'published_period' => $currentPublished,
                 'published_trend' => $prevPublished > 0 ? round((($currentPublished - $prevPublished) / $prevPublished) * 100) : ($currentPublished > 0 ? 100 : 0),
                 'created_period' => $currentCreated,
                 'created_trend' => $prevCreated > 0 ? round((($currentCreated - $prevCreated) / $prevCreated) * 100) : ($currentCreated > 0 ? 100 : 0),
-                'scheduled_upcoming' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'SCHEDULED' AND scheduled_date > NOW()")['c'],
-                'pending_review' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'PENDING_REVIEW'")['c'],
+                'scheduled_upcoming' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'SCHEDULED' AND scheduled_date > NOW()", [$companyId])['c'],
+                'pending_review' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PENDING_REVIEW'", [$companyId])['c'],
                 'approval_rate' => $approvalRate,
                 'approval_trend' => $approvalRate - $prevApprovalRate,
             ];
@@ -177,27 +217,29 @@ try {
             }
             $analytics['bottlenecks'] = $bottlenecks;
             
-            // === POSTS BY STATUS (Funnel) ===
+            // === POSTS BY STATUS (Funnel) - filtered by company ===
             $analytics['by_status'] = [];
             $statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
             foreach ($statuses as $status) {
-                $analytics['by_status'][$status] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = ?", [$status])['c'];
+                $analytics['by_status'][$status] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = ?", [$companyId, $status])['c'];
             }
-            $analytics['by_status']['CHANGES_REQUESTED'] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE status = 'CHANGES_REQUESTED'")['c'];
+            $analytics['by_status']['CHANGES_REQUESTED'] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'CHANGES_REQUESTED'", [$companyId])['c'];
             
             // === POSTS BY PLATFORM (disabled - multi-platform now) ===
             $analytics['by_platform'] = []; // Multi-platform support - grouping by platform no longer applicable
             
-            // === TIME-BASED INSIGHTS ===
+            // === TIME-BASED INSIGHTS - filtered by company ===
             $bestDay = fetchOne(
                 "SELECT DAYNAME(created_at) as day, COUNT(*) as count 
-                 FROM posts WHERE status = 'PUBLISHED' 
-                 GROUP BY DAYOFWEEK(created_at) ORDER BY count DESC LIMIT 1"
+                 FROM posts WHERE company_id = ? AND status = 'PUBLISHED' 
+                 GROUP BY DAYOFWEEK(created_at) ORDER BY count DESC LIMIT 1",
+                [$companyId]
             );
             $bestHour = fetchOne(
                 "SELECT HOUR(created_at) as hour, COUNT(*) as count 
-                 FROM posts WHERE status = 'PUBLISHED' 
-                 GROUP BY HOUR(created_at) ORDER BY count DESC LIMIT 1"
+                 FROM posts WHERE company_id = ? AND status = 'PUBLISHED' 
+                 GROUP BY HOUR(created_at) ORDER BY count DESC LIMIT 1",
+                [$companyId]
             );
             $analytics['time_insights'] = [
                 'best_day' => $bestDay['day'] ?? 'N/A',
@@ -206,7 +248,7 @@ try {
                 'best_hour_count' => (int)($bestHour['count'] ?? 0),
             ];
             
-            // === USER PERFORMANCE WITH SCORES (DETAILED) ===
+            // === USER PERFORMANCE WITH SCORES (filtered by company) ===
             $userQuery = $isAdmin 
                 ? "SELECT u.id, u.username, u.full_name, u.role,
                       COUNT(DISTINCT p.id) as total_posts,
@@ -214,22 +256,22 @@ try {
                       SUM(CASE WHEN p.status = 'SCHEDULED' THEN 1 ELSE 0 END) as scheduled,
                       SUM(CASE WHEN p.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending,
                       SUM(CASE WHEN p.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') THEN 1 ELSE 0 END) as approved,
-                      (SELECT COUNT(*) FROM activity_log al WHERE al.user_id = u.id AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.created_at >= ?) as posts_this_period,
-                      (SELECT MAX(created_at) FROM activity_log al2 WHERE al2.user_id = u.id) as last_activity
-                   FROM users u LEFT JOIN posts p ON p.author_id = u.id WHERE u.is_active = 1 GROUP BY u.id ORDER BY total_posts DESC"
+                      (SELECT COUNT(*) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.created_at >= ?) as posts_this_period,
+                      (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p4 ON al2.post_id = p4.id WHERE al2.user_id = u.id AND p4.company_id = ?) as last_activity
+                   FROM users u LEFT JOIN posts p ON p.author_id = u.id AND p.company_id = ? WHERE u.is_active = 1 GROUP BY u.id ORDER BY total_posts DESC"
                 : "SELECT u.id, u.username, u.full_name, u.role,
                       COUNT(DISTINCT p.id) as total_posts,
                       SUM(CASE WHEN p.status = 'PUBLISHED' THEN 1 ELSE 0 END) as published,
                       SUM(CASE WHEN p.status = 'SCHEDULED' THEN 1 ELSE 0 END) as scheduled,
                       SUM(CASE WHEN p.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending,
                       SUM(CASE WHEN p.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') THEN 1 ELSE 0 END) as approved,
-                      (SELECT COUNT(*) FROM activity_log al WHERE al.user_id = u.id AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.created_at >= ?) as posts_this_period,
-                      (SELECT MAX(created_at) FROM activity_log al2 WHERE al2.user_id = u.id) as last_activity
-                   FROM users u LEFT JOIN posts p ON p.author_id = u.id WHERE u.id = ? GROUP BY u.id";
+                      (SELECT COUNT(*) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.created_at >= ?) as posts_this_period,
+                      (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p4 ON al2.post_id = p4.id WHERE al2.user_id = u.id AND p4.company_id = ?) as last_activity
+                   FROM users u LEFT JOIN posts p ON p.author_id = u.id AND p.company_id = ? WHERE u.id = ? GROUP BY u.id";
             
-            $userParams = $isAdmin ? [$dateFrom] : [$dateFrom, $user['id']];
+            $userParams = $isAdmin ? [$companyId, $companyId, $dateFrom, $companyId, $companyId] : [$companyId, $companyId, $dateFrom, $companyId, $companyId, $user['id']];
             $users = fetchAll($userQuery, $userParams);
             
             // Calculate productivity score for each user
@@ -304,35 +346,39 @@ try {
             
             $analytics['recommendations'] = $recommendations;
             
-            // === WEEKLY TRENDS ===
+            // === WEEKLY TRENDS - filtered by company ===
             $analytics['weekly_trends'] = fetchAll(
                 "SELECT YEARWEEK(created_at, 1) as week, DATE_FORMAT(MIN(created_at), '%b %d') as week_start,
                     COUNT(*) as created, SUM(CASE WHEN status = 'PUBLISHED' THEN 1 ELSE 0 END) as published
-                 FROM posts WHERE created_at >= DATE_SUB(NOW(), INTERVAL 8 WEEK)
-                 GROUP BY YEARWEEK(created_at, 1) ORDER BY week"
+                 FROM posts WHERE company_id = ? AND created_at >= DATE_SUB(NOW(), INTERVAL 8 WEEK)
+                 GROUP BY YEARWEEK(created_at, 1) ORDER BY week",
+                [$companyId]
             );
             
-            // === REVISION ANALYTICS ===
+            // === REVISION ANALYTICS - filtered by company ===
             $analytics['revision_stats'] = [
-                'total_revisions' => (int)fetchOne("SELECT COUNT(*) as c FROM activity_log WHERE action = 'status_changed' AND new_value = 'CHANGES_REQUESTED' AND created_at >= ?", [$dateFrom])['c'],
+                'total_revisions' => (int)fetchOne("SELECT COUNT(*) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'CHANGES_REQUESTED' AND a.created_at >= ?", [$companyId, $dateFrom])['c'],
                 'by_platform' => [], // Disabled after migration to multi-platform
             ];
             
-            // === RECENT ACTIVITY - ENHANCED ===
+            // === RECENT ACTIVITY - filtered by company ===
             $analytics['recent_activity'] = fetchAll(
                 "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platforms, p.id as post_id
                  FROM activity_log al 
                  JOIN users u ON al.user_id = u.id 
                  JOIN posts p ON al.post_id = p.id 
-                 ORDER BY al.created_at DESC LIMIT 25"
+                 WHERE p.company_id = ?
+                 ORDER BY al.created_at DESC LIMIT 25",
+                [$companyId]
             );
             
-            // === UPCOMING SCHEDULED ===
+            // === UPCOMING SCHEDULED - filtered by company ===
             $analytics['upcoming_scheduled'] = fetchAll(
                 "SELECT p.id, p.title, p.platforms, p.scheduled_date, u.username as author
                  FROM posts p JOIN users u ON p.author_id = u.id
-                 WHERE p.status = 'SCHEDULED' AND p.scheduled_date > NOW()
-                 ORDER BY p.scheduled_date ASC LIMIT 5"
+                 WHERE p.company_id = ? AND p.status = 'SCHEDULED' AND p.scheduled_date > NOW()
+                 ORDER BY p.scheduled_date ASC LIMIT 5",
+                [$companyId]
             );
             
             // === CONTENT HEALTH SCORE ===
@@ -358,6 +404,7 @@ try {
             requireAuth();
             $year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
             $month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
+            $companyId = $_SESSION['company_id'] ?? 1;
             
             $startDate = sprintf('%04d-%02d-01', $year, $month);
             $endDate = date('Y-m-t', strtotime($startDate));
@@ -365,13 +412,14 @@ try {
             $posts = fetchAll(
                 "SELECT id, title, status, platforms, scheduled_date, published_date 
                  FROM posts 
-                 WHERE (status IN ('SCHEDULED', 'PUBLISHED'))
+                 WHERE company_id = ?
+                 AND (status IN ('SCHEDULED', 'PUBLISHED'))
                  AND (
                      (scheduled_date BETWEEN ? AND ?)
                      OR (published_date BETWEEN ? AND ?)
                  )
                  ORDER BY COALESCE(scheduled_date, published_date) ASC",
-                [$startDate, $endDate . ' 23:59:59', $startDate, $endDate . ' 23:59:59']
+                [$companyId, $startDate, $endDate . ' 23:59:59', $startDate, $endDate . ' 23:59:59']
             );
             
             sendResponse(true, $posts);
@@ -497,6 +545,11 @@ try {
             $where = [];
             $params = [];
             
+            // CRITICAL: Filter by current company for data isolation
+            $companyId = $_SESSION['company_id'] ?? 1;
+            $where[] = "p.company_id = ?";
+            $params[] = $companyId;
+            
             if (!empty($_GET['status'])) {
                 $where[] = "p.status = ?";
                 $params[] = $_GET['status'];
@@ -537,15 +590,18 @@ try {
             $startDate = "$year-$month-01";
             $endDate = date('Y-m-t', strtotime($startDate));
             
+            $companyId = $_SESSION['company_id'] ?? 1;
+            
             $posts = fetchAll("
                 SELECT p.id, p.title, p.platforms, p.status, p.scheduled_date, p.published_date, 
                        u.username as author_name, u.full_name as author_full_name
                 FROM posts p
                 LEFT JOIN users u ON p.author_id = u.id
-                WHERE (p.scheduled_date BETWEEN ? AND ?) 
-                   OR (p.published_date BETWEEN ? AND ?)
+                WHERE p.company_id = ?
+                  AND ((p.scheduled_date BETWEEN ? AND ?) 
+                   OR (p.published_date BETWEEN ? AND ?))
                 ORDER BY COALESCE(p.scheduled_date, p.published_date) ASC
-            ", [$startDate, $endDate, $startDate, $endDate]);
+            ", [$companyId, $startDate, $endDate, $startDate, $endDate]);
             
             sendResponse(true, [
                 'posts' => $posts,
@@ -651,9 +707,12 @@ try {
                 logActivity($id, $user['id'], 'updated', null, null, 'Content updated');
                 $postId = $id;
             } else {
+                // Get current company from session
+                $companyId = $_SESSION['company_id'] ?? 1;
+                
                 executeQuery(
-                    "INSERT INTO posts (title, content, platforms, status, urgency, priority, author_id, scheduled_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    [$title, $content, $platformsJson, $status, $urgency, $priority, $user['id'], $scheduled_date]
+                    "INSERT INTO posts (company_id, title, content, platforms, status, urgency, priority, author_id, scheduled_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [$companyId, $title, $content, $platformsJson, $status, $urgency, $priority, $user['id'], $scheduled_date]
                 );
                 $postId = lastInsertId();
                 logActivity($postId, $user['id'], 'created', null, null, "Created as $status");
@@ -935,14 +994,17 @@ try {
         case 'get_notifications':
             requireAuth();
             $user = getCurrentUser();
+            $companyId = $_SESSION['company_id'] ?? 1;
             
+            // Filter notifications to only show those for posts in current company
             $notifs = fetchAll(
                 "SELECT n.*, p.title as post_title FROM notifications n 
                  LEFT JOIN posts p ON n.post_id = p.id 
-                 WHERE n.user_id = ? ORDER BY n.created_at DESC LIMIT 30",
-                [$user['id']]
+                 WHERE n.user_id = ? AND (p.company_id = ? OR p.id IS NULL) 
+                 ORDER BY n.created_at DESC LIMIT 30",
+                [$user['id'], $companyId]
             );
-            $unread = fetchOne("SELECT COUNT(*) as c FROM notifications WHERE user_id = ? AND is_read = 0", [$user['id']])['c'];
+            $unread = fetchOne("SELECT COUNT(*) as c FROM notifications n LEFT JOIN posts p ON n.post_id = p.id WHERE n.user_id = ? AND n.is_read = 0 AND (p.company_id = ? OR p.id IS NULL)", [$user['id'], $companyId])['c'];
             
             sendResponse(true, ['notifications' => $notifs, 'unread_count' => $unread]);
             break;
