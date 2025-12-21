@@ -109,10 +109,10 @@ $csrfToken = generateCSRFToken();
         <!-- Dark Sidebar -->
         <aside id="sidebar" class="w-16 hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col fixed h-full z-50 group">
             <!-- Logo -->
-            <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-4">
+            <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-2 overflow-hidden">
                 <!-- Dynamic Company Logo -->
-                <img id="sidebarLogo" src="images/Final_Logo White.png" alt="Company" class="h-8 hidden group-hover:block">
-                <img id="sidebarLogoSmall" src="images/Final_Logo White.png" alt="Company" class="h-7 group-hover:hidden">
+                <img id="sidebarLogo" src="images/Final_Logo White.png" alt="Company" class="h-8 max-w-full object-contain hidden group-hover:block">
+                <img id="sidebarLogoSmall" src="images/Final_Logo White.png" alt="Company" class="w-10 h-10 object-contain group-hover:hidden" style="image-rendering: -webkit-optimize-contrast;">
             </div>
             
             <!-- Navigation -->
