@@ -102,6 +102,13 @@ $csrfToken = generateCSRFToken();
     </style>
 </head>
 <body class="bg-slate-100 text-slate-700">
+    <!-- Initial Loading Spinner -->
+    <div id="appLoader" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 transition-opacity duration-300">
+        <div class="flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-brand-200 border-t-brand-500 rounded-full animate-spin mb-4"></div>
+            <div class="text-slate-500 font-medium animate-pulse">Loading BroMan Social...</div>
+        </div>
+    </div>
     
     <!-- New Layout: Sidebar + Main -->
     <div class="flex min-h-screen">
@@ -862,7 +869,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
 <script>
-const app = { user: null, posts: [], currentPost: null };
+const app = { user: null, posts: [], currentPost: null, lastUnreadCount: 0, notificationsInitialized: false };
 const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
 const STATUS_COLORS = {
     'IDEA': 'bg-violet-100 text-violet-700',
@@ -899,19 +906,50 @@ function isVideoFile(path) {
 }
 
 async function init() {
-    await loadUser();
-    await loadPosts();
-    loadNotifications();
+    try {
+        // Ensure loader is visible (though it is by default in HTML)
+        const loader = document.getElementById('appLoader');
+        if (loader) loader.classList.remove('hidden');
+
+        await loadUser();
+        // Parallelize these for faster loading
+        await Promise.all([loadPosts(), loadNotifications()]);
     
-    // Get tab from URL hash or default to 'board'
-    const validTabs = ['dashboard', 'board', 'calendar', 'users'];
-    let initialTab = window.location.hash.replace('#', '');
-    if (!validTabs.includes(initialTab)) initialTab = 'board';
-    
-    // Check if non-admin trying to access users tab
-    if (initialTab === 'users' && app.user?.role !== 'admin') initialTab = 'board';
-    
-    switchTab(initialTab);
+        // Get tab from URL hash or default to 'board'
+        const validTabs = ['dashboard', 'board', 'calendar', 'users'];
+        let initialTab = window.location.hash.replace('#', '');
+        if (!validTabs.includes(initialTab)) initialTab = 'board';
+        
+        // Check if non-admin trying to access users tab
+        if (initialTab === 'users' && app.user?.role !== 'admin') initialTab = 'board';
+        
+        switchTab(initialTab);
+
+        // Start polling: Notifications (5s), Posts (10s)
+        setInterval(loadNotifications, 5000);
+        setInterval(() => loadPosts(true), 10000);
+        
+        // Initialize audio context on first user interaction
+        const unlockAudio = () => {
+            initAudio();
+            // Remove listeners once activated
+            document.removeEventListener('click', unlockAudio);
+            document.removeEventListener('keydown', unlockAudio);
+        };
+        document.addEventListener('click', unlockAudio);
+        document.addEventListener('keydown', unlockAudio);
+
+    } catch (error) {
+        console.error("Initialization failed:", error);
+        toast('Failed to load application data', 'error');
+    } finally {
+        // Fade out loader
+        const loader = document.getElementById('appLoader');
+        if (loader) {
+            loader.classList.add('opacity-0');
+            setTimeout(() => loader.classList.add('hidden'), 300);
+        }
+    }
 }
 
 // Handle browser back/forward buttons
@@ -931,7 +969,14 @@ async function api(action, method = 'GET', body = null) {
         if (csrfToken) opts.headers['X-CSRF-TOKEN'] = csrfToken;
     }
     if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
-    const res = await fetch(`api.php?action=${action}`, opts);
+    
+    // Prevent caching for GET requests
+    let url = `api.php?action=${action}`;
+    if (method === 'GET') {
+        url += `&_t=${Date.now()}`;
+    }
+
+    const res = await fetch(url, opts);
     return res.json();
 }
 
@@ -1312,7 +1357,7 @@ async function loadDashboard() {
     }
 }
 
-async function loadPosts() {
+async function loadPosts(checkChanges = false) {
     let url = 'fetch_posts';
     const params = [];
     const platform = document.getElementById('platformFilter')?.value;
@@ -1323,8 +1368,18 @@ async function loadPosts() {
     if (search) params.push(`search=${encodeURIComponent(search)}`);
     if (params.length) url += '&' + params.join('&');
     
+    // Preserve scroll position if checking changes
+    const scrollPos = window.scrollY;
+
     const data = await api(url);
-    if (data.success) { app.posts = data.data; renderBoard(); }
+    if (data.success) { 
+        // Always render to ensure fresh data
+        app.posts = data.data; 
+        renderBoard(); 
+        
+        // Restore scroll if it was a background update
+        if (checkChanges) window.scrollTo(0, scrollPos);
+    }
 }
 
 // Current status filter for board tabs
@@ -2105,17 +2160,31 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
 
 // ==================== NOTIFICATIONS ====================
 async function loadNotifications() {
-    const data = await api('get_notifications');
-    if (data.success) {
-        const badge = document.getElementById('notifBadge');
-        if (data.data.unread_count > 0) { 
-            badge.textContent = data.data.unread_count; 
-            badge.classList.remove('hidden'); 
-        } else {
-            badge.classList.add('hidden');
-        }
+    try {
+        const data = await api('get_notifications');
+        if (data.success) {
+            const badge = document.getElementById('notifBadge');
+            const newCount = data.data.unread_count || 0;
+
+            // Play sound if new notifications arrived (and system is initialized)
+            if (app.notificationsInitialized && newCount > app.lastUnreadCount) {
+                playNotificationSound();
+                toast('New notification received', 'info');
+            }
+
+            // Update state
+            app.lastUnreadCount = newCount;
+            app.notificationsInitialized = true;
+
+            if (newCount > 0) { 
+                badge.textContent = newCount; 
+                badge.classList.remove('hidden'); 
+            } else {
+                badge.classList.add('hidden');
+            }
         
-        document.getElementById('notifList').innerHTML = data.data.notifications.slice(0, 10).map(n => `
+        const notifList = document.getElementById('notifList');
+        const notifHtml = data.data.notifications.slice(0, 10).map(n => `
             <div class="p-3 border-b border-slate-100 cursor-pointer transition-colors ${n.is_read ? 'bg-white hover:bg-slate-50' : 'bg-blue-50 hover:bg-blue-100 border-l-4 border-l-brand-500'}" onclick="notifClick(${n.id}, ${n.post_id})">
                 <div class="flex items-start gap-2">
                     ${!n.is_read ? '<span class="w-2 h-2 bg-brand-500 rounded-full mt-1.5 flex-shrink-0"></span>' : ''}
@@ -2127,6 +2196,11 @@ async function loadNotifications() {
                 </div>
             </div>
         `).join('') || '<p class="p-4 text-slate-400 text-center">No notifications</p>';
+        
+        notifList.innerHTML = notifHtml;
+    }
+    } catch (e) {
+        console.error('Notification load failed', e);
     }
 }
 
@@ -2434,7 +2508,56 @@ document.addEventListener('click', e => {
     if (!e.target.closest('.relative')) document.getElementById('notifDropdown').classList.add('hidden'); 
 });
 
-init();
+// ==================== AUDIO / NOTIFICATIONS ====================
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
+function playNotificationSound(force = false) {
+    if (!audioCtx) initAudio();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    
+    if (!audioCtx) {
+        if (force) alert("Audio is disabled. interact with the page first.");
+        return;
+    }
+
+    try {
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        // Pleasant "Glass/Bell" Chime
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(784, audioCtx.currentTime); // G5
+        oscillator.frequency.exponentialRampToValueAtTime(1174, audioCtx.currentTime + 0.1); // D6 (Upward soft chime)
+
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // Start quiet
+        gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.05); // Attack
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2); // Long elegant decay
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 1.2);
+    } catch (e) {
+        console.warn("Audio playback failed", e);
+    }
+}
+
+// Safely start init
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 </script>
             </main>
         </div>
