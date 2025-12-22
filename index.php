@@ -578,7 +578,7 @@ $csrfToken = generateCSRFToken();
                             <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
                             <div class="text-left">
                                 <p class="text-slate-600 text-sm font-medium">Click to add media</p>
-                                <p class="text-slate-400 text-xs">Max 10MB each • JPG, PNG, GIF, MP4</p>
+                                <p class="text-slate-400 text-xs">Max 100MB each • JPG, PNG, GIF, MP4</p>
                             </div>
                         </div>
                     </div>
@@ -1505,8 +1505,8 @@ function closeCreateModal() {
 function previewCreateFiles(e) {
     const files = Array.from(e.target.files);
     files.forEach(file => {
-        if (file.size > 10 * 1024 * 1024) {
-            toast(`File ${file.name} exceeds 10MB limit`, 'error');
+        if (file.size > 100 * 1024 * 1024) {
+            toast(`File ${file.name} exceeds 100MB limit`, 'error');
             return;
         }
         createMediaFiles.push(file);

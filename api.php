@@ -64,7 +64,7 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
 // Upload config
 define('UPLOAD_DIR', __DIR__ . '/uploads/');
 define('ALLOWED_TYPES', ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm']);
-define('MAX_FILE_SIZE', 10 * 1024 * 1024);
+define('MAX_FILE_SIZE', 100 * 1024 * 1024);
 
 // ===== API ENDPOINTS =====
 
@@ -989,7 +989,7 @@ try {
             $mime = mime_content_type($file['tmp_name']);
             
             if (!in_array($mime, ALLOWED_TYPES)) sendResponse(false, null, 'Invalid file type', 400);
-            if ($file['size'] > MAX_FILE_SIZE) sendResponse(false, null, 'File too large (max 10MB)', 400);
+            if ($file['size'] > MAX_FILE_SIZE) sendResponse(false, null, 'File too large (max 100MB)', 400);
             
             $year = date('Y');
             $month = date('m');
