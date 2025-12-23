@@ -17,6 +17,7 @@ $csrfToken = generateCSRFToken();
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -506,7 +507,7 @@ $csrfToken = generateCSRFToken();
     </main>
 
     <!-- ==================== CREATE POST MODAL ==================== -->
-    <div id="createModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
+    <div id="createModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
             <div class="bg-navy-900 text-white px-6 py-4 flex justify-between rounded-t-2xl">
                 <h2 class="text-xl font-bold">✨ Create New Post</h2>
@@ -518,14 +519,24 @@ $csrfToken = generateCSRFToken();
                     <input type="text" id="createTitle" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-gold-500" placeholder="Enter a compelling title...">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Content <span class="text-red-500">*</span></label>
-                    <textarea id="createContent" rows="4" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500" placeholder="Write your post content..."></textarea>
+                    <label class="block text-sm font-semibold mb-1.5 flex justify-between items-center">
+                        <span>Content <span class="text-red-500">*</span></span>
+                        <button type="button" onclick="toggleEmojiPicker('createContent', 'createEmojiBtn')" id="createEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors">
+                            <i class="fa-regular fa-face-smile text-lg"></i>
+                        </button>
+                    </label>
+                    <div class="relative">
+                        <textarea id="createContent" rows="4" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500" placeholder="Write your post content..."></textarea>
+                        <div id="createEmojiPickerContainer" class="absolute z-50 hidden mt-2 right-0 shadow-2xl rounded-xl overflow-hidden border border-slate-200">
+                             <emoji-picker class="light"></emoji-picker>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2">
                         <label class="block text-sm font-semibold mb-2">Platforms <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal">(Select one or more)</span></label>
-                        <div class="grid grid-cols-4 gap-2" id="createPlatformsGrid">
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                        <div class="grid grid-cols-4 gap-3" id="createPlatformsGrid">
+                            <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
                                 <input type="checkbox" name="createPlatforms" value="Facebook" class="hidden">
                                 <span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-facebook"></i></span>
                                 <span class="text-sm">Facebook</span>
@@ -535,7 +546,7 @@ $csrfToken = generateCSRFToken();
                                 <span class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-instagram"></i></span>
                                 <span class="text-sm">Instagram</span>
                             </label>
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                            <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
                                 <input type="checkbox" name="createPlatforms" value="LinkedIn" class="hidden">
                                 <span class="w-6 h-6 bg-blue-700 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-linkedin"></i></span>
                                 <span class="text-sm">LinkedIn</span>
@@ -605,13 +616,13 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- ==================== VIEW POST MODAL (Read-Only) ==================== -->
-    <div id="viewModal" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-start justify-center p-4 overflow-y-auto">
+    <div id="viewModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-start justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl my-8 border border-slate-200">
             <!-- Header -->
             <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100">
                 <div class="flex items-center gap-3">
                     <span id="viewStatusBadge" class="status-badge bg-sky-100 text-sky-700">DRAFT</span>
-                    <span id="viewPlatformBadge" class="text-sm text-slate-500"></span>
+                    <div id="viewPlatformBadge" class="flex flex-wrap gap-1.5"></div>
                 </div>
                 <div class="flex items-center gap-1">
                     <button id="viewEditBtn" onclick="switchToEditMode()" class="text-slate-400 hover:text-brand-500 hover:bg-slate-100 p-2 rounded-lg transition-all" title="Edit Post">
@@ -681,7 +692,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- ==================== EDIT POST MODAL ==================== -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
+    <div id="editModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
             <div class="bg-navy-900 text-white px-6 py-4 flex justify-between rounded-t-2xl">
                 <h2 class="text-xl font-bold">✏️ Edit Post</h2>
@@ -694,13 +705,23 @@ $csrfToken = generateCSRFToken();
                     <input type="text" id="editTitle" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Content <span class="text-red-500">*</span></label>
-                    <textarea id="editContent" rows="5" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500"></textarea>
+                    <label class="block text-sm font-semibold mb-1.5 flex justify-between items-center">
+                        <span>Content <span class="text-red-500">*</span></span>
+                        <button type="button" onclick="toggleEmojiPicker('editContent', 'editEmojiBtn')" id="editEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors">
+                            <i class="fa-regular fa-face-smile text-lg"></i>
+                        </button>
+                    </label>
+                    <div class="relative">
+                        <textarea id="editContent" rows="5" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500"></textarea>
+                        <div id="editEmojiPickerContainer" class="absolute z-50 hidden mt-2 right-0 shadow-2xl rounded-xl overflow-hidden border border-slate-200">
+                             <emoji-picker class="light"></emoji-picker>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-semibold mb-2">Platforms <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal">(Select one or more)</span></label>
-                    <div class="grid grid-cols-4 gap-2" id="editPlatformsGrid">
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                    <div class="grid grid-cols-4 gap-3" id="editPlatformsGrid">
+                        <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
                             <input type="checkbox" name="editPlatforms" value="Facebook" class="hidden">
                             <span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-facebook"></i></span>
                             <span class="text-sm">Facebook</span>
@@ -710,7 +731,7 @@ $csrfToken = generateCSRFToken();
                             <span class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-instagram"></i></span>
                             <span class="text-sm">Instagram</span>
                         </label>
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
+                        <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
                             <input type="checkbox" name="editPlatforms" value="LinkedIn" class="hidden">
                             <span class="w-6 h-6 bg-blue-700 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-linkedin"></i></span>
                             <span class="text-sm">LinkedIn</span>
@@ -766,7 +787,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- ==================== REQUEST CHANGES MODAL ==================== -->
-    <div id="changesModal" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-center justify-center p-4">
+    <div id="changesModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 border border-slate-200">
             <h3 class="text-lg font-semibold mb-4 text-slate-800">Request Changes</h3>
             <p class="text-slate-500 text-sm mb-4">Please explain what changes are needed. This feedback will be visible to the post author.</p>
@@ -779,7 +800,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- ==================== SCHEDULE MODAL ==================== -->
-    <div id="scheduleModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div id="scheduleModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <h3 class="text-xl font-bold mb-4 flex items-center gap-2">📅 Schedule for Publishing</h3>
             <p class="text-slate-600 text-sm mb-4">Select when this post should be published. The post will automatically move to Published at the scheduled time.</p>
@@ -798,7 +819,7 @@ $csrfToken = generateCSRFToken();
     <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
     <!-- Edit User Modal -->
-    <div id="editUserModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div id="editUserModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div class="bg-[#0a1628] text-white px-6 py-4 flex justify-between rounded-t-2xl">
                 <h2 class="text-xl font-bold">✏️ Edit User</h2>
@@ -834,7 +855,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- Add User Modal -->
-    <div id="addUserModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div id="addUserModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
             <div class="bg-[#0a1628] text-white px-6 py-4 flex justify-between rounded-t-2xl">
                 <h2 class="text-xl font-bold">➕ Add New User</h2>
@@ -1529,7 +1550,7 @@ function cardHTML(post) {
             <h4 class="font-semibold text-slate-800 mb-1 line-clamp-2">${escapeHtml(post.title)}</h4>
             <p class="text-slate-500 text-sm mb-3 line-clamp-2">${escapeHtml(post.content)}</p>
             <div class="flex items-center justify-between">
-                <div class="flex items-center gap-1">${platformBadgesHtml}</div>
+                <div class="flex flex-wrap items-center gap-1">${platformBadgesHtml}</div>
                 <span class="text-xs text-slate-400">${post.author_name}</span>
             </div>
             ${post.comment_count > 0 ? `<div class="text-xs text-slate-400 mt-2 flex items-center gap-1"><i class="fa-regular fa-comment"></i> ${post.comment_count}</div>` : ''}
@@ -1662,8 +1683,8 @@ async function openViewModal(id) {
     const platformBadgesHtml = platforms.map(plat => {
         const icon = PLATFORM_ICONS[plat] || 'fa-solid fa-share-nodes';
         const color = PLATFORM_COLORS[plat] || 'bg-slate-500';
-        return `<span class="px-2 py-0.5 rounded text-white text-xs ${color}"><i class="${icon} mr-1"></i>${plat}</span>`;
-    }).join(' ');
+        return `<span class="px-3 py-1.5 rounded text-white text-[11px] font-bold ${color} flex items-center gap-3 whitespace-nowrap shadow-sm"><i class="${icon} text-xs"></i>${plat}</span>`;
+    }).join('');
     document.getElementById('viewPlatformBadge').innerHTML = platformBadgesHtml;
     
     // Title and meta
@@ -1865,6 +1886,43 @@ function renderViewActivity(activities) {
     `}).join('') || '<p class="text-slate-400 text-center py-4">No activity recorded</p>';
 }
 
+
+function toggleEmojiPicker(textareaId, btnId) {
+    const containerId = textareaId === 'createContent' ? 'createEmojiPickerContainer' : 'editEmojiPickerContainer';
+    const container = document.getElementById(containerId);
+    const isHidden = container.classList.contains('hidden');
+    
+    // Hide all other pickers
+    document.querySelectorAll('[id$="EmojiPickerContainer"]').forEach(c => c.classList.add('hidden'));
+    
+    if (isHidden) {
+        container.classList.remove('hidden');
+        
+        // One-time initialization of the picker inside this container
+        const picker = container.querySelector('emoji-picker');
+        if (!picker.dataset.initialized) {
+            picker.addEventListener('emoji-click', event => {
+                const textarea = document.getElementById(textareaId);
+                const emoji = event.detail.unicode;
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const text = textarea.value;
+                textarea.value = text.substring(0, start) + emoji + text.substring(end);
+                textarea.focus();
+                textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+                container.classList.add('hidden');
+            });
+            picker.dataset.initialized = 'true';
+        }
+    }
+}
+
+// Close emoji pickers when clicking outside
+document.addEventListener('mousedown', (e) => {
+    if (!e.target.closest('[id$="EmojiPickerContainer"]') && !e.target.closest('[id$="EmojiBtn"]')) {
+        document.querySelectorAll('[id$="EmojiPickerContainer"]').forEach(c => c.classList.add('hidden'));
+    }
+});
 
 async function addViewComment() {
     const content = document.getElementById('viewNewComment').value.trim();
