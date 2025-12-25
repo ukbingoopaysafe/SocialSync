@@ -252,45 +252,76 @@ try {
                 'best_hour_count' => (int)($bestHour['count'] ?? 0),
             ];
             
-            // === USER PERFORMANCE WITH SCORES (filtered by company) ===
+            // === USER PERFORMANCE WITH DETAILED METRICS (filtered by company) ===
             $userQuery = $isAdmin 
                 ? "SELECT u.id, u.username, u.full_name, u.role,
-                      COUNT(DISTINCT p.id) as total_posts,
-                      SUM(CASE WHEN p.status = 'PUBLISHED' THEN 1 ELSE 0 END) as published,
-                      SUM(CASE WHEN p.status = 'SCHEDULED' THEN 1 ELSE 0 END) as scheduled,
-                      SUM(CASE WHEN p.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending,
-                      SUM(CASE WHEN p.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') THEN 1 ELSE 0 END) as approved,
-                      (SELECT COUNT(*) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.created_at >= ?) as posts_this_period,
-                      (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p4 ON al2.post_id = p4.id WHERE al2.user_id = u.id AND p4.company_id = ?) as last_activity
-                   FROM users u LEFT JOIN posts p ON p.author_id = u.id AND p.company_id = ? WHERE u.is_active = 1 GROUP BY u.id ORDER BY total_posts DESC"
+                      -- Authoring stats (Staff focus)
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'IDEA' AND p2.created_at >= ?) as ideas_created,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PENDING_REVIEW' AND p2.created_at >= ?) as pending_review_count,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PUBLISHED' AND p2.created_at >= ?) as published_count,
+                      
+                      -- Admin/Reviewer stats
+                      (SELECT COUNT(DISTINCT al.post_id) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'APPROVED' AND al.created_at >= ?) as reviews_approved,
+                      (SELECT COUNT(DISTINCT al.post_id) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED' AND al.created_at >= ?) as reviews_rejected,
+                      (SELECT COUNT(*) FROM comments c JOIN posts p4 ON c.post_id = p4.id WHERE c.user_id = u.id AND p4.company_id = ? AND c.created_at >= ?) as comments_count,
+                      
+                      -- Meta
+                      (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p5 ON al2.post_id = p5.id WHERE al2.user_id = u.id AND p5.company_id = ?) as last_activity
+                   FROM users u WHERE u.is_active = 1 ORDER BY u.role DESC, u.full_name ASC"
                 : "SELECT u.id, u.username, u.full_name, u.role,
-                      COUNT(DISTINCT p.id) as total_posts,
-                      SUM(CASE WHEN p.status = 'PUBLISHED' THEN 1 ELSE 0 END) as published,
-                      SUM(CASE WHEN p.status = 'SCHEDULED' THEN 1 ELSE 0 END) as scheduled,
-                      SUM(CASE WHEN p.status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) as pending,
-                      SUM(CASE WHEN p.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') THEN 1 ELSE 0 END) as approved,
-                      (SELECT COUNT(*) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED') as revisions_received,
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.created_at >= ?) as posts_this_period,
-                      (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p4 ON al2.post_id = p4.id WHERE al2.user_id = u.id AND p4.company_id = ?) as last_activity
-                   FROM users u LEFT JOIN posts p ON p.author_id = u.id AND p.company_id = ? WHERE u.id = ? GROUP BY u.id";
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'IDEA' AND p2.created_at >= ?) as ideas_created,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PENDING_REVIEW' AND p2.created_at >= ?) as pending_review_count,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PUBLISHED' AND p2.created_at >= ?) as published_count,
+                      (SELECT COUNT(*) FROM comments c JOIN posts p4 ON c.post_id = p4.id WHERE c.user_id = u.id AND p4.company_id = ? AND c.created_at >= ?) as comments_count,
+                      (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p5 ON al2.post_id = p5.id WHERE al2.user_id = u.id AND p5.company_id = ?) as last_activity
+                   FROM users u WHERE u.id = ? AND u.is_active = 1";
             
-            $userParams = $isAdmin ? [$companyId, $companyId, $dateFrom, $companyId, $companyId] : [$companyId, $companyId, $dateFrom, $companyId, $companyId, $user['id']];
+            // Common params: company_id, date_from
+            if ($isAdmin) {
+                $userParams = [
+                    $companyId, $dateFrom, // ideas
+                    $companyId, $dateFrom, // drafts
+                    $companyId, $dateFrom, // pending
+                    $companyId, $dateFrom, // approved
+                    $companyId, $dateFrom, // published
+                    $companyId, $dateFrom, // reviews_approved
+                    $companyId, $dateFrom, // reviews_rejected
+                    $companyId, $dateFrom, // comments
+                    $companyId             // last_activity
+                ];
+            } else {
+                $userParams = [
+                    $companyId, $dateFrom, // ideas
+                    $companyId, $dateFrom, // drafts
+                    $companyId, $dateFrom, // pending
+                    $companyId, $dateFrom, // approved
+                    $companyId, $dateFrom, // published
+                    $companyId, $dateFrom, // comments
+                    $companyId,            // last_activity
+                    $user['id']
+                ];
+            }
+            
             $users = fetchAll($userQuery, $userParams);
             
-            // Calculate productivity score for each user
             foreach ($users as &$u) {
-                $total = (int)$u['total_posts'];
-                $published = (int)$u['published'];
-                $revisions = (int)$u['revisions_received'];
+                // Ensure all keys exist to prevent JS errors
+                $u['ideas_created'] = (int)($u['ideas_created'] ?? 0);
+                $u['drafts_created'] = (int)($u['drafts_created'] ?? 0);
+                $u['pending_review_count'] = (int)($u['pending_review_count'] ?? 0);
+                $u['approved_count'] = (int)($u['approved_count'] ?? 0);
+                $u['published_count'] = (int)($u['published_count'] ?? 0);
+                $u['reviews_approved'] = (int)($u['reviews_approved'] ?? 0);
+                $u['reviews_rejected'] = (int)($u['reviews_rejected'] ?? 0);
+                $u['comments_count'] = (int)($u['comments_count'] ?? 0);
                 
-                // Score: 40% approval rate + 40% publish rate + 20% low revisions
-                $approvalScore = $total > 0 ? (($u['approved'] / $total) * 40) : 0;
-                $publishScore = $total > 0 ? (($published / $total) * 40) : 0;
-                $revisionScore = $total > 0 ? max(0, 20 - ($revisions / $total) * 20) : 20;
-                
-                $u['productivity_score'] = round($approvalScore + $publishScore + $revisionScore);
-                $u['approval_rate'] = $total > 0 ? round(($u['approved'] / $total) * 100) : 0;
+                // Keep approval rate calc for reference if needed
+                $totalAuthoring = $u['ideas_created'] + $u['drafts_created'] + $u['approved_count'];
+                $u['author_approval_rate'] = $totalAuthoring > 0 ? round(($u['approved_count'] / $totalAuthoring) * 100) : 0;
             }
             $analytics['user_performance'] = $users;
             

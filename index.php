@@ -27,79 +27,10 @@ $csrfToken = generateCSRFToken();
             }}}
         }
     </script>
+    <link rel="stylesheet" href="css/dashboard.css">
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
-        
-        /* Modern Card Style */
-        .post-card { 
-            background: white; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 12px;
-            transition: all 0.15s ease;
-            cursor: pointer;
-        }
-        .post-card:hover { 
-            border-color: #cbd5e1;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        
-        /* Clean Upload Zone */
-        .upload-zone { 
-            border: 2px dashed #e2e8f0; 
-            border-radius: 12px;
-            transition: all 0.15s ease;
-            background: #fafafa;
-        }
-        .upload-zone:hover, .upload-zone.drag-over { 
-            border-color: #0ea5e9; 
-            background: #f0f9ff;
-        }
-        
-        /* Refined Status Badge */
-        .status-badge { 
-            font-size: 0.65rem; 
-            padding: 0.2rem 0.6rem; 
-            border-radius: 6px; 
-            font-weight: 500; 
-            text-transform: uppercase; 
-            letter-spacing: 0.03em;
-        }
-        
-        /* Smooth Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
-        /* Button Transitions */
-        button, a { transition: all 0.15s ease; }
-        
-        /* Modal Backdrop */
-        .modal-backdrop { backdrop-filter: blur(4px); }
-        
-        /* Platform Checkbox Styling */
-        .platform-checkbox:has(input:checked) {
-            background: #ecfdf5;
-            border-color: #10b981;
-            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-        }
-        .platform-checkbox:has(input:checked)::after {
-            content: '✓';
-            position: absolute;
-            top: -4px;
-            right: -4px;
-            background: #10b981;
-            color: white;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            font-size: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .platform-checkbox { position: relative; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-700">
@@ -201,146 +132,185 @@ $csrfToken = generateCSRFToken();
             <main class="p-6">
         <!-- Dashboard View - Advanced Analytics -->
         <div id="dashboardView" class="hidden max-w-7xl mx-auto">
-            <!-- Header with Health Score -->
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-4">
-                    <div id="healthRing" class="relative w-16 h-16">
-                        <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
-                            <path class="text-slate-200" stroke="currentColor" stroke-width="3" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                            <path id="healthPath" class="text-emerald-500" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+            <!-- Pulse Header: Health + Main KPIs -->
+            <div class="pulse-header flex flex-col lg:flex-row gap-8 items-center">
+                <!-- Health Pulse -->
+                <div class="flex items-center gap-6 pr-8 border-r border-white/10">
+                    <div class="relative w-24 h-24">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <circle class="text-white/10" stroke="currentColor" stroke-width="3" fill="none" r="16" cy="18" cx="18"></circle>
+                            <path id="healthPath" class="text-emerald-400 perf-ring" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"></path>
                         </svg>
-                        <span id="healthScore" class="absolute inset-0 flex items-center justify-center text-sm font-bold text-slate-700">0</span>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span id="healthScore" class="text-2xl font-bold tracking-tight">0</span>
+                            <span class="text-[8px] uppercase tracking-widest text-white/50">Score</span>
+                        </div>
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Analytics Dashboard</h2>
-                        <p id="healthLabel" class="text-slate-500 text-sm">Content Health Score</p>
+                        <h2 class="text-xl font-bold mb-0.5">Pipeline Pulse</h2>
+                        <p id="healthLabel" class="text-white/60 text-xs font-medium uppercase tracking-wider">Analyzing stats...</p>
+                        <div class="flex items-center gap-2 mt-2">
+                             <select id="analyticsPeriod" onchange="loadDashboard()" class="bg-white/10 border-0 rounded-lg text-xs py-1 px-3 text-white focus:ring-1 focus:ring-brand-400 outline-none cursor-pointer">
+                                <option value="7" class="bg-slate-800">Last 7d</option>
+                                <option value="30" selected class="bg-slate-800">Last 30d</option>
+                                <option value="90" class="bg-slate-800">Last 90d</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <select id="analyticsPeriod" onchange="loadDashboard()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm bg-white shadow-sm">
-                    <option value="7">Last 7 days</option>
-                    <option value="30" selected>Last 30 days</option>
-                    <option value="90">Last 90 days</option>
-                </select>
-            </div>
-            
-            <!-- Smart Recommendations -->
-            <div id="recommendationsSection" class="mb-6 space-y-3"></div>
-            
-            <!-- Overview KPIs with Trends -->
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Total Posts</span>
-                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+
+                <!-- Snapshot Row -->
+                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                    <div class="glass-stat">
+                        <div class="text-white/50 text-[10px] uppercase font-bold mb-1">Total Impact</div>
+                        <div class="flex items-baseline gap-2">
+                            <span id="kpiTotal" class="text-2xl font-bold">0</span>
+                            <span class="text-white/30 text-[10px]">Posts</span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline gap-2">
-                        <span id="kpiTotal" class="text-3xl font-bold text-slate-800">0</span>
+                    <div class="glass-stat">
+                        <div class="text-white/50 text-[10px] uppercase font-bold mb-1">Published</div>
+                        <div class="flex items-baseline justify-between">
+                            <span id="kpiPublished" class="text-2xl font-bold text-emerald-400">0</span>
+                            <span id="kpiPublishedTrend" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Published</span>
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <div class="glass-stat">
+                        <div class="text-white/50 text-[10px] uppercase font-bold mb-1">Approval Velocity</div>
+                        <div class="flex items-baseline justify-between">
+                            <span id="kpiApprovalRate" class="text-2xl font-bold text-blue-400">0%</span>
+                            <span id="kpiApprovalTrend" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400"></span>
+                        </div>
                     </div>
-                    <div class="flex items-baseline gap-2">
-                        <span id="kpiPublished" class="text-3xl font-bold text-emerald-600">0</span>
-                        <span id="kpiPublishedTrend" class="text-xs font-medium px-1.5 py-0.5 rounded"></span>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Scheduled</span>
-                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <span id="kpiScheduled" class="text-3xl font-bold text-indigo-600">0</span>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Pending</span>
-                        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <span id="kpiPending" class="text-3xl font-bold text-amber-600">0</span>
-                    </div>
-                </div>
-                <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-1">
-                        <span class="text-slate-500 text-xs font-medium uppercase tracking-wide">Approval Rate</span>
-                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <div class="flex items-baseline gap-2">
-                        <span id="kpiApprovalRate" class="text-3xl font-bold text-blue-600">0%</span>
-                        <span id="kpiApprovalTrend" class="text-xs font-medium px-1.5 py-0.5 rounded"></span>
+                    <div class="glass-stat">
+                         <div class="text-white/50 text-[10px] uppercase font-bold mb-1">Queue Status</div>
+                         <div class="flex items-center gap-3">
+                            <div>
+                                <div id="kpiPending" class="text-xl font-bold text-amber-400">0</div>
+                                <div class="text-[8px] text-white/30 uppercase">Review</div>
+                            </div>
+                            <div class="w-px h-8 bg-white/10"></div>
+                            <div>
+                                <div id="kpiScheduled" class="text-xl font-bold text-indigo-400">0</div>
+                                <div class="text-[8px] text-white/30 uppercase">Sched</div>
+                            </div>
+                         </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Time Insights + Bottleneck Row -->
-            <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
-                    <div class="text-indigo-100 text-xs font-medium uppercase tracking-wide mb-2">Best Day to Publish</div>
-                    <div id="bestDay" class="text-2xl font-bold">-</div>
-                    <div id="bestDayCount" class="text-indigo-200 text-sm"></div>
+
+            <!-- Strategic Insights Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                <!-- Smart Recommendations -->
+                <div class="lg:col-span-8 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <span class="p-1.5 bg-brand-50 text-brand-600 rounded-lg"><i class="fa-solid fa-lightbulb text-sm"></i></span>
+                            Strategic Intelligence
+                        </h3>
+                    </div>
+                    <div id="recommendationsSection" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
-                <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-lg">
-                    <div class="text-amber-100 text-xs font-medium uppercase tracking-wide mb-2">Peak Hour</div>
-                    <div id="bestHour" class="text-2xl font-bold">-</div>
-                    <div id="bestHourCount" class="text-amber-200 text-sm"></div>
-                </div>
-                <div class="lg:col-span-2 bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
-                    <div class="text-slate-500 text-xs font-medium uppercase tracking-wide mb-3">Workflow Bottlenecks</div>
-                    <div id="bottleneckBars" class="space-y-2"></div>
+
+                <!-- Delivery Efficiency -->
+                <div class="lg:col-span-4 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
+                    <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
+                        <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-clock-rotate-left text-sm"></i></span>
+                        Best Delivery
+                    </h3>
+                    <div class="flex-1 flex flex-col justify-center space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Peak Performance Day</div>
+                                <div id="bestDay" class="text-xl font-bold text-slate-700">-</div>
+                            </div>
+                            <div id="bestDayCount" class="text-xs font-bold text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-100"></div>
+                        </div>
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Prime Publishing Hour</div>
+                                <div id="bestHour" class="text-xl font-bold text-slate-700">-</div>
+                            </div>
+                            <div id="bestHourCount" class="text-xs font-bold text-slate-400 bg-white px-2 py-1 rounded-lg border border-slate-100"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Charts Row -->
+            <!-- Flow & Monitoring Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <!-- Content Pipeline Funnel - IMPROVED -->
-                <div class="lg:col-span-2 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                    <h3 class="font-semibold text-slate-800 mb-6">Content Pipeline</h3>
-                    <div id="workflowFunnel" class="grid grid-cols-6 gap-3 h-44"></div>
+                <!-- Content Pipeline Evolution -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-8">
+                        <h3 class="font-bold text-slate-800">Pipeline Distribution</h3>
+                        <div class="flex gap-2 text-[10px] font-bold text-slate-400">
+                             <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-500"></span> FLOW</span>
+                        </div>
+                    </div>
+                    <div id="workflowFunnel" class="flex items-end justify-between h-56 gap-4"></div>
                 </div>
                 
-                <!-- Platform Distribution -->
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                    <h3 class="font-semibold text-slate-800 mb-4">Platform Distribution</h3>
-                    <div class="relative h-32">
-                        <canvas id="platformChart"></canvas>
+                <!-- Platform Dominance -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
+                    <h3 class="font-bold text-slate-800 mb-6">Channel Authority</h3>
+                    <div class="relative flex-1 flex items-center justify-center mb-4">
+                        <div class="w-full h-40">
+                            <canvas id="platformChart"></canvas>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div class="text-center">
+                                <div class="text-[10px] text-slate-400 font-bold uppercase">Multi</div>
+                                <div class="text-sm font-bold text-slate-700">Platform</div>
+                            </div>
+                        </div>
                     </div>
-                    <div id="platformLegend" class="mt-4 space-y-2 text-sm"></div>
+                    <div id="platformLegend" class="grid grid-cols-2 gap-x-4 gap-y-2 mt-auto pt-4 border-t border-slate-50"></div>
                 </div>
             </div>
             
-            <!-- Team Performance with Score + Scheduled -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <!-- User Performance - DETAILED -->
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-slate-800">Team Performance</h3>
-                        <span id="teamMemberCount" class="text-xs text-slate-400"></span>
+            <!-- Employee Monitoring & Pipeline Health -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                <!-- Team Performance Monitoring - HIGH DENSITY -->
+                <div class="lg:col-span-8 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-bold text-slate-800">Employee Performance Monitor</h3>
+                            <p class="text-xs text-slate-400">Productivity tracking based on approved vs requested changes</p>
+                        </div>
+                        <span id="teamMemberCount" class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full uppercase"></span>
                     </div>
-                    <div id="userPerformanceCards" class="space-y-4 max-h-[500px] overflow-y-auto pr-2"></div>
+                    <div id="userPerformanceCards" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar"></div>
                 </div>
                 
-                <!-- Upcoming Scheduled -->
-                <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="font-semibold text-slate-800">Upcoming Scheduled</h3>
-                        <a href="calendar.php" class="text-brand-500 text-sm hover:underline">View Calendar →</a>
+                <!-- Right Rail: Bottlenecks & Schedule -->
+                <div class="lg:col-span-4 space-y-6">
+                    <!-- Workflow Health Markers -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <h3 class="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">Workflow Bottlenecks</h3>
+                        <div id="bottleneckBars" class="space-y-4"></div>
                     </div>
-                    <div id="upcomingScheduled" class="space-y-3"></div>
+
+                    <!-- Upcoming Timeline -->
+                    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider text-indigo-600">Upcoming Post</h3>
+                            <a href="#calendar" onclick="switchTab('calendar')" class="text-[10px] font-bold text-brand-500 hover:text-brand-600 uppercase tracking-widest">Full View →</a>
+                        </div>
+                        <div id="upcomingScheduled" class="space-y-3"></div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Recent Activity - DETAILED -->
-            <div class="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-semibold text-slate-800">Recent Activity</h3>
-                    <span id="activityCount" class="text-xs text-slate-400"></span>
+            <!-- Global Activity Log -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm overflow-hidden">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Live Activity Feed
+                    </h3>
+                    <span id="activityCount" class="text-[10px] font-bold text-slate-400 uppercase"></span>
                 </div>
-                <div id="recentActivity" class="space-y-4 max-h-[600px] overflow-y-auto pr-2"></div>
+                <div id="recentActivity" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[800px] overflow-y-auto pr-2 custom-scrollbar"></div>
             </div>
         </div>
 
@@ -1071,51 +1041,62 @@ async function loadDashboard() {
         // === Health Score Ring ===
         const health = d.health || { score: 0, status: 'healthy', label: 'Loading...' };
         const healthPath = document.getElementById('healthPath');
-        if (!healthPath) return;
-        const healthColors = { healthy: '#10b981', warning: '#f59e0b', critical: '#ef4444' };
-        healthPath.setAttribute('stroke-dasharray', `${health.score}, 100`);
-        healthPath.style.stroke = healthColors[health.status];
-        document.getElementById('healthScore').textContent = health.score;
-        document.getElementById('healthLabel').textContent = health.label;
+        if (healthPath) {
+            const healthColors = { healthy: '#10b981', warning: '#f59e0b', critical: '#ef4444' };
+            healthPath.setAttribute('stroke-dasharray', `${health.score}, 100`);
+            healthPath.style.stroke = healthColors[health.status];
+            document.getElementById('healthScore').textContent = health.score;
+            document.getElementById('healthLabel').textContent = health.label;
+        }
     
     // === Smart Recommendations ===
-    const recColors = { warning: 'bg-amber-50 border-amber-200', success: 'bg-emerald-50 border-emerald-200', alert: 'bg-red-50 border-red-200', info: 'bg-blue-50 border-blue-200' };
+    const recColors = { 
+        warning: 'bg-amber-50 border-amber-100 rec-item', 
+        success: 'bg-emerald-50 border-emerald-100 rec-item', 
+        alert: 'bg-red-50 border-red-100 rec-item', 
+        info: 'bg-blue-50 border-blue-100 rec-item' 
+    };
     const recTextColors = { warning: 'text-amber-800', success: 'text-emerald-800', alert: 'text-red-800', info: 'text-blue-800' };
-    document.getElementById('recommendationsSection').innerHTML = (d.recommendations || []).slice(0, 3).map(r => `
-        <div class="flex items-start gap-3 p-4 rounded-xl border ${recColors[r.type] || 'bg-slate-50 border-slate-200'}">
-            <span class="text-2xl">${r.icon}</span>
+    const recIcons = { warning: '⚠️', success: '✅', alert: '🚨', info: 'ℹ️' };
+    
+    document.getElementById('recommendationsSection').innerHTML = (d.recommendations || []).slice(0, 4).map(r => `
+        <div class="flex items-start gap-3 p-4 rounded-xl border-l-4 ${recColors[r.type] || 'bg-slate-50 border-slate-200'}">
+            <span class="text-xl">${r.icon || recIcons[r.type] || '💡'}</span>
             <div>
-                <div class="font-semibold ${recTextColors[r.type] || 'text-slate-800'}">${r.title}</div>
-                <div class="text-sm text-slate-600">${r.message}</div>
+                <div class="text-xs font-black uppercase tracking-wider mb-1 ${recTextColors[r.type] || 'text-slate-800'}">${r.title}</div>
+                <div class="text-[11px] leading-relaxed text-slate-600 font-medium">${r.message}</div>
             </div>
         </div>
-    `).join('');
+    `).join('') || '<div class="col-span-2 py-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">System stabilized. No critical insights.</div>';
     
     // === KPIs with Trends ===
     document.getElementById('kpiTotal').textContent = d.overview?.total_posts || 0;
     document.getElementById('kpiPublished').textContent = d.overview?.published_period || 0;
-    document.getElementById('kpiScheduled').textContent = d.overview?.scheduled_upcoming || 0;
     document.getElementById('kpiPending').textContent = d.overview?.pending_review || 0;
+    document.getElementById('kpiScheduled').textContent = d.overview?.scheduled_upcoming || 0;
     document.getElementById('kpiApprovalRate').textContent = (d.overview?.approval_rate || 0) + '%';
     
-    // Trend badges
+    const trendBadge = (val) => {
+        if (!val || val === 0) return '';
+        const isPos = val > 0;
+        return `
+            <span class="text-[10px] font-black px-1.5 py-0.5 rounded ${isPos ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">
+                ${isPos ? '↑' : '↓'}${Math.abs(val)}%
+            </span>
+        `;
+    };
+
     const pubTrend = d.overview?.published_trend || 0;
-    const pubTrendEl = document.getElementById('kpiPublishedTrend');
-    if (pubTrend !== 0) {
-        pubTrendEl.textContent = (pubTrend > 0 ? '↑' : '↓') + Math.abs(pubTrend) + '%';
-        pubTrendEl.className = `text-xs font-medium px-1.5 py-0.5 rounded ${pubTrend > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`;
-    } else {
-        pubTrendEl.textContent = '';
-    }
-    
+    document.getElementById('kpiPublishedTrend').innerHTML = pubTrend !== 0 ? (pubTrend > 0 ? '↑' : '↓') + Math.abs(pubTrend) + '%' : '';
+    document.getElementById('kpiPublishedTrend').className = `text-[9px] font-bold px-1.5 py-0.5 rounded ${pubTrend >= 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`;
+    if (pubTrend === 0) document.getElementById('kpiPublishedTrend').classList.add('hidden');
+    else document.getElementById('kpiPublishedTrend').classList.remove('hidden');
+
     const appTrend = d.overview?.approval_trend || 0;
-    const appTrendEl = document.getElementById('kpiApprovalTrend');
-    if (appTrend !== 0) {
-        appTrendEl.textContent = (appTrend > 0 ? '↑' : '↓') + Math.abs(appTrend) + '%';
-        appTrendEl.className = `text-xs font-medium px-1.5 py-0.5 rounded ${appTrend > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`;
-    } else {
-        appTrendEl.textContent = '';
-    }
+    document.getElementById('kpiApprovalTrend').innerHTML = appTrend !== 0 ? (appTrend > 0 ? '↑' : '↓') + Math.abs(appTrend) + '%' : '';
+    document.getElementById('kpiApprovalTrend').className = `text-[9px] font-bold px-1.5 py-0.5 rounded ${appTrend >= 0 ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`;
+    if (appTrend === 0) document.getElementById('kpiApprovalTrend').classList.add('hidden');
+    else document.getElementById('kpiApprovalTrend').classList.remove('hidden');
     
     // === Time Insights ===
     const timeInsights = d.time_insights || {};
@@ -1129,25 +1110,26 @@ async function loadDashboard() {
     const maxHours = Math.max(...bottlenecks.map(b => b.avg_hours || 0), 48);
     document.getElementById('bottleneckBars').innerHTML = bottlenecks.map(b => {
         const pct = Math.min((b.avg_hours / maxHours) * 100, 100);
-        const color = b.is_bottleneck ? 'bg-red-500' : 'bg-emerald-500';
+        const color = b.is_bottleneck ? 'bg-red-500' : 'bg-brand-500';
         return `
-            <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-500 w-20">${b.stage}</span>
-                <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div class="${color} h-full rounded-full transition-all" style="width: ${pct}%"></div>
+            <div class="group">
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-tight">${b.stage}</span>
+                    <span class="text-[10px] font-black ${b.is_bottleneck ? 'text-red-500' : 'text-slate-400'}">${b.avg_days}d avg</span>
                 </div>
-                <span class="text-xs font-medium ${b.is_bottleneck ? 'text-red-600' : 'text-slate-600'} w-16 text-right">${b.avg_days}d</span>
+                <div class="h-1.5 bg-slate-50 rounded-full overflow-hidden">
+                    <div class="${color} h-full rounded-full transition-all duration-1000" style="width: ${pct}%"></div>
+                </div>
             </div>
         `;
-    }).join('') || '<p class="text-slate-400 text-sm">No data</p>';
+    }).join('') || '<p class="text-slate-400 text-[10px] font-bold uppercase py-4">Efficiency data pending...</p>';
     
     // === Workflow Funnel ===
     const statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
-    const colors = ['#8b5cf6', '#0ea5e9', '#f59e0b', '#10b981', '#6366f1', '#64748b'];
     const maxCount = Math.max(...statuses.map(s => d.by_status?.[s] || 0), 1);
-    const statusLabels = ['Ideas', 'Drafts', 'Review', 'Approved', 'Scheduled', 'Published'];
+    const statusLabels = ['Ideas', 'Drafts', 'Review', 'Approved', 'Sched', 'Pub'];
     const gradients = [
-        'from-purple-400 to-purple-600',
+        'from-violet-400 to-violet-600',
         'from-sky-400 to-sky-600', 
         'from-amber-400 to-amber-600',
         'from-emerald-400 to-emerald-600',
@@ -1157,16 +1139,19 @@ async function loadDashboard() {
     
     document.getElementById('workflowFunnel').innerHTML = statuses.map((s, i) => {
         const count = d.by_status?.[s] || 0;
-        const height = Math.max((count / maxCount) * 100, 15);
+        const height = Math.max((count / maxCount) * 100, 10);
         return `
-            <div class="flex flex-col h-full">
-                <div class="flex-1 flex flex-col justify-end">
-                    <div class="bg-gradient-to-t ${gradients[i]} rounded-lg shadow-sm flex flex-col items-center justify-end p-3 transition-all hover:scale-105" style="height: ${height}%">
-                        <span class="text-2xl font-bold text-white drop-shadow">${count}</span>
+            <div class="flex flex-col h-full items-center group relative flex-1">
+                <div class="flex-1 flex flex-col justify-end w-full px-1">
+                    <div class="bg-gradient-to-t ${gradients[i]} rounded-t-xl shadow-sm flex flex-col items-center justify-end pb-3 transition-all duration-500 hover:brightness-110" style="height: ${height}%">
+                        <span class="text-xl font-black text-white drop-shadow-md">${count}</span>
                     </div>
                 </div>
-                <div class="text-center mt-2">
-                    <span class="text-xs font-medium text-slate-500">${statusLabels[i]}</span>
+                <div class="text-center mt-3 w-full border-t border-slate-50 pt-2">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">${statusLabels[i]}</span>
+                </div>
+                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                    ${count} posts in ${statusLabels[i]}
                 </div>
             </div>
         `;
@@ -1181,7 +1166,7 @@ async function loadDashboard() {
     };
     
     const ctx = document.getElementById('platformChart')?.getContext('2d');
-    if (ctx && platformData.length > 0) {
+    if (ctx) {
         if (platformChart) platformChart.destroy();
         platformChart = new Chart(ctx, {
             type: 'doughnut',
@@ -1190,191 +1175,192 @@ async function loadDashboard() {
                 datasets: [{
                     data: platformData.map(p => p.count),
                     backgroundColor: platformData.map(p => platformColors[p.platform] || '#94a3b8'),
-                    borderWidth: 0
+                    borderWidth: 4,
+                    borderColor: '#ffffff',
+                    hoverOffset: 10
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                cutout: '65%'
+                cutout: '75%',
+                animation: { animateRotate: true, animateScale: true }
             }
         });
         
-        document.getElementById('platformLegend').innerHTML = platformData.slice(0, 4).map(p => `
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="w-3 h-3 rounded" style="background: ${platformColors[p.platform] || '#94a3b8'}"></span>
-                    <span class="text-slate-600">${p.platform}</span>
+        document.getElementById('platformLegend').innerHTML = (platformData.length > 0 ? platformData.slice(0, 6) : []).map(p => `
+            <div class="flex items-center justify-between p-1">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background: ${platformColors[p.platform] || '#94a3b8'}"></span>
+                    <span class="text-[10px] font-bold text-slate-500 truncate uppercase">${p.platform}</span>
                 </div>
-                <span class="font-medium">${p.count}</span>
+                <span class="text-[10px] font-black text-slate-800">${p.count}</span>
             </div>
-        `).join('');
+        `).join('') || '<div class="col-span-2 text-center text-[8px] text-slate-300 font-bold uppercase tracking-widest pt-4">No data</div>';
     }
     
-    // === User Performance Cards - DETAILED ===
+    // === User Performance Cards ===
     const teamMembers = d.user_performance || [];
-    document.getElementById('teamMemberCount').textContent = teamMembers.length > 0 ? `${teamMembers.length} members` : '';
+    document.getElementById('teamMemberCount').textContent = teamMembers.length > 0 ? `${teamMembers.length} ACTIVE` : 'NONE';
     
     document.getElementById('userPerformanceCards').innerHTML = teamMembers.map(u => {
-        const score = u.productivity_score || 0;
-        const scoreColor = score >= 70 ? 'text-emerald-600' : (score >= 40 ? 'text-amber-600' : 'text-red-600');
-        const scoreBg = score >= 70 ? 'stroke-emerald-500' : (score >= 40 ? 'stroke-amber-500' : 'stroke-red-500');
-        const roleColor = u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-sky-100 text-sky-700';
-        const lastActivity = u.last_activity ? formatDate(u.last_activity) : 'No activity';
+        const isAdminMember = u.role === 'admin';
+        const lastActivity = u.last_activity ? formatDate(u.last_activity) : 'Never';
         
-        return `
-        <div class="p-4 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-shadow">
-            <div class="flex items-start justify-between mb-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-12 h-12 bg-gradient-to-br from-brand-400 to-brand-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
-                        ${(u.full_name || u.username)[0].toUpperCase()}
-                    </div>
-                    <div>
-                        <div class="font-semibold text-slate-800">${u.full_name || u.username}</div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs text-slate-400">@${u.username}</span>
-                            <span class="px-2 py-0.5 rounded-full text-xs font-medium ${roleColor}">${u.role === 'admin' ? 'Admin' : 'Staff'}</span>
+        // Dynamic Metrics based on Role
+        let metricsHtml = '';
+        if (isAdminMember) {
+            metricsHtml = `
+                <div class="grid grid-cols-2 gap-2 py-3 border-y border-slate-50 mb-3">
+                    <div class="px-3 py-2 bg-indigo-50/50 rounded-xl">
+                        <div class="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-0.5">Reviews</div>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-sm font-black text-indigo-600">${u.reviews_approved + u.reviews_rejected}</span>
+                            <span class="text-[8px] text-indigo-300 font-bold">Total</span>
                         </div>
                     </div>
+                    <div class="px-3 py-2 bg-emerald-50/50 rounded-xl">
+                        <div class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-0.5">Approved</div>
+                        <div class="text-sm font-black text-emerald-600">${u.reviews_approved}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-amber-50/50 rounded-xl">
+                        <div class="text-[10px] text-amber-400 font-black uppercase tracking-widest mb-0.5">Rejections</div>
+                        <div class="text-sm font-black text-amber-600">${u.reviews_rejected}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-blue-50/50 rounded-xl">
+                        <div class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-0.5">Comments</div>
+                        <div class="text-sm font-black text-blue-600">${u.comments_count}</div>
+                    </div>
                 </div>
-                <div class="relative w-14 h-14">
-                    <svg class="w-14 h-14 -rotate-90" viewBox="0 0 36 36">
-                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" stroke-width="3"/>
-                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" class="${scoreBg}" stroke-width="3" stroke-dasharray="${score}, 100" stroke-linecap="round"/>
-                    </svg>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <span class="text-sm font-bold ${scoreColor}">${score}</span>
+            `;
+        } else {
+            metricsHtml = `
+                <div class="grid grid-cols-2 gap-2 py-3 border-y border-slate-50 mb-3">
+                    <div class="px-3 py-2 bg-violet-50/50 rounded-xl">
+                        <div class="text-[10px] text-violet-400 font-black uppercase tracking-widest mb-0.5">Ideas</div>
+                        <div class="text-sm font-black text-violet-600">${u.ideas_created}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-sky-50/50 rounded-xl">
+                        <div class="text-[10px] text-sky-400 font-black uppercase tracking-widest mb-0.5">Drafts</div>
+                        <div class="text-sm font-black text-sky-600">${u.drafts_created}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-amber-50/50 rounded-xl">
+                        <div class="text-[10px] text-amber-400 font-black uppercase tracking-widest mb-0.5">In Review</div>
+                        <div class="text-sm font-black text-amber-600">${u.pending_review_count}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-emerald-50/50 rounded-xl">
+                        <div class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mb-0.5">Accepted</div>
+                        <div class="text-sm font-black text-emerald-600">${u.approved_count}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-slate-50/50 rounded-xl">
+                        <div class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-0.5">Published</div>
+                        <div class="text-sm font-black text-slate-600">${u.published_count}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-indigo-50/50 rounded-xl">
+                        <div class="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-0.5">Comments</div>
+                        <div class="text-sm font-black text-indigo-600">${u.comments_count}</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        return `
+        <div class="p-5 bg-white border border-slate-100 rounded-3xl hover:border-brand-200 hover:shadow-xl transition-all duration-500 group">
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-14 h-14 bg-slate-50 text-slate-600 rounded-2xl flex items-center justify-center font-black text-2xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300 group-hover:scale-110 group-hover:rotate-3 group-hover:bg-white group-hover:border-brand-100">
+                    ${(u.full_name || u.username)[0].toUpperCase()}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-black text-slate-800 truncate text-lg tracking-tight">${u.full_name || u.username}</div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${isAdminMember ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}">${u.role}</span>
+                        <span class="text-[9px] text-slate-300 font-bold">•</span>
+                        <span class="text-[8px] text-slate-400 font-black uppercase tracking-tighter">${lastActivity}</span>
                     </div>
                 </div>
             </div>
             
-            <div class="grid grid-cols-3 gap-2 text-center mb-3">
-                <div class="bg-slate-50 rounded-lg p-2">
-                    <div class="text-lg font-bold text-slate-700">${u.total_posts || 0}</div>
-                    <div class="text-xs text-slate-400">Posts</div>
-                </div>
-                <div class="bg-emerald-50 rounded-lg p-2">
-                    <div class="text-lg font-bold text-emerald-600">${u.published || 0}</div>
-                    <div class="text-xs text-slate-400">Published</div>
-                </div>
-                <div class="bg-indigo-50 rounded-lg p-2">
-                    <div class="text-lg font-bold text-indigo-600">${u.scheduled || 0}</div>
-                    <div class="text-xs text-slate-400">Scheduled</div>
-                </div>
-            </div>
+            ${metricsHtml}
             
-            <div class="flex items-center justify-between text-xs">
-                <div class="flex items-center gap-4">
-                    <span class="text-slate-500">Pending: <span class="font-medium text-amber-600">${u.pending || 0}</span></span>
-                    <span class="text-slate-500">Revisions: <span class="font-medium text-red-600">${u.revisions_received || 0}</span></span>
-                    <span class="text-slate-500">Rate: <span class="font-medium text-emerald-600">${u.approval_rate || 0}%</span></span>
+            <div class="flex items-center justify-between px-1">
+                <div class="flex items-center gap-1.5">
+                    <div class="w-2 h-2 rounded-full ${isAdminMember ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]'}"></div>
+                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Pulse</span>
                 </div>
-                <span class="text-slate-400">${lastActivity}</span>
+                ${!isAdminMember ? `<span class="text-[10px] font-black ${u.author_approval_rate > 70 ? 'text-emerald-500' : 'text-amber-500'} bg-slate-50 px-2 py-1 rounded-lg border border-slate-50">${u.author_approval_rate}% OK</span>` : ''}
             </div>
         </div>
-    `}).join('') || '<p class="text-slate-400 text-center py-8">No team data available</p>';
+    `}).join('') || '<div class="col-span-full py-12 text-center text-slate-400 font-bold uppercase tracking-widest">No team pulse detected</div>';
     
     // === Upcoming Scheduled ===
     document.getElementById('upcomingScheduled').innerHTML = (d.upcoming_scheduled || []).map(p => {
         const schedDate = new Date(p.scheduled_date);
         return `
-            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg cursor-pointer hover:bg-slate-100" onclick="openViewModal(${p.id})">
-                <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex flex-col items-center justify-center text-xs">
-                    <span class="font-bold">${schedDate.getDate()}</span>
-                    <span class="text-[10px]">${schedDate.toLocaleString('en', {month: 'short'})}</span>
+            <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl cursor-pointer hover:bg-indigo-50 transition-colors group" onclick="openViewModal(${p.id})">
+                <div class="w-10 h-10 bg-white border border-slate-100 text-indigo-600 rounded-xl flex flex-col items-center justify-center text-[10px] font-black shadow-sm group-hover:border-indigo-200">
+                    <span class="leading-none">${schedDate.getDate()}</span>
+                    <span class="uppercase tracking-tighter opacity-50">${schedDate.toLocaleString('en', {month: 'short'})}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <div class="font-medium text-slate-700 truncate">${escapeHtml(p.title)}</div>
-                    <div class="text-xs text-slate-400">${p.platform} · ${schedDate.toLocaleTimeString('en', {hour: '2-digit', minute: '2-digit'})}</div>
+                    <div class="text-xs font-bold text-slate-700 truncate group-hover:text-indigo-700">${escapeHtml(p.title)}</div>
+                    <div class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">${p.platforms ? JSON.parse(p.platforms).join(' · ') : ''} · ${schedDate.toLocaleTimeString('en', {hour: '2-digit', minute: '2-digit'})}</div>
                 </div>
             </div>
         `;
-    }).join('') || '<p class="text-slate-400 text-center py-6">No upcoming scheduled posts</p>';
+    }).join('') || '<p class="text-slate-300 text-[10px] font-bold uppercase py-6 text-center">Calendar is clear</p>';
     
-    // === Recent Activity - DETAILED ===
+    // === Recent Activity ===
     const actionConfig = {
-        'created': { icon: '✚', bg: 'bg-emerald-100', text: 'text-emerald-600', label: 'Created new post' },
-        'updated': { icon: '✎', bg: 'bg-blue-100', text: 'text-blue-600', label: 'Updated content' },
-        'status_changed': { icon: '⟳', bg: 'bg-amber-100', text: 'text-amber-600', label: 'Changed status' },
-        'comment_added': { icon: '💬', bg: 'bg-indigo-100', text: 'text-indigo-600', label: 'Added comment' },
-        'media_uploaded': { icon: '📎', bg: 'bg-purple-100', text: 'text-purple-600', label: 'Uploaded media' },
-        'deleted': { icon: '✕', bg: 'bg-red-100', text: 'text-red-600', label: 'Deleted post' },
-    };
-    
-    const activityStatusLabels = {
-        'IDEA': 'Idea', 'DRAFT': 'Draft', 'PENDING_REVIEW': 'Pending Review',
-        'CHANGES_REQUESTED': 'Changes Requested', 'APPROVED': 'Approved',
-        'SCHEDULED': 'Scheduled', 'PUBLISHED': 'Published'
+        'created': { icon: '✚', bg: 'bg-emerald-50 text-emerald-500', label: 'Draft Created' },
+        'updated': { icon: '✎', bg: 'bg-blue-50 text-blue-500', label: 'Revised Content' },
+        'status_changed': { icon: '⟳', bg: 'bg-amber-50 text-amber-500', label: 'Workflow Skip' },
+        'comment_added': { icon: '💬', bg: 'bg-indigo-50 text-indigo-500', label: 'Internal Comms' },
+        'media_uploaded': { icon: '📎', bg: 'bg-purple-50 text-purple-500', label: 'Media Injection' },
+        'deleted': { icon: '✕', bg: 'bg-red-50 text-red-500', label: 'Node Purged' },
     };
     
     const activityStatusColors = {
-        'IDEA': 'bg-purple-500', 'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
+        'IDEA': 'bg-violet-500', 'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
         'CHANGES_REQUESTED': 'bg-orange-500', 'APPROVED': 'bg-emerald-500',
         'SCHEDULED': 'bg-indigo-500', 'PUBLISHED': 'bg-slate-600'
     };
     
-    const platformIcons = {
-        'Facebook': '📘', 'Instagram': '📸', 'LinkedIn': '💼', 'X': 'X', 
-        'TikTok': '🎵', 'YouTube': '▶️', 'Snapchat': '👻', 'Website': '🌐'
-    };
-    
     document.getElementById('recentActivity').innerHTML = (d.recent_activity || []).map(a => {
-        const config = actionConfig[a.action] || { icon: '•', bg: 'bg-slate-100', text: 'text-slate-500', label: a.action };
+        const config = actionConfig[a.action] || { icon: '•', bg: 'bg-slate-50 text-slate-500', label: a.action };
         
-        // Status transition for status_changed
         let statusTransition = '';
-        if (a.action === 'status_changed' && a.old_value && a.new_value) {
-            statusTransition = `
-                <div class="flex items-center gap-2 mt-2">
-                    <span class="px-2 py-1 rounded text-xs font-medium bg-slate-200 text-slate-600">${activityStatusLabels[a.old_value] || a.old_value}</span>
-                    <span class="text-slate-400">→</span>
-                    <span class="px-2 py-1 rounded text-xs font-medium text-white ${activityStatusColors[a.new_value] || 'bg-slate-500'}">${activityStatusLabels[a.new_value] || a.new_value}</span>
-                </div>`;
-        } else if (a.action === 'status_changed' && a.new_value) {
-            statusTransition = `
-                <div class="mt-2">
-                    <span class="px-2 py-1 rounded text-xs font-medium text-white ${activityStatusColors[a.new_value] || 'bg-slate-500'}">${activityStatusLabels[a.new_value] || a.new_value}</span>
-                </div>`;
+        if (a.action === 'status_changed' && a.new_value) {
+            statusTransition = `<span class="ml-2 px-1.5 py-0.5 rounded-[4px] text-[8px] font-black text-white uppercase ${activityStatusColors[a.new_value] || 'bg-slate-400'}">${a.new_value.replace('_', ' ')}</span>`;
         }
-        
-        // Description/reason if available
-        let description = '';
-        if (a.description) {
-            description = `<div class="mt-2 text-sm text-slate-600 bg-slate-100 p-2 rounded-lg border-l-2 border-amber-400 italic">"${escapeHtml(a.description)}"</div>`;
-        }
-        
-        // Platform badge
-        const platformBadge = a.platform ? `<span class="text-xs text-slate-500">${platformIcons[a.platform] || '📱'} ${a.platform}</span>` : '';
         
         return `
-        <div class="p-4 bg-white hover:bg-slate-50 rounded-xl transition-colors border border-slate-200 shadow-sm cursor-pointer" onclick="openViewModal(${a.post_id})">
+        <div class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-100 hover:shadow-md transition-all cursor-pointer group" onclick="openViewModal(${a.post_id})">
             <div class="flex items-start gap-3">
-                <div class="w-12 h-12 ${config.bg} rounded-xl flex items-center justify-center text-xl ${config.text} flex-shrink-0">${config.icon}</div>
+                <div class="w-10 h-10 ${config.bg} rounded-xl flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform">${config.icon}</div>
                 <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="font-bold text-slate-800">${a.full_name || a.username}</span>
-                        <span class="text-xs text-slate-400">${formatDate(a.created_at)}</span>
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-[10px] font-black text-slate-800 uppercase tracking-tight truncate">${a.full_name || a.username}</span>
+                        <span class="text-[9px] font-bold text-slate-300 uppercase">${formatDate(a.created_at)}</span>
                     </div>
-                    <div class="text-sm text-slate-500 mt-0.5">${config.label}</div>
-                    <div class="mt-2 p-2 bg-slate-50 rounded-lg">
-                        <div class="font-medium text-slate-700">${escapeHtml(a.post_title)}</div>
-                        <div class="flex items-center gap-3 mt-1">
-                            ${platformBadge}
-                        </div>
+                    <div class="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center">
+                        ${config.label} ${statusTransition}
                     </div>
-                    ${statusTransition}
-                    ${description}
+                    <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-50 group-hover:bg-slate-100 transition-colors">
+                        <div class="text-[11px] font-bold text-slate-700 truncate">${escapeHtml(a.post_title)}</div>
+                    </div>
                 </div>
             </div>
         </div>
-    `}).join('') || '<p class="text-slate-400 text-center py-8">No recent activity</p>';
+    `}).join('') || '<div class="col-span-full py-12 text-center text-slate-300 text-xs font-bold uppercase tracking-widest">Awaiting system events...</div>';
     
     // Update activity count
     const activityCount = (d.recent_activity || []).length;
-    document.getElementById('activityCount').textContent = activityCount > 0 ? `Showing ${activityCount} activities` : '';
+    document.getElementById('activityCount').textContent = activityCount > 0 ? `${activityCount} REAL-TIME EVENTS` : '';
+    
     } catch (err) {
         console.error('loadDashboard ERROR:', err);
+        toast('Failed to load dashboard sync', 'error');
     }
 }
 
@@ -1601,23 +1587,6 @@ function cardHTML(post) {
         return `<span class="text-[10px] px-1.5 py-0.5 rounded text-white ${color}"><i class="${icon}"></i></span>`;
     }).join('');
     
-    // Format date
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        const date = new Date(dateStr);
-        const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-        
-        if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins}m ago`;
-        if (diffHours < 24) return `${diffHours}h ago`;
-        if (diffDays < 7) return `${diffDays}d ago`;
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    };
-    
     const updatedDate = formatDate(post.updated_at || post.created_at);
     const scheduledDate = post.scheduled_date ? formatDate(post.scheduled_date) : null;
     
@@ -1651,6 +1620,23 @@ function cardHTML(post) {
             </div>
         </div>
     `;
+}
+
+// Utility: Format date
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // ==================== CREATE MODAL ====================
