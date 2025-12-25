@@ -1044,8 +1044,28 @@ try {
             if (!$postId || !$content) sendResponse(false, null, 'Post ID and content required', 400);
             if (mb_strlen($content) > 5000) sendResponse(false, null, 'Comment too long (max 5000 chars)', 400);
             
+            // Get post information to find the author
+            $post = fetchOne("SELECT id, title, author_id FROM posts WHERE id = ?", [$postId]);
+            if (!$post) sendResponse(false, null, 'Post not found', 404);
+            
             executeQuery("INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)", [$postId, $user['id'], $content]);
             logActivity($postId, $user['id'], 'comment_added');
+            
+            // Send notification to post author (if they're not the one commenting)
+            if ($post['author_id'] != $user['id']) {
+                $commenterName = $user['full_name'] ?: $user['username'];
+                $message = $commenterName . " commented on your post: " . mb_substr($content, 0, 100) . (mb_strlen($content) > 100 ? '...' : '');
+                notify($post['author_id'], 'comment', 'New Comment on Your Post', $message, $postId, $user['id']);
+            }
+            
+            // Send notification to all admins
+            $admins = fetchAll("SELECT id FROM users WHERE role = 'admin' AND id != ?", [$user['id']]);
+            $commenterName = $user['full_name'] ?: $user['username'];
+            $postTitle = mb_substr($post['title'], 0, 50) . (mb_strlen($post['title']) > 50 ? '...' : '');
+            $message = $commenterName . " commented on post '" . $postTitle . "': " . mb_substr($content, 0, 80) . (mb_strlen($content) > 80 ? '...' : '');
+            foreach ($admins as $admin) {
+                notify($admin['id'], 'comment', 'New Comment', $message, $postId, $user['id']);
+            }
             
             $comment = fetchOne(
                 "SELECT c.*, u.username, u.full_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?",
