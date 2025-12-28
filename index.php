@@ -352,6 +352,10 @@ $csrfToken = generateCSRFToken();
                         <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                         Pending <span id="countPENDING_REVIEW" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
+                    <button onclick="setStatusFilter('REVIEWED')" id="tabREVIEWED" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                        Reviewed <span id="countREVIEWED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
+                    </button>
                     <button onclick="setStatusFilter('APPROVED')" id="tabAPPROVED" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                         Approved <span id="countAPPROVED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
@@ -451,10 +455,8 @@ $csrfToken = generateCSRFToken();
                         <div id="adminUsersCount" class="text-3xl font-bold text-purple-600 tracking-tight">0</div>
                     </div>
                 </div>
-                <button onclick="openAddUserModal()" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg shadow-slate-900/10 transition-all">
-                    <i class="fa-solid fa-plus"></i>
-                    Add User
-                </button>
+                <!-- User Actions Container -->
+                <div id="userActionsContainer"></div>
             </div>
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <table class="w-full text-left border-collapse">
@@ -928,6 +930,7 @@ $csrfToken = generateCSRFToken();
                     <div class="relative">
                         <select id="editUserRole" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
                             <option value="staff">Staff</option>
+                            <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
@@ -970,6 +973,7 @@ $csrfToken = generateCSRFToken();
                     <div class="relative">
                         <select id="addUserRole" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
                             <option value="staff">Staff</option>
+                            <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
@@ -991,12 +995,13 @@ $csrfToken = generateCSRFToken();
 
 <script>
 const app = { user: null, posts: [], currentPost: null, lastUnreadCount: 0, notificationsInitialized: false };
-const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
 const STATUS_COLORS = {
     'IDEA': 'bg-violet-100 text-violet-700',
     'DRAFT': 'bg-sky-100 text-sky-700',
     'PENDING_REVIEW': 'bg-amber-100 text-amber-700',
-    'CHANGES_REQUESTED': 'bg-orange-100 text-orange-700',
+    'REVIEWED': 'bg-orange-100 text-orange-700',
+    'CHANGES_REQUESTED': 'bg-red-100 text-red-700',
     'APPROVED': 'bg-emerald-100 text-emerald-700',
     'SCHEDULED': 'bg-indigo-100 text-indigo-700',
     'PUBLISHED': 'bg-slate-100 text-slate-600'
@@ -1005,6 +1010,7 @@ const STATUS_LABELS = {
     'IDEA': 'Idea',
     'DRAFT': 'Draft',
     'PENDING_REVIEW': 'In Review',
+    'REVIEWED': 'Reviewed',
     'CHANGES_REQUESTED': 'Changes',
     'APPROVED': 'Approved',
     'SCHEDULED': 'Scheduled',
@@ -1041,8 +1047,8 @@ async function init() {
         let initialTab = window.location.hash.replace('#', '');
         if (!validTabs.includes(initialTab)) initialTab = 'board';
         
-        // Check if non-admin trying to access users tab
-        if (initialTab === 'users' && app.user?.role !== 'admin') initialTab = 'board';
+        // Check if unauthorized role trying to access users tab
+        if (initialTab === 'users' && !['admin', 'manager'].includes(app.user?.role?.toLowerCase())) initialTab = 'board';
         
         switchTab(initialTab);
 
@@ -1078,7 +1084,7 @@ window.addEventListener('hashchange', function() {
     const validTabs = ['dashboard', 'board', 'calendar', 'users'];
     let tab = window.location.hash.replace('#', '');
     if (!validTabs.includes(tab)) tab = 'board';
-    if (tab === 'users' && app.user?.role !== 'admin') tab = 'board';
+    if (tab === 'users' && !['admin', 'manager'].includes(app.user?.role?.toLowerCase())) tab = 'board';
     switchTab(tab);
 });
 
@@ -1108,7 +1114,7 @@ async function loadUser() {
         document.getElementById('userName').textContent = data.data.full_name || data.data.username;
         document.getElementById('userRole').textContent = data.data.role;
         document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
-        if (data.data.role === 'admin') document.getElementById('adminLink').classList.remove('hidden');
+        if (['admin', 'manager'].includes(data.data.role)) document.getElementById('adminLink').classList.remove('hidden');
         
         // Update company branding (use white logo for dark sidebar)
         if (data.data.company_logo) {
@@ -1202,7 +1208,7 @@ async function loadDashboard() {
     // === KPIs with Trends ===
     document.getElementById('kpiTotal').textContent = d.overview?.total_posts || 0;
     document.getElementById('kpiPublished').textContent = d.overview?.published_period || 0;
-    document.getElementById('kpiPending').textContent = d.overview?.pending_review || 0;
+    document.getElementById('kpiPending').textContent = (d.overview?.pending_review || 0) + (d.overview?.reviewed || 0);
     document.getElementById('kpiScheduled').textContent = d.overview?.scheduled_upcoming || 0;
     document.getElementById('kpiApprovalRate').textContent = (d.overview?.approval_rate || 0) + '%';
     
@@ -1255,13 +1261,14 @@ async function loadDashboard() {
     }).join('') || '<p class="text-slate-400 text-[10px] font-bold uppercase py-4">Efficiency data pending...</p>';
     
     // === Workflow Funnel ===
-    const statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+    const statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
     const maxCount = Math.max(...statuses.map(s => d.by_status?.[s] || 0), 1);
-    const statusLabels = ['Ideas', 'Drafts', 'Review', 'Approved', 'Sched', 'Pub'];
+    const statusLabels = ['Ideas', 'Drafts', 'Review', 'Reviewed', 'Approved', 'Sched', 'Pub'];
     const gradients = [
         'from-violet-400 to-violet-600',
         'from-sky-400 to-sky-600', 
         'from-amber-400 to-amber-600',
+        'from-orange-400 to-orange-600',
         'from-emerald-400 to-emerald-600',
         'from-indigo-400 to-indigo-600',
         'from-slate-400 to-slate-600'
@@ -1335,12 +1342,13 @@ async function loadDashboard() {
     document.getElementById('teamMemberCount').textContent = teamMembers.length > 0 ? `${teamMembers.length} ACTIVE` : 'NONE';
     
     document.getElementById('userPerformanceCards').innerHTML = teamMembers.map(u => {
-        const isAdminMember = u.role === 'admin';
+        const roleStr = String(u.role).toLowerCase();
+        const isReviewerMember = roleStr === 'admin' || roleStr === 'manager';
         const lastActivity = u.last_activity ? formatDate(u.last_activity) : 'Never';
         
         // Dynamic Metrics based on Role
         let metricsHtml = '';
-        if (isAdminMember) {
+        if (isReviewerMember) {
             metricsHtml = `
                 <div class="grid grid-cols-2 gap-2 py-3 border-y border-slate-50 mb-3">
                     <div class="px-3 py-2 bg-indigo-50/50 rounded-xl">
@@ -1361,6 +1369,14 @@ async function loadDashboard() {
                     <div class="px-3 py-2 bg-blue-50/50 rounded-xl">
                         <div class="text-[10px] text-blue-400 font-black uppercase tracking-widest mb-0.5">Comments</div>
                         <div class="text-sm font-black text-blue-600">${u.comments_count}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-violet-50/50 rounded-xl">
+                        <div class="text-[10px] text-violet-400 font-black uppercase tracking-widest mb-0.5">Drafted</div>
+                        <div class="text-sm font-black text-violet-600">${u.drafts_created}</div>
+                    </div>
+                    <div class="px-3 py-2 bg-slate-50/50 rounded-xl">
+                        <div class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-0.5">Published</div>
+                        <div class="text-sm font-black text-slate-600">${u.published_count}</div>
                     </div>
                 </div>
             `;
@@ -1404,7 +1420,7 @@ async function loadDashboard() {
                 <div class="flex-1 min-w-0">
                     <div class="font-black text-slate-800 truncate text-lg tracking-tight">${u.full_name || u.username}</div>
                     <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${isAdminMember ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}">${u.role}</span>
+                        <span class="px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest ${isReviewerMember ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}">${u.role}</span>
                         <span class="text-[9px] text-slate-300 font-bold">•</span>
                         <span class="text-[8px] text-slate-400 font-black uppercase tracking-tighter">${lastActivity}</span>
                     </div>
@@ -1415,10 +1431,9 @@ async function loadDashboard() {
             
             <div class="flex items-center justify-between px-1">
                 <div class="flex items-center gap-1.5">
-                    <div class="w-2 h-2 rounded-full ${isAdminMember ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]'}"></div>
+                    <div class="w-2 h-2 rounded-full ${isReviewerMember ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]'}"></div>
                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Pulse</span>
                 </div>
-                ${!isAdminMember ? `<span class="text-[10px] font-black ${u.author_approval_rate > 70 ? 'text-emerald-500' : 'text-amber-500'} bg-slate-50 px-2 py-1 rounded-lg border border-slate-50">${u.author_approval_rate}% OK</span>` : ''}
             </div>
         </div>
     `}).join('') || '<div class="col-span-full py-12 text-center text-slate-400 font-bold uppercase tracking-widest">No team pulse detected</div>';
@@ -1444,7 +1459,7 @@ async function loadDashboard() {
     const actionConfig = {
         'created': { icon: '✚', bg: 'bg-emerald-50 text-emerald-500', label: 'Draft Created' },
         'updated': { icon: '✎', bg: 'bg-blue-50 text-blue-500', label: 'Revised Content' },
-        'status_changed': { icon: '⟳', bg: 'bg-amber-50 text-amber-500', label: 'Workflow Skip' },
+        'status_changed': { icon: '⟳', bg: 'bg-amber-50 text-amber-500', label: 'Status Update' },
         'comment_added': { icon: '💬', bg: 'bg-indigo-50 text-indigo-500', label: 'Internal Comms' },
         'media_uploaded': { icon: '📎', bg: 'bg-purple-50 text-purple-500', label: 'Media Injection' },
         'deleted': { icon: '✕', bg: 'bg-red-50 text-red-500', label: 'Node Purged' },
@@ -1452,7 +1467,7 @@ async function loadDashboard() {
     
     const activityStatusColors = {
         'IDEA': 'bg-violet-500', 'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
-        'CHANGES_REQUESTED': 'bg-orange-500', 'APPROVED': 'bg-emerald-500',
+        'REVIEWED': 'bg-orange-500', 'CHANGES_REQUESTED': 'bg-orange-500', 'APPROVED': 'bg-emerald-500',
         'SCHEDULED': 'bg-indigo-500', 'PUBLISHED': 'bg-slate-600'
     };
     
@@ -1523,7 +1538,7 @@ async function loadPosts(checkChanges = false) {
 let currentStatusFilter = '';
 
 function renderBoard() {
-    const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
+    const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], REVIEWED: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
     
     app.posts.forEach(p => {
         if (p.status === 'CHANGES_REQUESTED') grouped.DRAFT.push(p);
@@ -2053,14 +2068,19 @@ async function openViewModal(id) {
         
         // Buttons visibility
         const isAdmin = app.user.role === 'admin';
+        const isManager = app.user.role === 'manager';
+        const isAdminOrManager = ['admin', 'manager'].includes(app.user.role);
         const isOwner = p.author_id == app.user.id;
         const canEditStatus = ['DRAFT', 'CHANGES_REQUESTED', 'IDEA'].includes(p.status);
+        const isApprovedOrLater = ['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(p.status);
         
+        // Hide edit button for posts after manager approval
         const editBtn = document.getElementById('viewEditBtn');
-        if (editBtn) editBtn.classList.toggle('hidden', !(isAdmin || (isOwner && canEditStatus)));
+        if (editBtn) editBtn.classList.toggle('hidden', isApprovedOrLater || !(isAdminOrManager || (isOwner && canEditStatus)));
         
+        // Hide delete button for posts after manager approval
         const deleteBtn = document.getElementById('viewDeleteBtn');
-        if (deleteBtn) deleteBtn.classList.toggle('hidden', !(isAdmin || (isOwner && ['DRAFT', 'IDEA'].includes(p.status))));
+        if (deleteBtn) deleteBtn.classList.toggle('hidden', isApprovedOrLater || !(isAdminOrManager || (isOwner && ['DRAFT', 'IDEA'].includes(p.status))));
         
         const modal = document.getElementById('viewModal');
         if (modal) modal.classList.remove('hidden');
@@ -2074,6 +2094,8 @@ async function openViewModal(id) {
 function renderActionButtons(p) {
     const container = document.getElementById('actionButtons');
     const isAdmin = app.user.role === 'admin';
+    const isManager = app.user.role === 'manager';
+    const isAdminOrManager = ['admin', 'manager'].includes(app.user.role);
     const isOwner = p.author_id == app.user.id;
     let buttons = [];
     
@@ -2093,18 +2115,33 @@ function renderActionButtons(p) {
         }
     } else if (p.status === 'PENDING_REVIEW') {
         if (isAdmin) {
-            buttons.push(`<button onclick="approvePost()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Approve</button>`);
+            buttons.push(`<button onclick="sendToReviewed()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Send to Manager</button>`);
             buttons.push(`<button onclick="openChangesModal()" class="${btnWarning}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Request Changes</button>`);
         }
+        if (isOwner) {
+            buttons.push(`<button onclick="recallToDraft()" class="${btnSecondary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Recall to Draft</button>`);
+        }
+    } else if (p.status === 'REVIEWED') {
+        if (isManager) {
+            buttons.push(`<button onclick="approvePost()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Approve</button>`);
+            buttons.push(`<button onclick="openChangesModal()" class="${btnWarning}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Request Changes</button>`);
+        } else if (isAdmin) {
+            buttons.push(`<button onclick="recallFromManager()" class="${btnSecondary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Recall to Review</button>`);
+        } else {
+            buttons.push(`<div class="flex-1 text-center py-2.5 px-5 bg-orange-50 text-orange-600 font-medium rounded-md text-sm border border-orange-200"><svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Awaiting Manager Approval</div>`);
+        }
     } else if (p.status === 'APPROVED') {
-        if (isAdmin) {
+        if (isAdminOrManager) {
             buttons.push(`<button onclick="openScheduleModal()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Schedule for Publishing</button>`);
+        }
+        if (isManager) {
+            buttons.push(`<button onclick="revokeApproval()" class="${btnWarning}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Revoke Approval</button>`);
         }
     } else if (p.status === 'SCHEDULED') {
         const schedDate = p.scheduled_date ? new Date(p.scheduled_date) : null;
         const schedStr = schedDate ? schedDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
         buttons.push(`<div class="flex-1 text-center py-2.5 px-5 bg-slate-50 text-slate-600 font-medium rounded-md text-sm border border-slate-200"><svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Scheduled: ${schedStr}</div>`);
-        if (isAdmin) {
+        if (isAdminOrManager) {
             buttons.push(`<button onclick="publishNow()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>Publish Now</button>`);
             buttons.push(`<button onclick="unschedulePost()" class="${btnSecondary}">Unschedule</button>`);
         }
@@ -2296,11 +2333,62 @@ async function submitForReview() {
     }
 }
 
+async function sendToReviewed() {
+    if (!app.currentPost) return;
+    const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'REVIEWED' });
+    if (data.success) {
+        toast('Sent to manager for approval!', 'success');
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Error', 'error');
+    }
+}
+
 async function approvePost() {
     if (!app.currentPost) return;
     const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'APPROVED' });
     if (data.success) {
         toast('Post approved!', 'success');
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Error', 'error');
+    }
+}
+
+async function revokeApproval() {
+    if (!app.currentPost) return;
+    if (!confirm('Are you sure you want to revoke approval for this post? It will return to the Review stage.')) return;
+    const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'REVIEWED' });
+    if (data.success) {
+        toast('Approval revoked!', 'success');
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Error', 'error');
+    }
+}
+
+async function recallFromManager() {
+    if (!app.currentPost) return;
+    if (!confirm('Recall this post from the manager?')) return;
+    const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'PENDING_REVIEW' });
+    if (data.success) {
+        toast('Recalled from manager!', 'success');
+        closeViewModal();
+        loadPosts();
+    } else {
+        toast(data.message || 'Error', 'error');
+    }
+}
+
+async function recallToDraft() {
+    if (!app.currentPost) return;
+    if (!confirm('Recall this post to Draft?')) return;
+    const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'DRAFT' });
+    if (data.success) {
+        toast('Recalled to draft!', 'success');
         closeViewModal();
         loadPosts();
     } else {
@@ -2718,14 +2806,26 @@ function showDayPosts(dateStr) {
 let allUsers = [];
 
 async function loadUsers() {
-    if (app.user?.role !== 'admin') return;
+    if (!['admin', 'manager'].includes(app.user?.role?.toLowerCase())) return;
     
     const data = await api('fetch_users');
     if (data.success) {
         allUsers = data.data;
         document.getElementById('totalUsersCount').textContent = allUsers.length;
         document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.is_active).length;
-        document.getElementById('adminUsersCount').textContent = allUsers.filter(u => u.role === 'admin').length;
+        document.getElementById('adminUsersCount').textContent = allUsers.filter(u => u.role?.toLowerCase() === 'admin').length;
+        
+        // Render Action Button
+        const actionContainer = document.getElementById('userActionsContainer');
+        if (actionContainer) {
+            actionContainer.innerHTML = app.user?.role?.toLowerCase() === 'manager' ? `
+                <button onclick="openAddUserModal()" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg shadow-slate-900/10 transition-all">
+                    <i class="fa-solid fa-plus"></i>
+                    Add User
+                </button>
+            ` : '';
+        }
+
         renderUsersTable();
     }
 }
@@ -2745,7 +2845,7 @@ function renderUsersTable() {
                 </div>
             </td>
             <td class="px-6 py-4">
-                <span class="px-2 py-1 rounded-full text-xs font-medium ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'}">
+                <span class="px-2 py-1 rounded-full text-xs font-medium ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : (u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')}">
                     ${u.role}
                 </span>
             </td>
@@ -2757,12 +2857,14 @@ function renderUsersTable() {
             <td class="px-6 py-4 text-sm text-slate-500">${formatDate(u.created_at)}</td>
             <td class="px-6 py-4 text-center">
                 <div class="flex items-center justify-center gap-2">
+                    ${app.user?.role?.toLowerCase() === 'manager' ? `
                     <button onclick="openEditUserModal(${u.id})" class="px-3 py-1 text-xs rounded-lg bg-brand-100 text-brand-600 hover:bg-brand-200">
                         Edit
                     </button>
                     <button onclick="toggleUserStatus(${u.id}, ${u.is_active ? 0 : 1})" class="px-3 py-1 text-xs rounded-lg ${u.is_active ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}">
                         ${u.is_active ? 'Deactivate' : 'Activate'}
                     </button>
+                    ` : '<span class="text-xs text-slate-400">View Only</span>'}
                 </div>
             </td>
         </tr>

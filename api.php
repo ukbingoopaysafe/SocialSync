@@ -48,7 +48,13 @@ function requireAuth() {
 function requireAdmin() {
     requireAuth();
     $user = getCurrentUser();
-    if ($user['role'] !== 'admin') sendResponse(false, null, 'Admin access required', 403);
+    if (!in_array($user['role'], ['admin', 'manager'])) sendResponse(false, null, 'Admin access required', 403);
+}
+
+function requireManager() {
+    requireAuth();
+    $user = getCurrentUser();
+    if ($user['role'] !== 'manager') sendResponse(false, null, 'Manager access required', 403);
 }
 
 function logActivity($postId, $userId, $action, $oldValue = null, $newValue = null, $desc = null) {
@@ -153,6 +159,8 @@ try {
             requireAuth();
             $user = getCurrentUser();
             $isAdmin = $user['role'] === 'admin';
+            $isManager = $user['role'] === 'manager';
+            $isAdminOrManager = $isAdmin || $isManager;
             $days = isset($_GET['days']) ? intval($_GET['days']) : 30;
             $dateFrom = date('Y-m-d H:i:s', strtotime("-{$days} days"));
             $datePrev = date('Y-m-d H:i:s', strtotime("-" . ($days * 2) . " days"));
@@ -177,6 +185,9 @@ try {
             $prevApproved = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'APPROVED' AND a.created_at >= ? AND a.created_at < ?", [$companyId, $datePrev, $dateFrom])['c'];
             $prevApprovalRate = $prevSubmitted > 0 ? round(($prevApproved / $prevSubmitted) * 100) : 0;
             
+            $pending = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PENDING_REVIEW'", [$companyId])['c'];
+            $reviewed = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'REVIEWED'", [$companyId])['c'];
+            
             $analytics['overview'] = [
                 'total_posts' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ?", [$companyId])['c'],
                 'published_period' => $currentPublished,
@@ -184,7 +195,8 @@ try {
                 'created_period' => $currentCreated,
                 'created_trend' => $prevCreated > 0 ? round((($currentCreated - $prevCreated) / $prevCreated) * 100) : ($currentCreated > 0 ? 100 : 0),
                 'scheduled_upcoming' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'SCHEDULED' AND scheduled_date > NOW()", [$companyId])['c'],
-                'pending_review' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PENDING_REVIEW'", [$companyId])['c'],
+                'pending_review' => $pending,
+                'reviewed' => $reviewed,
                 'approval_rate' => $approvalRate,
                 'approval_trend' => $approvalRate - $prevApprovalRate,
             ];
@@ -193,7 +205,8 @@ try {
             $bottlenecks = [];
             $stageTransitions = [
                 ['from' => 'DRAFT', 'to' => 'PENDING_REVIEW', 'label' => 'Drafting'],
-                ['from' => 'PENDING_REVIEW', 'to' => 'APPROVED', 'label' => 'Review'],
+                ['from' => 'PENDING_REVIEW', 'to' => 'REVIEWED', 'label' => 'Admin Review'],
+                ['from' => 'REVIEWED', 'to' => 'APPROVED', 'label' => 'Manager Approval'],
                 ['from' => 'APPROVED', 'to' => 'SCHEDULED', 'label' => 'Scheduling'],
                 ['from' => 'SCHEDULED', 'to' => 'PUBLISHED', 'label' => 'Publishing'],
             ];
@@ -223,7 +236,7 @@ try {
             
             // === POSTS BY STATUS (Funnel) - filtered by company ===
             $analytics['by_status'] = [];
-            $statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+            $statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
             foreach ($statuses as $status) {
                 $analytics['by_status'][$status] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = ?", [$companyId, $status])['c'];
             }
@@ -253,17 +266,17 @@ try {
             ];
             
             // === USER PERFORMANCE WITH DETAILED METRICS (filtered by company) ===
-            $userQuery = $isAdmin 
+            $userQuery = $isAdminOrManager 
                 ? "SELECT u.id, u.username, u.full_name, u.role,
                       -- Authoring stats (Staff focus)
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'IDEA' AND p2.created_at >= ?) as ideas_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PENDING_REVIEW' AND p2.created_at >= ?) as pending_review_count,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('PENDING_REVIEW', 'REVIEWED') AND p2.created_at >= ?) as pending_review_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PUBLISHED' AND p2.created_at >= ?) as published_count,
                       
-                      -- Admin/Reviewer stats
-                      (SELECT COUNT(DISTINCT al.post_id) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'APPROVED' AND al.created_at >= ?) as reviews_approved,
+                      -- Admin/Manager stats (Reviewer focus)
+                      (SELECT COUNT(DISTINCT al.post_id) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value IN ('REVIEWED', 'APPROVED') AND al.created_at >= ?) as reviews_approved,
                       (SELECT COUNT(DISTINCT al.post_id) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED' AND al.created_at >= ?) as reviews_rejected,
                       (SELECT COUNT(*) FROM comments c JOIN posts p4 ON c.post_id = p4.id WHERE c.user_id = u.id AND p4.company_id = ? AND c.created_at >= ?) as comments_count,
                       
@@ -273,7 +286,7 @@ try {
                 : "SELECT u.id, u.username, u.full_name, u.role,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'IDEA' AND p2.created_at >= ?) as ideas_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PENDING_REVIEW' AND p2.created_at >= ?) as pending_review_count,
+                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('PENDING_REVIEW', 'REVIEWED') AND p2.created_at >= ?) as pending_review_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PUBLISHED' AND p2.created_at >= ?) as published_count,
                       (SELECT COUNT(*) FROM comments c JOIN posts p4 ON c.post_id = p4.id WHERE c.user_id = u.id AND p4.company_id = ? AND c.created_at >= ?) as comments_count,
@@ -281,7 +294,7 @@ try {
                    FROM users u WHERE u.id = ? AND u.is_active = 1";
             
             // Common params: company_id, date_from
-            if ($isAdmin) {
+            if ($isAdminOrManager) {
                 $userParams = [
                     $companyId, $dateFrom, // ideas
                     $companyId, $dateFrom, // drafts
@@ -418,8 +431,11 @@ try {
             
             // === CONTENT HEALTH SCORE ===
             $healthScore = 100;
-            if ($pending >= 5) $healthScore -= 20;
-            elseif ($pending >= 3) $healthScore -= 10;
+            $totalBacklog = $pending + $reviewed;
+            if ($totalBacklog >= 8) $healthScore -= 30;
+            elseif ($totalBacklog >= 5) $healthScore -= 20;
+            elseif ($totalBacklog >= 3) $healthScore -= 10;
+            
             if ($maxBottleneck) $healthScore -= 15;
             if ($approvalRate < 50) $healthScore -= 20;
             elseif ($approvalRate < 70) $healthScore -= 10;
@@ -476,7 +492,7 @@ try {
             break;
         
         case 'update_user_status':
-            requireAdmin();
+            requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $userId = $input['id'] ?? 0;
             $isActive = $input['is_active'] ?? 0;
@@ -493,7 +509,7 @@ try {
             break;
         
         case 'update_user':
-            requireAdmin();
+            requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $userId = $input['id'] ?? 0;
             $fullName = trim($input['full_name'] ?? '');
@@ -502,7 +518,7 @@ try {
             
             if (!$userId) sendResponse(false, null, 'User ID required', 400);
             if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
-            if (!in_array($role, ['admin', 'staff'])) sendResponse(false, null, 'Invalid role', 400);
+            if (!in_array($role, ['admin', 'staff', 'manager'])) sendResponse(false, null, 'Invalid role', 400);
             
             // Prevent changing your own role (security measure)
             if ($userId == $_SESSION['user_id'] && $role !== 'admin') {
@@ -533,9 +549,7 @@ try {
             break;
         
         case 'create_user':
-            requireAdmin();
-        case 'create_user':
-            requireAdmin();
+            requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $username = trim($input['username'] ?? '');
             $fullName = trim($input['full_name'] ?? '');
@@ -545,7 +559,7 @@ try {
             if (empty($username)) sendResponse(false, null, 'Username is required', 400);
             if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
             if (empty($password)) sendResponse(false, null, 'Password is required', 400);
-            if (!in_array($role, ['admin', 'staff'])) sendResponse(false, null, 'Invalid role', 400);
+            if (!in_array($role, ['admin', 'staff', 'manager'])) sendResponse(false, null, 'Invalid role', 400);
             
             // Check if username already exists
             $existingUser = fetchOne("SELECT id FROM users WHERE username = ?", [$username]);
@@ -562,7 +576,7 @@ try {
             break;
         
         case 'get_user_by_id':
-            requireAdmin();
+            requireManager();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'User ID required', 400);
             
@@ -575,7 +589,7 @@ try {
             break;
         
         case 'save_user':
-            requireAdmin();
+            requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $id = $input['id'] ?? null;
             $username = trim($input['username'] ?? '');
@@ -585,7 +599,7 @@ try {
             $isActive = isset($input['is_active']) ? (bool)$input['is_active'] : true;
             
             if (empty($username)) sendResponse(false, null, 'Username is required', 400);
-            if (!in_array($role, ['admin', 'staff'])) $role = 'staff';
+            if (!in_array($role, ['admin', 'staff', 'manager'])) $role = 'staff';
             
             if ($id) {
                 // Update existing user
@@ -810,6 +824,11 @@ try {
                 $existing = fetchOne("SELECT * FROM posts WHERE id = ?", [$id]);
                 if (!$existing) sendResponse(false, null, 'Post not found', 404);
                 
+                // No one can edit posts after manager approval (APPROVED, SCHEDULED, PUBLISHED)
+                if (in_array($existing['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'])) {
+                    sendResponse(false, null, 'Cannot edit post after manager approval', 403);
+                }
+                
                 // Staff can only edit own posts in DRAFT/CHANGES_REQUESTED
                 if ($user['role'] === 'staff') {
                     if ($existing['author_id'] != $user['id']) {
@@ -909,42 +928,59 @@ try {
             
             $oldStatus = $post['status'];
             $isAdmin = $user['role'] === 'admin';
+            $isManager = $user['role'] === 'manager';
+            $isAdminOrManager = in_array($user['role'], ['admin', 'manager']);
             $isOwner = $post['author_id'] == $user['id'];
             
             // Validate transitions
             $allowed = false;
             
             // IDEA -> DRAFT (Admin approves idea)
-            if ($oldStatus === 'IDEA' && $newStatus === 'DRAFT' && $isAdmin) $allowed = true;
+            if ($oldStatus === 'IDEA' && $newStatus === 'DRAFT' && $isAdminOrManager) $allowed = true;
             
             // DRAFT -> PENDING_REVIEW (Owner submits)
-            if ($oldStatus === 'DRAFT' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdmin)) $allowed = true;
+            if ($oldStatus === 'DRAFT' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdminOrManager)) $allowed = true;
             
             // CHANGES_REQUESTED -> PENDING_REVIEW (Owner resubmits)
-            if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdmin)) $allowed = true;
+            if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdminOrManager)) $allowed = true;
             
-            // PENDING_REVIEW -> APPROVED (Admin approves)
-            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'APPROVED' && $isAdmin) $allowed = true;
+            // PENDING_REVIEW -> REVIEWED (Admin reviews and passes to manager)
+            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'REVIEWED' && $isAdmin) $allowed = true;
+            
+            // PENDING_REVIEW -> DRAFT (Owner recalls from review)
+            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'DRAFT' && $isOwner) $allowed = true;
             
             // PENDING_REVIEW -> CHANGES_REQUESTED (Admin requests changes)
             if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'CHANGES_REQUESTED' && $isAdmin) $allowed = true;
             
-            // CHANGES_REQUESTED -> DRAFT (internal, same as just editing)
-            if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'DRAFT' && ($isOwner || $isAdmin)) $allowed = true;
+            // REVIEWED -> APPROVED (Manager final approval)
+            if ($oldStatus === 'REVIEWED' && $newStatus === 'APPROVED' && $isManager) $allowed = true;
             
-            // APPROVED -> SCHEDULED (Admin schedules for publishing)
-            if ($oldStatus === 'APPROVED' && $newStatus === 'SCHEDULED' && $isAdmin) {
+            // REVIEWED -> PENDING_REVIEW (Admin recalls from manager)
+            if ($oldStatus === 'REVIEWED' && $newStatus === 'PENDING_REVIEW' && $isAdmin) $allowed = true;
+            
+            // REVIEWED -> CHANGES_REQUESTED (Manager requests changes)
+            if ($oldStatus === 'REVIEWED' && $newStatus === 'CHANGES_REQUESTED' && $isManager) $allowed = true;
+            
+            // CHANGES_REQUESTED -> DRAFT (internal, same as just editing)
+            if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'DRAFT' && ($isOwner || $isAdminOrManager)) $allowed = true;
+            
+            // APPROVED -> SCHEDULED (Admin/Manager schedules for publishing)
+            if ($oldStatus === 'APPROVED' && $newStatus === 'SCHEDULED' && $isAdminOrManager) {
                 if (!$scheduledDate) {
                     sendResponse(false, null, 'Scheduled date is required', 400);
                 }
                 $allowed = true;
             }
+
+            // APPROVED -> REVIEWED (Manager reverts approval)
+            if ($oldStatus === 'APPROVED' && $newStatus === 'REVIEWED' && $isManager) $allowed = true;
             
-            // SCHEDULED -> PUBLISHED (Admin or system publishes)
-            if ($oldStatus === 'SCHEDULED' && $newStatus === 'PUBLISHED' && $isAdmin) $allowed = true;
+            // SCHEDULED -> PUBLISHED (Admin/Manager or system publishes)
+            if ($oldStatus === 'SCHEDULED' && $newStatus === 'PUBLISHED' && $isAdminOrManager) $allowed = true;
             
-            // SCHEDULED -> APPROVED (Admin unschedules)
-            if ($oldStatus === 'SCHEDULED' && $newStatus === 'APPROVED' && $isAdmin) $allowed = true;
+            // SCHEDULED -> APPROVED (Admin/Manager unschedules)
+            if ($oldStatus === 'SCHEDULED' && $newStatus === 'APPROVED' && $isAdminOrManager) $allowed = true;
             
             if (!$allowed) {
                 sendResponse(false, null, "Cannot change from $oldStatus to $newStatus", 403);
@@ -979,8 +1015,19 @@ try {
                 $description = "Scheduled for " . date('M j, Y g:i A', strtotime($scheduledDate));
             } elseif ($newStatus === 'PUBLISHED') {
                 $description = "Published to archive";
+            } elseif ($oldStatus === 'APPROVED' && $newStatus === 'REVIEWED') {
+                $description = "Revoked approval - returned to manager review";
+            } elseif ($oldStatus === 'REVIEWED' && $newStatus === 'PENDING_REVIEW') {
+                $description = "Recalled from manager - returned to admin review";
+            } elseif ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'DRAFT') {
+                $description = "Recalled from review - returned to draft";
+            } elseif ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'REVIEWED') {
+                $description = "Admin approved - forwarded to manager";
+            } elseif ($oldStatus === 'REVIEWED' && $newStatus === 'APPROVED') {
+                $description = "Manager final approval";
             }
-            logActivity($id, $user['id'], 'status_changed', $oldStatus, $newStatus, $description);
+            
+            logActivity($id, $user['id'], 'status_changed', $oldStatus, $newStatus, "{$user['full_name']} changed status: " . ($description ?: $newStatus));
             
             // Notifications
             if ($newStatus === 'PENDING_REVIEW') {
@@ -988,8 +1035,21 @@ try {
                 foreach ($admins as $admin) {
                     notify($admin['id'], 'review_needed', 'Review Needed', "Post '{$post['title']}' needs review", $id, $user['id']);
                 }
+            } elseif ($newStatus === 'REVIEWED') {
+                // Notify all managers when a post is ready for final approval
+                $managers = fetchAll("SELECT id FROM users WHERE role = 'manager'");
+                foreach ($managers as $manager) {
+                    notify($manager['id'], 'manager_approval_needed', 'Manager Approval Needed', "Post '{$post['title']}' needs your final approval", $id, $user['id']);
+                }
+                // Also notify the author that their post is under manager review
+                notify($post['author_id'], 'reviewed', 'Post Under Manager Review', "Your post '{$post['title']}' is now under manager review", $id, $user['id']);
             } elseif ($newStatus === 'APPROVED') {
                 notify($post['author_id'], 'approved', 'Post Approved', "Your post '{$post['title']}' was approved!", $id, $user['id']);
+                // Notify admins that a post was approved by manager so they can schedule it
+                $admins = fetchAll("SELECT id FROM users WHERE role = 'admin' AND id != ?", [$user['id']]);
+                foreach ($admins as $admin) {
+                    notify($admin['id'], 'post_approved', 'Post Ready for Scheduling', "Post '{$post['title']}' was approved and is ready for scheduling", $id, $user['id']);
+                }
             } elseif ($newStatus === 'CHANGES_REQUESTED') {
                 notify($post['author_id'], 'changes_requested', 'Changes Requested', "Changes requested on '{$post['title']}': $reason", $id, $user['id']);
             } elseif ($newStatus === 'SCHEDULED') {
@@ -1010,6 +1070,11 @@ try {
             
             $post = fetchOne("SELECT * FROM posts WHERE id = ?", [$id]);
             if (!$post) sendResponse(false, null, 'Not found', 404);
+            
+            // No one can delete posts after manager approval
+            if (in_array($post['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'])) {
+                sendResponse(false, null, 'Cannot delete post after manager approval', 403);
+            }
             
             // Staff can only delete own drafts/ideas
             if ($user['role'] === 'staff') {
@@ -1195,7 +1260,7 @@ try {
             
             if (empty($username)) sendResponse(false, null, 'Username required', 400);
             if (empty($email)) sendResponse(false, null, 'Email required', 400);
-            if (!in_array($role, ['admin', 'staff'])) $role = 'staff';
+            if (!in_array($role, ['admin', 'staff', 'manager'])) $role = 'staff';
             
             if ($id) {
                 // Update
