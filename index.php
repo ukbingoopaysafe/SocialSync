@@ -412,63 +412,59 @@ $csrfToken = generateCSRFToken();
                 </div>
             </div>
             
-            <!-- Platform Legend -->
-            <div class="flex flex-wrap gap-3 mb-4 text-xs">
-                <span class="text-slate-500 font-medium">Platforms:</span>
-                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-blue-600 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-facebook"></i></span> Facebook</div>
-                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-instagram"></i></span> Instagram</div>
-                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-blue-700 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-linkedin"></i></span> LinkedIn</div>
-                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-black text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-x-twitter"></i></span> X</div>
-                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-red-600 text-white flex items-center justify-center text-[10px]"><i class="fa-brands fa-youtube"></i></span> YouTube</div>
-                <div class="flex items-center gap-1.5"><span class="w-4 h-4 rounded bg-yellow-400 text-slate-800 flex items-center justify-center text-[10px]"><i class="fa-brands fa-snapchat"></i></span> Snapchat</div>
+            <!-- Platform Legend (Simplified) -->
+            <div class="flex items-center gap-4 mb-4 text-xs text-slate-500">
+                <span class="font-medium">Legend:</span>
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Scheduled</span>
+                <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Published</span>
             </div>
             
             <!-- Calendar Grid -->
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-                <div class="grid grid-cols-7 bg-gradient-to-r from-slate-700 to-slate-800">
-                    <div class="py-3 text-center text-sm font-medium text-white">Sun</div>
-                    <div class="py-3 text-center text-sm font-medium text-white">Mon</div>
-                    <div class="py-3 text-center text-sm font-medium text-white">Tue</div>
-                    <div class="py-3 text-center text-sm font-medium text-white">Wed</div>
-                    <div class="py-3 text-center text-sm font-medium text-white">Thu</div>
-                    <div class="py-3 text-center text-sm font-medium text-white">Fri</div>
-                    <div class="py-3 text-center text-sm font-medium text-white">Sat</div>
+            <div class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
+                    <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Sun</div>
+                    <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Mon</div>
+                    <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Tue</div>
+                    <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Wed</div>
+                    <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Thu</div>
+                    <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Fri</div>
+                    <div class="py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Sat</div>
                 </div>
-                <div id="calendarGrid" class="grid grid-cols-7"></div>
+                <div id="calendarGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100 bg-slate-100"></div>
             </div>
         </div>
 
         <!-- Users View (Admin Only) -->
-        <div id="usersView" class="hidden">
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <div class="flex gap-4">
-                    <div class="bg-white rounded-xl px-6 py-4 border border-slate-200">
-                        <div id="totalUsersCount" class="text-2xl font-bold text-slate-800">0</div>
-                        <div class="text-sm text-slate-500">Total Users</div>
+        <div id="usersView" class="hidden max-w-7xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
+                <div class="flex gap-4 flex-1">
+                    <div class="bg-white rounded-xl px-6 py-5 border border-slate-200 shadow-sm flex-1 max-w-[200px]">
+                        <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Users</div>
+                        <div id="totalUsersCount" class="text-3xl font-bold text-slate-800 tracking-tight">0</div>
                     </div>
-                    <div class="bg-white rounded-xl px-6 py-4 border border-slate-200">
-                        <div id="activeUsersCount" class="text-2xl font-bold text-emerald-600">0</div>
-                        <div class="text-sm text-slate-500">Active</div>
+                    <div class="bg-white rounded-xl px-6 py-5 border border-slate-200 shadow-sm flex-1 max-w-[200px]">
+                        <div class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-1">Active</div>
+                        <div id="activeUsersCount" class="text-3xl font-bold text-emerald-600 tracking-tight">0</div>
                     </div>
-                    <div class="bg-white rounded-xl px-6 py-4 border border-slate-200">
-                        <div id="adminUsersCount" class="text-2xl font-bold text-purple-600">0</div>
-                        <div class="text-sm text-slate-500">Admins</div>
+                    <div class="bg-white rounded-xl px-6 py-5 border border-slate-200 shadow-sm flex-1 max-w-[200px]">
+                         <div class="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1">Admins</div>
+                        <div id="adminUsersCount" class="text-3xl font-bold text-purple-600 tracking-tight">0</div>
                     </div>
                 </div>
-                <button onclick="openAddUserModal()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                <button onclick="openAddUserModal()" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg shadow-slate-900/10 transition-all">
+                    <i class="fa-solid fa-plus"></i>
                     Add User
                 </button>
             </div>
-            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                <table class="w-full">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">User</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Role</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Created</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Actions</th>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-200">
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Joined</th>
+                            <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
@@ -478,282 +474,401 @@ $csrfToken = generateCSRFToken();
     </main>
 
     <!-- ==================== CREATE POST MODAL ==================== -->
-    <div id="createModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
-            <div class="bg-navy-900 text-white px-6 py-4 flex justify-between rounded-t-2xl">
-                <h2 class="text-xl font-bold">✨ Create New Post</h2>
-                <button onclick="closeCreateModal()" class="text-2xl hover:text-gold-400">&times;</button>
+    <div id="createModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col my-8">
+            <!-- Header -->
+            <div class="bg-white px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-slate-100 flex-shrink-0">
+                <h2 class="text-lg font-bold text-slate-800">New Post</h2>
+                <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <form id="createForm" class="p-6 space-y-5">
-                <div>
-                    <label class="block text-sm font-semibold mb-1.5">Title <span class="text-red-500">*</span></label>
-                    <input type="text" id="createTitle" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-gold-500" placeholder="Enter a compelling title...">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1.5 flex justify-between items-center">
-                        <span>Content <span class="text-red-500">*</span></span>
-                        <button type="button" onclick="toggleEmojiPicker('createContent', 'createEmojiBtn')" id="createEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors">
-                            <i class="fa-regular fa-face-smile text-lg"></i>
-                        </button>
-                    </label>
-                    <div class="relative">
-                        <textarea id="createContent" rows="4" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500" placeholder="Write your post content..."></textarea>
-                        <div id="createEmojiPickerContainer" class="absolute z-50 hidden mt-2 right-0 shadow-2xl rounded-xl overflow-hidden border border-slate-200">
-                             <emoji-picker class="light"></emoji-picker>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-semibold mb-2">Platforms <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal">(Select one or more)</span></label>
-                        <div class="grid grid-cols-4 gap-3" id="createPlatformsGrid">
-                            <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="Facebook" class="hidden">
-                                <span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-facebook"></i></span>
-                                <span class="text-sm">Facebook</span>
-                            </label>
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-pink-50 hover:border-pink-300 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="Instagram" class="hidden">
-                                <span class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-instagram"></i></span>
-                                <span class="text-sm">Instagram</span>
-                            </label>
-                            <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="LinkedIn" class="hidden">
-                                <span class="w-6 h-6 bg-blue-700 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-linkedin"></i></span>
-                                <span class="text-sm">LinkedIn</span>
-                            </label>
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="X" class="hidden">
-                                <span class="w-6 h-6 bg-black text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-x-twitter"></i></span>
-                                <span class="text-sm">X</span>
-                            </label>
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="TikTok" class="hidden">
-                                <span class="w-6 h-6 bg-slate-800 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-tiktok"></i></span>
-                                <span class="text-sm">TikTok</span>
-                            </label>
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-red-50 hover:border-red-300 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="YouTube" class="hidden">
-                                <span class="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-youtube"></i></span>
-                                <span class="text-sm">YouTube</span>
-                            </label>
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-yellow-50 hover:border-yellow-300 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="Snapchat" class="hidden">
-                                <span class="w-6 h-6 bg-yellow-400 text-slate-800 rounded flex items-center justify-center text-xs"><i class="fa-brands fa-snapchat"></i></span>
-                                <span class="text-sm">Snapchat</span>
-                            </label>
-                            <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-all">
-                                <input type="checkbox" name="createPlatforms" value="Website" class="hidden">
-                                <span class="w-6 h-6 bg-indigo-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-solid fa-globe"></i></span>
-                                <span class="text-sm">Website</span>
-                            </label>
-                        </div>
+            
+            <!-- Scrollable Content -->
+            <form id="createForm" class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                <!-- Title & Content -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Title</label>
+                        <input type="text" id="createTitle" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-800 placeholder-slate-400" placeholder="Post title...">
                     </div>
                     <div>
-                        <label class="block text-sm font-semibold mb-1.5">Start As</label>
-                        <select id="createStatus" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500">
-                            <option value="DRAFT">📝 Draft (Ready to work)</option>
-                            <option value="IDEA">💡 Idea (Just a suggestion)</option>
-                        </select>
-                    </div>
-                </div>
-                <!-- Media Upload (Multiple) -->
-                <div>
-                    <label class="block text-sm font-semibold mb-1.5">Attach Media (Optional) <span class="text-xs text-slate-400 font-normal">Multiple files allowed</span></label>
-                    <div id="createMediaGallery" class="grid grid-cols-4 gap-2 mb-3"></div>
-                    <div class="upload-zone rounded-xl p-4 text-center cursor-pointer border-2 border-dashed border-slate-300 hover:border-sky-400 transition-colors" onclick="document.getElementById('createFileInput').click()">
-                        <input type="file" id="createFileInput" class="hidden" accept="image/*,video/*" multiple onchange="previewCreateFiles(event)">
-                        <div class="flex items-center justify-center gap-3">
-                            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
-                            <div class="text-left">
-                                <p class="text-slate-600 text-sm font-medium">Click to add media</p>
-                                <p class="text-slate-400 text-xs">Max 100MB each • JPG, PNG, GIF, MP4</p>
+                        <div class="flex justify-between items-center mb-2">
+                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Content</label>
+                             <button type="button" onclick="toggleEmojiPicker('createContent', 'createEmojiBtn')" id="createEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors text-sm">
+                                <i class="fa-regular fa-face-smile"></i>
+                             </button>
+                        </div>
+                        <div class="relative">
+                            <textarea id="createContent" rows="4" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-slate-700 placeholder-slate-400" placeholder="What's on your mind?"></textarea>
+                            <div id="createEmojiPickerContainer" class="absolute z-50 hidden mt-1 right-0 shadow-xl rounded-lg overflow-hidden border border-slate-200">
+                                 <emoji-picker class="light"></emoji-picker>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-4 pt-2">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="createUrgent" class="w-5 h-5 text-red-500 rounded focus:ring-red-500">
-                        <span class="text-sm font-medium">🔥 Mark as Urgent</span>
-                    </label>
+
+                <!-- Platforms & Status -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Platforms</label>
+                        <div class="grid grid-cols-4 gap-2" id="createPlatformsGrid">
+                            <!-- Compact Platform Toggles -->
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="Facebook" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all hover:bg-slate-50">
+                                    <span class="text-blue-600 text-lg mb-1"><i class="fa-brands fa-facebook"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">FB</span>
+                                </div>
+                            </label>
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="Instagram" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-pink-500 peer-checked:bg-pink-50 transition-all hover:bg-slate-50">
+                                    <span class="text-pink-600 text-lg mb-1"><i class="fa-brands fa-instagram"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">IG</span>
+                                </div>
+                            </label>
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="LinkedIn" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-blue-700 peer-checked:bg-blue-50 transition-all hover:bg-slate-50">
+                                    <span class="text-blue-700 text-lg mb-1"><i class="fa-brands fa-linkedin"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">IN</span>
+                                </div>
+                            </label>
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="X" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-black peer-checked:bg-slate-100 transition-all hover:bg-slate-50">
+                                    <span class="text-black text-lg mb-1"><i class="fa-brands fa-x-twitter"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">X</span>
+                                </div>
+                            </label>
+                            <!-- Row 2 -->
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="TikTok" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-slate-800 peer-checked:bg-slate-100 transition-all hover:bg-slate-50">
+                                    <span class="text-slate-800 text-lg mb-1"><i class="fa-brands fa-tiktok"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">TikTok</span>
+                                </div>
+                            </label>
+                             <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="YouTube" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-red-600 peer-checked:bg-red-50 transition-all hover:bg-slate-50">
+                                    <span class="text-red-600 text-lg mb-1"><i class="fa-brands fa-youtube"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">YT</span>
+                                </div>
+                            </label>
+                             <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="Snapchat" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-yellow-400 peer-checked:bg-yellow-50 transition-all hover:bg-slate-50">
+                                    <span class="text-yellow-500 text-lg mb-1"><i class="fa-brands fa-snapchat"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">Snap</span>
+                                </div>
+                            </label>
+                             <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="createPlatforms" value="Website" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 transition-all hover:bg-slate-50">
+                                    <span class="text-indigo-600 text-lg mb-1"><i class="fa-solid fa-globe"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">Web</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                         <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Initial Status</label>
+                            <div class="relative">
+                                <select id="createStatus" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
+                                    <option value="DRAFT">Draft</option>
+                                    <option value="IDEA">Idea</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                         
+                         <label class="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
+                            <input type="checkbox" id="createUrgent" class="w-4 h-4 text-red-600 rounded border-red-300 focus:ring-red-500">
+                            <span class="text-sm font-bold text-red-700">Urgent Priority</span>
+                        </label>
+                    </div>
                 </div>
-                <div class="flex gap-3 pt-4">
-                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Create Post</button>
-                    <button type="button" onclick="closeCreateModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
+
+                <!-- Media Upload -->
+                <div>
+                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Media</label>
+                    <div id="createMediaGallery" class="grid grid-cols-4 gap-2 mb-3 empty:hidden"></div>
+                    <div class="group rounded-lg p-6 text-center cursor-pointer border border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50/30 transition-all" onclick="document.getElementById('createFileInput').click()">
+                        <input type="file" id="createFileInput" class="hidden" accept="image/*,video/*" multiple onchange="previewCreateFiles(event)">
+                        <div class="flex flex-col items-center gap-2">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-brand-100 group-hover:text-brand-500 transition-colors">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <p class="text-sm font-medium text-slate-600 group-hover:text-brand-600">Click to upload media</p>
+                        </div>
+                    </div>
                 </div>
             </form>
+            
+            <!-- Footer Actions -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
+                <button type="button" onclick="closeCreateModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="button" onclick="document.getElementById('createForm').dispatchEvent(new Event('submit'))" class="flex-1 px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10">Create Post</button>
+            </div>
         </div>
     </div>
 
     <!-- ==================== VIEW POST MODAL (Read-Only) ==================== -->
-    <div id="viewModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-start justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl my-8 border border-slate-200">
-            <!-- Header -->
-            <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                    <span id="viewStatusBadge" class="status-badge bg-sky-100 text-sky-700">DRAFT</span>
-                    <div id="viewPlatformBadge" class="flex flex-wrap gap-1.5"></div>
-                </div>
-                <div class="flex items-center gap-1">
-                    <button id="viewEditBtn" onclick="switchToEditMode()" class="text-slate-400 hover:text-brand-500 hover:bg-slate-100 p-2 rounded-lg transition-all" title="Edit Post">
-                        <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                    </button>
-                    <button id="viewDeleteBtn" onclick="deletePost()" class="text-slate-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all" title="Delete Post">
-                        <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                    <button onclick="closeViewModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-lg ml-2 text-xl font-light">&times;</button>
-                </div>
-            </div>
+    <div id="viewModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 lg:p-8">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-full max-h-[90vh] flex flex-col lg:flex-row overflow-hidden border border-slate-100 text-right">
             
-            <!-- Content -->
-            <div class="p-6">
-                <!-- Media Preview -->
-                <div id="viewMediaContainer" class="hidden mb-6">
-                    <div id="viewMediaWrapper"></div>
-                </div>
+            <!-- Left Column: Media (Dark Mode) - Reduced Width -->
+            <div id="viewMediaColumn" class="hidden lg:flex lg:w-[48%] xl:w-[48%] bg-slate-900 items-center justify-center relative group border-l border-slate-100">
+                 <div id="viewMediaWrapper" class="w-full h-full flex items-center justify-center p-4"></div>
+            </div>
+
+            <!-- Right Column: Content & Details - Increased Width -->
+            <div class="flex-1 flex flex-col bg-white h-full relative w-full lg:w-[52%] xl:w-[52%]">
                 
-                <!-- Title & Meta -->
-                <div class="mb-6">
-                    <h1 id="viewTitle" class="text-2xl font-bold text-navy-900 mb-2"></h1>
-                    <div class="flex items-center gap-4 text-sm text-slate-500">
-                        <span id="viewAuthor" class="flex items-center gap-1"></span>
-                        <span id="viewDate"></span>
-                        <span id="viewUrgentBadge" class="hidden text-red-600 font-medium text-xs bg-red-50 px-2 py-0.5 rounded">URGENT</span>
+                <!-- Fixed Header (Sticky) -->
+                <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100 bg-white flex-shrink-0 gap-4 z-10 sticky top-0">
+                     <!-- Status & Platforms -->
+                    <div class="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
+                        <span id="viewStatusBadge" class="status-badge px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 flex-shrink-0">DRAFT</span>
+                        <div id="viewPlatformBadge" class="flex items-center gap-1.5 overflow-x-auto scrollbar-none mask-linear-fade pl-4"></div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button id="viewEditBtn" onclick="switchToEditMode()" class="text-slate-400 hover:text-brand-600 hover:bg-brand-50 p-2 rounded-lg transition-all" title="Edit Post">
+                            <i class="fa-solid fa-pen text-sm"></i>
+                        </button>
+                        <button id="viewDeleteBtn" onclick="deletePost()" class="text-slate-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all" title="Delete Post">
+                             <i class="fa-solid fa-trash text-sm"></i>
+                        </button>
+                        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                        <button onclick="closeViewModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-2 rounded-lg transition-colors">
+                            <i class="fa-solid fa-xmark text-lg"></i>
+                        </button>
                     </div>
                 </div>
-                
-                <!-- Changes Requested Notice -->
-                <div id="viewChangesNotice" class="hidden bg-slate-50 border-l-4 border-slate-400 rounded-r-md p-4 mb-6">
-                    <div class="font-medium text-slate-700 text-sm mb-1">Revision Requested</div>
-                    <div id="viewChangesReason" class="text-slate-500 text-sm"></div>
-                </div>
-                
-                <!-- Content -->
-                <div class="prose max-w-none mb-8">
-                    <p id="viewContent" class="text-slate-700 whitespace-pre-wrap leading-relaxed"></p>
-                </div>
-                
-                <!-- Action Buttons (Workflow) -->
-                <div id="viewActions" class="border-t pt-6 mb-6">
-                    <div id="actionButtons" class="flex flex-wrap gap-3"></div>
-                </div>
-                
-                <!-- Comments Section -->
-                <div class="border-t pt-6">
-                    <h3 class="font-bold text-lg mb-4 flex items-center gap-2">💬 Comments <span id="viewCommentCount" class="text-sm font-normal text-slate-400"></span></h3>
-                    <div id="viewComments" class="space-y-4 mb-4 max-h-64 overflow-y-auto"></div>
-                    <div class="flex gap-2">
-                        <input type="text" id="viewNewComment" placeholder="Add a comment..." class="flex-1 px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-gold-500" onkeypress="if(event.key==='Enter')addViewComment()">
-                        <button onclick="addViewComment()" class="px-5 py-2.5 bg-gold-500 hover:bg-gold-600 text-navy-900 font-semibold rounded-xl">Send</button>
+
+                <!-- Scrollable Content -->
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-0">
+                    <!-- Mobile Media Fallback -->
+                    <div id="viewMediaMobile" class="lg:hidden bg-slate-100 border-b border-slate-200"></div>
+
+                    <div class="p-8 space-y-8">
+                        <!-- Header Section: Title & Meta -->
+                        <div class="space-y-4">
+                            <div class="flex items-start justify-between gap-4">
+                                <h1 id="viewTitle" class="text-xl font-bold text-slate-900 leading-snug tracking-tight"></h1>
+                                <span id="viewUrgentBadge" class="hidden flex-shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-rose-50 text-rose-600 border border-rose-100">
+                                    <i class="fa-solid fa-bolt text-[9px]"></i> Urgent
+                                </span>
+                            </div>
+                            
+                            <!-- Detailed Meta Row -->
+                            <div class="flex items-center flex-wrap gap-4 text-xs font-medium text-slate-500 border-b border-slate-100 pb-6">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                        <i class="fa-solid fa-user"></i>
+                                    </div>
+                                    <span id="viewAuthor" class="text-slate-700"></span>
+                                </div>
+                                <div class="w-1 h-1 rounded-full bg-slate-300"></div>
+                                <div class="flex items-center gap-1.5">
+                                    <i class="fa-regular fa-calendar text-slate-400"></i>
+                                    <span id="viewDate"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Changes Notice -->
+                        <div id="viewChangesNotice" class="hidden">
+                            <div class="bg-amber-50 border border-amber-100 rounded-lg p-4 flex gap-3 items-start">
+                                <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5"></i>
+                                <div>
+                                    <h4 class="text-sm font-bold text-amber-800">Changes Requested</h4>
+                                    <p id="viewChangesReason" class="text-sm text-amber-700 mt-1 leading-relaxed"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Main Content -->
+                        <div class="prose prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-600 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-600">
+                            <p id="viewContent" class="whitespace-pre-wrap"></p>
+                        </div>
+                        
+                        <!-- Action Area -->
+                        <div id="viewActions" class="pt-2">
+                            <div id="actionButtons" class="flex flex-wrap gap-3"></div>
+                        </div>
+                        
+                        <!-- Stacked Sections (Discussion & History) -->
+                        <div class="flex flex-col gap-8 pt-8 border-t border-slate-200">
+                             <!-- Comments Section -->
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                        <i class="fa-regular fa-comments text-slate-400"></i> Discussion
+                                    </h3>
+                                    <span id="viewCommentCount" class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">0</span>
+                                </div>
+                                
+                                <div id="viewComments" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar"></div>
+                                
+                                <div class="sticky bottom-0 bg-white pt-2">
+                                    <div class="relative">
+                                        <input type="text" id="viewNewComment" placeholder="Write a comment..." class="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-sm" onkeypress="if(event.key==='Enter')addViewComment()">
+                                        <button onclick="addViewComment()" class="absolute right-1.5 top-1.5 p-1.5 text-brand-600 hover:bg-brand-50 rounded-md transition-colors">
+                                            <i class="fa-solid fa-paper-plane text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Activity Timeline -->
+                            <div class="space-y-4 pt-8 border-t border-slate-100">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
+                                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> History
+                                </h3>
+                                <div id="viewActivity" class="relative space-y-6 before:absolute before:left-[5px] before:top-2 before:bottom-0 before:w-px before:bg-slate-200 ml-1"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Activity Log (Collapsible) -->
-                <details class="border-t pt-6 mt-6" open>
-                    <summary class="font-semibold text-slate-700 cursor-pointer hover:text-slate-900 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Activity Timeline
-                        <span id="activityStats" class="text-xs font-normal text-slate-400 ml-2"></span>
-                    </summary>
-                    <div id="viewActivity" class="mt-4 space-y-3 max-h-64 overflow-y-auto border-l-2 border-slate-200 ml-2 pl-4"></div>
-                </details>
             </div>
         </div>
     </div>
 
     <!-- ==================== EDIT POST MODAL ==================== -->
-    <div id="editModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
-            <div class="bg-navy-900 text-white px-6 py-4 flex justify-between rounded-t-2xl">
-                <h2 class="text-xl font-bold">✏️ Edit Post</h2>
-                <button onclick="closeEditModal()" class="text-2xl hover:text-gold-400">&times;</button>
+    <div id="editModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col my-8">
+            <!-- Header -->
+            <div class="bg-white px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-slate-100 flex-shrink-0">
+                <h2 class="text-lg font-bold text-slate-800">Edit Post</h2>
+                <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                     <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <form id="editForm" class="p-6 space-y-5">
+            
+            <form id="editForm" class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
                 <input type="hidden" id="editPostId">
-                <div>
-                    <label class="block text-sm font-semibold mb-1.5">Title <span class="text-red-500">*</span></label>
-                    <input type="text" id="editTitle" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-1.5 flex justify-between items-center">
-                        <span>Content <span class="text-red-500">*</span></span>
-                        <button type="button" onclick="toggleEmojiPicker('editContent', 'editEmojiBtn')" id="editEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors">
-                            <i class="fa-regular fa-face-smile text-lg"></i>
-                        </button>
-                    </label>
-                    <div class="relative">
-                        <textarea id="editContent" rows="5" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-gold-500"></textarea>
-                        <div id="editEmojiPickerContainer" class="absolute z-50 hidden mt-2 right-0 shadow-2xl rounded-xl overflow-hidden border border-slate-200">
-                             <emoji-picker class="light"></emoji-picker>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Title</label>
+                        <input type="text" id="editTitle" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-800">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Content</label>
+                             <button type="button" onclick="toggleEmojiPicker('editContent', 'editEmojiBtn')" id="editEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors text-sm">
+                                <i class="fa-regular fa-face-smile"></i>
+                             </button>
+                        </div>
+                        <div class="relative">
+                            <textarea id="editContent" rows="5" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-slate-700"></textarea>
+                            <div id="editEmojiPickerContainer" class="absolute z-50 hidden mt-1 right-0 shadow-xl rounded-lg overflow-hidden border border-slate-200">
+                                 <emoji-picker class="light"></emoji-picker>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-sm font-semibold mb-2">Platforms <span class="text-red-500">*</span> <span class="text-xs text-slate-400 font-normal">(Select one or more)</span></label>
-                    <div class="grid grid-cols-4 gap-3" id="editPlatformsGrid">
-                        <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="Facebook" class="hidden">
-                            <span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-facebook"></i></span>
-                            <span class="text-sm">Facebook</span>
-                        </label>
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-pink-50 hover:border-pink-300 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="Instagram" class="hidden">
-                            <span class="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-instagram"></i></span>
-                            <span class="text-sm">Instagram</span>
-                        </label>
-                        <label class="platform-checkbox flex items-center gap-3 p-2 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="LinkedIn" class="hidden">
-                            <span class="w-6 h-6 bg-blue-700 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-linkedin"></i></span>
-                            <span class="text-sm">LinkedIn</span>
-                        </label>
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="X" class="hidden">
-                            <span class="w-6 h-6 bg-black text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-x-twitter"></i></span>
-                            <span class="text-sm">X</span>
-                        </label>
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-100 hover:border-slate-400 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="TikTok" class="hidden">
-                            <span class="w-6 h-6 bg-slate-800 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-tiktok"></i></span>
-                            <span class="text-sm">TikTok</span>
-                        </label>
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-red-50 hover:border-red-300 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="YouTube" class="hidden">
-                            <span class="w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-brands fa-youtube"></i></span>
-                            <span class="text-sm">YouTube</span>
-                        </label>
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-yellow-50 hover:border-yellow-300 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="Snapchat" class="hidden">
-                            <span class="w-6 h-6 bg-yellow-400 text-slate-800 rounded flex items-center justify-center text-xs"><i class="fa-brands fa-snapchat"></i></span>
-                            <span class="text-sm">Snapchat</span>
-                        </label>
-                        <label class="platform-checkbox flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-300 transition-all">
-                            <input type="checkbox" name="editPlatforms" value="Website" class="hidden">
-                            <span class="w-6 h-6 bg-indigo-600 text-white rounded flex items-center justify-center text-xs"><i class="fa-solid fa-globe"></i></span>
-                            <span class="text-sm">Website</span>
-                        </label>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Platforms</label>
+                        <div class="grid grid-cols-4 gap-2" id="editPlatformsGrid">
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="Facebook" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all hover:bg-slate-50">
+                                    <span class="text-blue-600 text-lg mb-1"><i class="fa-brands fa-facebook"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">FB</span>
+                                </div>
+                            </label>
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="Instagram" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-pink-500 peer-checked:bg-pink-50 transition-all hover:bg-slate-50">
+                                    <span class="text-pink-600 text-lg mb-1"><i class="fa-brands fa-instagram"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">IG</span>
+                                </div>
+                            </label>
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="LinkedIn" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-blue-700 peer-checked:bg-blue-50 transition-all hover:bg-slate-50">
+                                    <span class="text-blue-700 text-lg mb-1"><i class="fa-brands fa-linkedin"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">IN</span>
+                                </div>
+                            </label>
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="X" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-black peer-checked:bg-slate-100 transition-all hover:bg-slate-50">
+                                    <span class="text-black text-lg mb-1"><i class="fa-brands fa-x-twitter"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">X</span>
+                                </div>
+                            </label>
+                            <!-- Row 2 -->
+                            <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="TikTok" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-slate-800 peer-checked:bg-slate-100 transition-all hover:bg-slate-50">
+                                    <span class="text-slate-800 text-lg mb-1"><i class="fa-brands fa-tiktok"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">TikTok</span>
+                                </div>
+                            </label>
+                             <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="YouTube" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-red-600 peer-checked:bg-red-50 transition-all hover:bg-slate-50">
+                                    <span class="text-red-600 text-lg mb-1"><i class="fa-brands fa-youtube"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">YT</span>
+                                </div>
+                            </label>
+                             <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="Snapchat" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-yellow-400 peer-checked:bg-yellow-50 transition-all hover:bg-slate-50">
+                                    <span class="text-yellow-500 text-lg mb-1"><i class="fa-brands fa-snapchat"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">Snap</span>
+                                </div>
+                            </label>
+                             <label class="platform-checkbox cursor-pointer">
+                                <input type="checkbox" name="editPlatforms" value="Website" class="hidden peer">
+                                <div class="flex flex-col items-center justify-center p-2 rounded-lg border border-slate-200 peer-checked:border-indigo-600 peer-checked:bg-indigo-50 transition-all hover:bg-slate-50">
+                                    <span class="text-indigo-600 text-lg mb-1"><i class="fa-solid fa-globe"></i></span>
+                                    <span class="text-[10px] font-medium text-slate-600">Web</span>
+                                </div>
+                            </label>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                 <div class="flex items-center gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="editUrgent" class="w-5 h-5 text-red-500 rounded">
-                        <span class="text-sm font-medium">🔥 Urgent</span>
+                        <input type="checkbox" id="editUrgent" class="w-5 h-5 text-red-500 rounded focus:ring-red-500">
+                        <span class="text-sm font-medium text-slate-700">🔥 Urgent Priority</span>
                     </label>
                 </div>
+
                 <!-- Media Gallery -->
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Media</label>
-                    <div id="editMediaGallery" class="grid grid-cols-4 gap-3 mb-3"></div>
-                    <div class="upload-zone rounded-xl p-4 text-center cursor-pointer" onclick="document.getElementById('editFileInput').click()">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Media</label>
+                    <div id="editMediaGallery" class="grid grid-cols-4 gap-3 mb-3 empty:hidden"></div>
+                    <div class="group rounded-lg p-6 text-center cursor-pointer border border-dashed border-slate-300 hover:border-brand-400 hover:bg-brand-50/30 transition-all" onclick="document.getElementById('editFileInput').click()">
                         <input type="file" id="editFileInput" class="hidden" accept="image/*,video/*" onchange="uploadEditFile(event)" multiple>
-                        <p class="text-slate-500 text-sm">+ Add more media</p>
+                         <div class="flex flex-col items-center gap-2">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center group-hover:bg-brand-100 group-hover:text-brand-500 transition-colors">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </div>
+                            <p class="text-sm font-medium text-slate-600 group-hover:text-brand-600">Add more media</p>
+                        </div>
                     </div>
                 </div>
-                <div class="flex gap-3 pt-4">
-                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Save Changes</button>
-                    <button type="button" onclick="closeEditModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
-                </div>
             </form>
+
+            <!-- Footer Actions -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
+                <button type="button" onclick="closeEditModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="button" onclick="document.getElementById('editForm').dispatchEvent(new Event('submit'))" class="flex-1 px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10">Save Changes</button>
+            </div>
         </div>
     </div>
 
@@ -790,71 +905,85 @@ $csrfToken = generateCSRFToken();
     <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
     <!-- Edit User Modal -->
-    <div id="editUserModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div class="bg-[#0a1628] text-white px-6 py-4 flex justify-between rounded-t-2xl">
-                <h2 class="text-xl font-bold">✏️ Edit User</h2>
-                <button onclick="closeEditUserModal()" class="text-2xl hover:text-sky-400">&times;</button>
+    <div id="editUserModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-slate-100">
+            <div class="bg-white px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-slate-100">
+                <h2 class="text-lg font-bold text-slate-800">Edit User</h2>
+                <button onclick="closeEditUserModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <form id="editUserForm" class="p-6 space-y-4">
+            <form id="editUserForm" class="p-6 space-y-5">
                 <input type="hidden" id="editUserId">
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Username</label>
-                    <input type="text" id="editUserUsername" disabled class="w-full px-4 py-3 border rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Username</label>
+                    <input type="text" id="editUserUsername" disabled class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-500 font-medium cursor-not-allowed">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Full Name <span class="text-red-500">*</span></label>
-                    <input type="text" id="editUserFullName" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Full Name</label>
+                    <input type="text" id="editUserFullName" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-800">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Role <span class="text-red-500">*</span></label>
-                    <select id="editUserRole" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500">
-                        <option value="staff">Staff</option>
-                        <option value="admin">Admin</option>
-                    </select>
+                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Role</label>
+                    <div class="relative">
+                        <select id="editUserRole" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">New Password <span class="text-slate-400 text-xs">(leave blank to keep current)</span></label>
-                    <input type="password" id="editUserPassword" class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
+                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">New Password <span class="text-slate-400 font-normal normal-case">(optional)</span></label>
+                    <input type="password" id="editUserPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-800" placeholder="••••••••">
                 </div>
-                <div class="flex gap-3 pt-4">
-                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Save Changes</button>
-                    <button type="button" onclick="closeEditUserModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeEditUserModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10">Save Changes</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Add User Modal -->
-    <div id="addUserModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div class="bg-[#0a1628] text-white px-6 py-4 flex justify-between rounded-t-2xl">
-                <h2 class="text-xl font-bold">➕ Add New User</h2>
-                <button onclick="closeAddUserModal()" class="text-2xl hover:text-sky-400">&times;</button>
+    <div id="addUserModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md border border-slate-100">
+            <div class="bg-white px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-slate-100">
+                <h2 class="text-lg font-bold text-slate-800">Add New User</h2>
+                <button onclick="closeAddUserModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
-            <form id="addUserForm" class="p-6 space-y-4">
+            <form id="addUserForm" class="p-6 space-y-5">
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Username <span class="text-red-500">*</span></label>
-                    <input type="text" id="addUserUsername" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="username">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Username</label>
+                    <input type="text" id="addUserUsername" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-800" placeholder="username">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Full Name <span class="text-red-500">*</span></label>
-                    <input type="text" id="addUserFullName" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Full Name">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Full Name</label>
+                    <input type="text" id="addUserFullName" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-800" placeholder="Full Name">
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Role <span class="text-red-500">*</span></label>
-                    <select id="addUserRole" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500">
-                        <option value="staff">Staff</option>
-                        <option value="admin">Admin</option>
-                    </select>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Role</label>
+                    <div class="relative">
+                        <select id="addUserRole" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold mb-1.5">Password <span class="text-red-500">*</span></label>
-                    <input type="password" id="addUserPassword" required class="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Password</label>
+                    <input type="password" id="addUserPassword" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all font-medium text-slate-800" placeholder="••••••••">
                 </div>
-                <div class="flex gap-3 pt-4">
-                    <button type="submit" class="flex-1 bg-brand-500 hover:bg-brand-600 text-white font-medium py-3 rounded-lg">Create User</button>
-                    <button type="button" onclick="closeAddUserModal()" class="px-6 bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 rounded-lg font-medium">Cancel</button>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeAddUserModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button type="submit" class="flex-1 px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/10">Create User</button>
                 </div>
             </form>
         </div>
@@ -1489,13 +1618,53 @@ function cardHTML(post) {
     
     const config = statusConfig[post.status] || { color: 'bg-slate-50 text-slate-500', dot: 'bg-slate-400', label: post.status, border: 'border-slate-300' };
     
-    // Media - Fixed Height 10rem (h-40)
+    // Media Content Logic
     let mediaHtml = '';
-    if (post.primary_image) {
-        if (isVideoFile(post.primary_image)) {
-            mediaHtml = `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 relative group-hover:border-slate-200 transition-colors flex-shrink-0"><video src="${post.primary_image}" class="w-full h-full object-cover" muted></video><div class="absolute inset-0 flex items-center justify-center bg-black/10"><div class="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-play text-[8px] text-slate-800 ml-0.5"></i></div></div></div>`;
+    let mediaList = [];
+    
+    // Safety check for media parsing
+    if (post.media) {
+        try {
+            mediaList = typeof post.media === 'string' ? JSON.parse(post.media) : post.media;
+            if (!Array.isArray(mediaList)) mediaList = [];
+        } catch (e) {
+            console.error('Media parse error', e);
+            mediaList = [];
+        }
+    } else if (post.primary_image) {
+        mediaList = [{ file_path: post.primary_image }];
+    }
+
+    if (mediaList && mediaList.length > 0) {
+        if (mediaList.length === 1) {
+            // Single Media
+            const m = mediaList[0];
+            if (isVideoFile(m.file_path)) {
+                mediaHtml = `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 relative group-hover:border-slate-200 transition-colors flex-shrink-0"><video src="${m.file_path}" class="w-full h-full object-cover" muted></video><div class="absolute inset-0 flex items-center justify-center bg-black/10"><div class="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-play text-[8px] text-slate-800 ml-0.5"></i></div></div></div>`;
+            } else {
+                mediaHtml = `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 group-hover:border-slate-200 transition-colors flex-shrink-0"><img src="${m.file_path}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"></div>`;
+            }
+        } else if (mediaList.length === 2) {
+            // Split View (50/50)
+            mediaHtml = `<div class="h-40 w-full grid grid-cols-2 gap-0.5 overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 group-hover:border-slate-200 transition-colors flex-shrink-0">
+                ${mediaList.map(m => isVideoFile(m.file_path) 
+                    ? `<div class="relative w-full h-full"><video src="${m.file_path}" class="w-full h-full object-cover"></video><div class="absolute inset-0 flex items-center justify-center bg-black/10"><i class="fa-solid fa-play text-[8px] text-white"></i></div></div>`
+                    : `<img src="${m.file_path}" class="w-full h-full object-cover">`
+                ).join('')}
+            </div>`;
         } else {
-            mediaHtml = `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 group-hover:border-slate-200 transition-colors flex-shrink-0"><img src="${post.primary_image}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"></div>`;
+            // Collage View (Main + Badge)
+            const m = mediaList[0];
+            const extraCount = mediaList.length - 1;
+            mediaHtml = `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 group-hover:border-slate-200 transition-colors flex-shrink-0 relative">
+                ${isVideoFile(m.file_path)
+                    ? `<video src="${m.file_path}" class="w-full h-full object-cover"></video>`
+                    : `<img src="${m.file_path}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700">`
+                }
+                <div class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+                    <i class="fa-regular fa-clone"></i> +${extraCount}
+                </div>
+            </div>`;
         }
     }
     
@@ -1678,102 +1847,228 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
 
 // ==================== VIEW MODAL ====================
 async function openViewModal(id) {
-    const data = await api(`get_post&id=${id}`);
-    if (!data.success) { toast('Failed to load post', 'error'); return; }
-    
-    app.currentPost = data.data;
-    const p = data.data;
-    
-    // Status badge
-    const statusBadge = document.getElementById('viewStatusBadge');
-    statusBadge.textContent = STATUS_LABELS[p.status] || p.status;
-    statusBadge.className = `status-badge ${STATUS_COLORS[p.status] || 'bg-slate-500'} text-white`;
-    
-    // Platform badges with icons (multi-platform support)
-    let platforms = [];
-    if (p.platforms) {
-        platforms = typeof p.platforms === 'string' ? JSON.parse(p.platforms) : p.platforms;
-    } else if (p.platform) {
-        platforms = [p.platform];
-    }
-    const platformBadgesHtml = platforms.map(plat => {
-        const icon = PLATFORM_ICONS[plat] || 'fa-solid fa-share-nodes';
-        const color = PLATFORM_COLORS[plat] || 'bg-slate-500';
-        return `<span class="px-3 py-1.5 rounded text-white text-[11px] font-bold ${color} flex items-center gap-3 whitespace-nowrap shadow-sm"><i class="${icon} text-xs"></i>${plat}</span>`;
-    }).join('');
-    document.getElementById('viewPlatformBadge').innerHTML = platformBadgesHtml;
-    
-    // Title and meta
-    document.getElementById('viewTitle').textContent = p.title;
-    document.getElementById('viewAuthor').innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg> ${p.author_full_name || p.author_name}`;
-    document.getElementById('viewDate').textContent = formatDate(p.created_at);
-    document.getElementById('viewUrgentBadge').classList.toggle('hidden', p.urgency != 1);
-    
-    // Content
-    document.getElementById('viewContent').textContent = p.content;
-    
-    // Media Gallery (show all media, not just primary)
-    const mediaContainer = document.getElementById('viewMediaContainer');
-    const mediaWrapper = document.getElementById('viewMediaWrapper');
-    if (p.media && p.media.length > 0) {
-        if (p.media.length === 1) {
-            // Single media - show large
-            const m = p.media[0];
-            if (isVideoFile(m.file_path)) {
-                mediaWrapper.innerHTML = `<video src="${m.file_path}" controls class="w-full max-h-96 rounded-xl bg-slate-100"></video>`;
+    try {
+        const data = await api(`get_post&id=${id}`);
+        if (!data.success) { toast('Failed to load post', 'error'); return; }
+        
+        app.currentPost = data.data;
+        const p = data.data;
+        
+        // Status badge
+        const statusBadge = document.getElementById('viewStatusBadge');
+        if (statusBadge) {
+            statusBadge.textContent = (STATUS_LABELS && STATUS_LABELS[p.status]) || p.status;
+            const statusColors = {
+                'IDEA': 'bg-violet-100 text-violet-700 border-violet-200',
+                'DRAFT': 'bg-slate-100 text-slate-700 border-slate-200',
+                'PENDING_REVIEW': 'bg-amber-50 text-amber-700 border-amber-200',
+                'CHANGES_REQUESTED': 'bg-orange-50 text-orange-700 border-orange-200',
+                'APPROVED': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                'SCHEDULED': 'bg-blue-50 text-blue-700 border-blue-200',
+                'PUBLISHED': 'bg-slate-900 text-white border-slate-900'
+            };
+            statusBadge.className = `px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 border ${statusColors[p.status] || 'bg-slate-100 text-slate-600'}`;
+        }
+        
+        // Platform badges
+        let platforms = [];
+        if (p.platforms) {
+            platforms = typeof p.platforms === 'string' ? JSON.parse(p.platforms) : p.platforms;
+        } else if (p.platform) {
+            platforms = [p.platform];
+        }
+        
+        // Safe access to globals
+        const icons = typeof PLATFORM_ICONS !== 'undefined' ? PLATFORM_ICONS : {};
+        const colors = typeof PLATFORM_COLORS !== 'undefined' ? PLATFORM_COLORS : {};
+        
+        const platformBadgesHtml = platforms.map(plat => {
+            const icon = icons[plat] || 'fa-solid fa-share-nodes';
+            const colorClass = colors[plat]?.replace('bg-', 'text-').replace('50', '600') || 'text-slate-600';
+            return `<div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-full shadow-sm">
+                        <i class="${icon} ${colorClass} text-xs"></i>
+                        <span class="text-[11px] font-bold text-slate-700">${plat}</span>
+                    </div>`;
+        }).join('');
+        const badgeContainer = document.getElementById('viewPlatformBadge');
+        if (badgeContainer) badgeContainer.innerHTML = platformBadgesHtml;
+        
+        // Title and meta
+        const titleEl = document.getElementById('viewTitle');
+        if (titleEl) titleEl.textContent = p.title;
+        
+        const authorEl = document.getElementById('viewAuthor');
+        if (authorEl) authorEl.textContent = p.author_full_name || p.author_name;
+        
+        const dateEl = document.getElementById('viewDate');
+        if (dateEl) dateEl.textContent = new Date(p.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        
+        const urgentBadge = document.getElementById('viewUrgentBadge');
+        if (urgentBadge) {
+            if (p.urgency == 1) {
+                urgentBadge.classList.remove('hidden');
+                urgentBadge.classList.add('inline-flex');
             } else {
-                mediaWrapper.innerHTML = `<img src="${m.file_path}" class="w-full max-h-96 object-contain rounded-xl bg-slate-100">`;
+                urgentBadge.classList.add('hidden');
+                urgentBadge.classList.remove('inline-flex');
+            }
+        }
+        
+        // Content
+        const contentEl = document.getElementById('viewContent');
+        if (contentEl) contentEl.textContent = p.content;
+        
+        // Media Gallery - Handle Split View (Desktop) and Mobile Fallback
+        const mediaColumn = document.getElementById('viewMediaColumn');
+        const mediaWrapper = document.getElementById('viewMediaWrapper'); // Desktop
+        const mediaMobile = document.getElementById('viewMediaMobile');   // Mobile
+        
+        const hasMedia = p.media && p.media.length > 0;
+        
+        // Helper to generate Media HTML
+        const getMediaHtml = (isMobile) => {
+            if (p.media.length === 0) return '';
+            
+            // Generate Slides
+            const slides = p.media.map((m, idx) => {
+                const isVid = isVideoFile(m.file_path);
+                const isActive = idx === 0 ? '' : 'hidden';
+                const heightClass = isMobile ? 'max-h-96' : 'max-h-full h-auto';
+                const objectClass = isMobile ? 'object-contain bg-slate-100' : 'object-contain';
+                
+                return `<div class="media-slide w-full h-full flex items-center justify-center transition-opacity duration-300 ${isActive}" data-index="${idx}">
+                    ${isVid 
+                        ? `<video src="${m.file_path}" controls class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm bg-black"></video>` 
+                        : `<img src="${m.file_path}" class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm mx-auto">`}
+                </div>`;
+            }).join('');
+            
+            // Single Item - No Controls
+            if (p.media.length === 1) return slides;
+            
+            // Carousel Controls
+            return `
+                <div class="relative w-full h-full group">
+                    <!-- Slides Container -->
+                    <div class="w-full h-full flex items-center justify-center" id="carouselSlides-${isMobile ? 'mo' : 'dt'}">
+                        ${slides}
+                    </div>
+                    
+                    <!-- Prev Button -->
+                    <button onclick="changeMediaSlide(-1, '${isMobile ? 'mo' : 'dt'}')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    
+                    <!-- Next Button -->
+                    <button onclick="changeMediaSlide(1, '${isMobile ? 'mo' : 'dt'}')" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    
+                    <!-- Dots -->
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                        ${p.media.map((_, i) => `<div class="w-2 h-2 rounded-full transition-colors ${i === 0 ? 'bg-white' : 'bg-white/40'}" id="dot-${isMobile ? 'mo' : 'dt'}-${i}"></div>`).join('')}
+                    </div>
+                </div>
+            `;
+        };
+        
+        // Expose slider function globally if not already
+        if (!window.changeMediaSlide) {
+            window.changeMediaSlide = (dir, type) => {
+                const container = document.getElementById(`carouselSlides-${type}`);
+                if (!container) return;
+                
+                const slides = container.querySelectorAll('.media-slide');
+                let currentIndex = Array.from(slides).findIndex(s => !s.classList.contains('hidden'));
+                
+                // Hide current
+                slides[currentIndex].classList.add('hidden');
+                
+                // Calculate next
+                let nextIndex = currentIndex + dir;
+                if (nextIndex >= slides.length) nextIndex = 0;
+                if (nextIndex < 0) nextIndex = slides.length - 1;
+                
+                // Show next
+                slides[nextIndex].classList.remove('hidden');
+                
+                // Update dots
+                const dots = document.querySelectorAll(`[id^="dot-${type}-"]`);
+                dots.forEach((d, i) => {
+                    if (i === nextIndex) {
+                        d.classList.remove('bg-white/40');
+                        d.classList.add('bg-white');
+                    } else {
+                        d.classList.add('bg-white/40');
+                        d.classList.remove('bg-white');
+                    }
+                });
+            };
+        }
+
+        if (hasMedia) {
+            // Desktop: Show Left Column
+            if (mediaColumn && mediaWrapper) {
+                mediaColumn.classList.remove('hidden');
+                mediaColumn.classList.add('flex'); // Ensure flex is working
+                mediaWrapper.innerHTML = getMediaHtml(false);
+            }
+            
+            // Mobile: Show Top Section
+            if (mediaMobile) {
+                mediaMobile.classList.remove('hidden');
+                mediaMobile.innerHTML = `<div class="p-6 flex justify-center">${getMediaHtml(true)}</div>`;
             }
         } else {
-            // Multiple media - show as gallery grid
-            mediaWrapper.innerHTML = `
-                <div class="grid grid-cols-${p.media.length <= 4 ? p.media.length : 4} gap-2">
-                    ${p.media.map(m => {
-                        if (isVideoFile(m.file_path)) {
-                            return `<div class="relative"><video src="${m.file_path}" class="w-full h-32 object-cover rounded-lg cursor-pointer" onclick="window.open('${m.file_path}', '_blank')" muted></video><span class="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] px-1 rounded">VIDEO</span></div>`;
-                        } else {
-                            return `<img src="${m.file_path}" class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90" onclick="window.open('${m.file_path}', '_blank')">`;
-                        }
-                    }).join('')}
-                </div>
-                <p class="text-xs text-slate-400 mt-2 text-center">${p.media.length} files • Click to view full size</p>
-            `;
+            // No Media: Hide both AND clear content
+            if (mediaColumn) {
+                mediaColumn.classList.add('hidden');
+                mediaColumn.classList.remove('flex');
+            }
+            if (mediaWrapper) mediaWrapper.innerHTML = '';
+            if (mediaMobile) {
+                mediaMobile.classList.add('hidden');
+                mediaMobile.innerHTML = '';
+            }
         }
-        mediaContainer.classList.remove('hidden');
-    } else {
-        mediaContainer.classList.add('hidden');
+        
+        // Changes notice
+        const changesNotice = document.getElementById('viewChangesNotice');
+        if (changesNotice && p.change_request_reason) {
+            const reasonEl = document.getElementById('viewChangesReason');
+            if (reasonEl) reasonEl.textContent = `${p.change_request_reason} — ${p.change_requested_by_name || 'Admin'}`;
+            changesNotice.classList.remove('hidden');
+        } else if (changesNotice) {
+            changesNotice.classList.add('hidden');
+        }
+        
+        // Action buttons
+        if (typeof renderActionButtons === 'function') renderActionButtons(p);
+        
+        // Comments
+        if (typeof renderViewComments === 'function') renderViewComments(p.comments || []);
+        
+        // Activity
+        if (typeof renderViewActivity === 'function') renderViewActivity(p.activity || []);
+        
+        // Buttons visibility
+        const isAdmin = app.user.role === 'admin';
+        const isOwner = p.author_id == app.user.id;
+        const canEditStatus = ['DRAFT', 'CHANGES_REQUESTED', 'IDEA'].includes(p.status);
+        
+        const editBtn = document.getElementById('viewEditBtn');
+        if (editBtn) editBtn.classList.toggle('hidden', !(isAdmin || (isOwner && canEditStatus)));
+        
+        const deleteBtn = document.getElementById('viewDeleteBtn');
+        if (deleteBtn) deleteBtn.classList.toggle('hidden', !(isAdmin || (isOwner && ['DRAFT', 'IDEA'].includes(p.status))));
+        
+        const modal = document.getElementById('viewModal');
+        if (modal) modal.classList.remove('hidden');
+        
+    } catch (err) {
+        console.error('Error opening view modal:', err);
+        toast('Error opening post: ' + err.message, 'error');
     }
-    
-    // Changes notice
-    const changesNotice = document.getElementById('viewChangesNotice');
-    if (p.change_request_reason) {
-        document.getElementById('viewChangesReason').textContent = `${p.change_request_reason} — by ${p.change_requested_by_name || 'Admin'}`;
-        changesNotice.classList.remove('hidden');
-    } else {
-        changesNotice.classList.add('hidden');
-    }
-    
-    // Action buttons
-    renderActionButtons(p);
-    
-    // Comments
-    renderViewComments(p.comments || []);
-    
-    // Activity
-    renderViewActivity(p.activity || []);
-    
-    // Edit button visibility
-    const isAdmin = app.user.role === 'admin';
-    const isOwner = p.author_id == app.user.id;
-    const canEditStatus = ['DRAFT', 'CHANGES_REQUESTED', 'IDEA'].includes(p.status);
-    const canEdit = isAdmin || (isOwner && canEditStatus);
-    document.getElementById('viewEditBtn').classList.toggle('hidden', !canEdit);
-    
-    // Delete button visibility - Admin can delete any, Staff can delete own drafts/ideas
-    const canDelete = isAdmin || (isOwner && ['DRAFT', 'IDEA'].includes(p.status));
-    document.getElementById('viewDeleteBtn').classList.toggle('hidden', !canDelete);
-    
-    document.getElementById('viewModal').classList.remove('hidden');
 }
 
 function renderActionButtons(p) {
@@ -1842,10 +2137,12 @@ function renderViewActivity(activities) {
     // Calculate stats
     const revisionCount = activities.filter(a => a.action === 'status_changed' && a.new_value === 'CHANGES_REQUESTED').length;
     const statsEl = document.getElementById('activityStats');
-    if (revisionCount > 0) {
-        statsEl.textContent = `(${revisionCount} revision${revisionCount > 1 ? 's' : ''} requested)`;
-    } else {
-        statsEl.textContent = `(${activities.length} event${activities.length !== 1 ? 's' : ''})`;
+    if (statsEl) {
+        if (revisionCount > 0) {
+            statsEl.textContent = `(${revisionCount} revision${revisionCount > 1 ? 's' : ''} requested)`;
+        } else {
+            statsEl.textContent = `(${activities.length} event${activities.length !== 1 ? 's' : ''})`;
+        }
     }
     
     // Action icons and labels mapping
@@ -2330,85 +2627,73 @@ function renderCalendar() {
     const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
     const today = new Date();
     
-    // Platform icons mapping
     const platformIcons = {
-        'Facebook': '<i class="fa-brands fa-facebook"></i>',
-        'Instagram': '<i class="fa-brands fa-instagram"></i>',
-        'LinkedIn': '<i class="fa-brands fa-linkedin"></i>',
-        'X': '<i class="fa-brands fa-x-twitter"></i>',
-        'TikTok': '<i class="fa-brands fa-tiktok"></i>',
-        'YouTube': '<i class="fa-brands fa-youtube"></i>',
-        'Snapchat': '<i class="fa-brands fa-snapchat"></i>',
-        'Website': '<i class="fa-solid fa-globe"></i>'
+        'Facebook': 'fa-brands fa-facebook', 'Instagram': 'fa-brands fa-instagram',
+        'LinkedIn': 'fa-brands fa-linkedin', 'X': 'fa-brands fa-x-twitter',
+        'TikTok': 'fa-brands fa-tiktok', 'YouTube': 'fa-brands fa-youtube',
+        'Snapchat': 'fa-brands fa-snapchat', 'Website': 'fa-solid fa-globe'
     };
     
     const platformColors = {
-        'Facebook': 'bg-blue-600',
-        'Instagram': 'bg-gradient-to-r from-purple-500 to-pink-500',
-        'LinkedIn': 'bg-blue-700',
-        'X': 'bg-black',
-        'TikTok': 'bg-slate-800',
-        'YouTube': 'bg-red-600',
-        'Snapchat': 'bg-yellow-400 text-slate-800',
-        'Website': 'bg-indigo-600'
+        'Facebook': 'text-blue-600', 'Instagram': 'text-pink-600',
+        'LinkedIn': 'text-blue-700', 'X': 'text-slate-800',
+        'TikTok': 'text-slate-900', 'YouTube': 'text-red-600',
+        'Snapchat': 'text-yellow-500', 'Website': 'text-indigo-600'
     };
     
     let html = '';
-    // Empty cells for days before month starts
+    // Empty cells for days before the 1st
     for (let i = 0; i < firstDay; i++) {
-        html += '<div class="min-h-[130px] border-b border-r border-slate-200 bg-slate-50/50"></div>';
+        html += '<div class="h-[140px] bg-slate-50/30 border-r border-b border-slate-100"></div>';
     }
     
-    // Days of month
+    // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = today.getFullYear() === calendarYear && today.getMonth() === calendarMonth && today.getDate() === day;
-        const isPast = new Date(dateStr) < new Date(today.toDateString());
         const dayPosts = calendarPosts.filter(p => (p.scheduled_date || p.published_date || '').startsWith(dateStr));
         
-        const dayBg = isToday ? 'bg-blue-50 ring-2 ring-blue-400 ring-inset' : (isPast ? 'bg-slate-50/30' : 'bg-white');
+        // Professional: Clean white background, today gets subtle brand accent
+        const dayBg = isToday ? 'bg-brand-50/50' : 'bg-white';
+        const dateStyle = isToday 
+            ? 'w-6 h-6 flex items-center justify-center rounded-full bg-brand-600 text-white text-[10px] font-bold' 
+            : 'text-[10px] text-slate-400 font-medium';
         
         html += `
-            <div class="min-h-[130px] border-b border-r border-slate-200 p-2 ${dayBg} hover:bg-slate-50 transition-colors">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-sm font-semibold ${isToday ? 'bg-blue-600 text-white px-2 py-0.5 rounded-full' : (isPast ? 'text-slate-400' : 'text-slate-700')}">${day}</span>
-                    ${dayPosts.length > 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">${dayPosts.length}</span>` : ''}
+            <div class="h-[140px] p-1.5 ${dayBg} border-r border-b border-slate-100 hover:bg-slate-50/50 transition-colors flex flex-col">
+                <div class="flex items-center justify-between mb-1 flex-shrink-0">
+                    <span class="${dateStyle}">${day}</span>
+                    ${dayPosts.length > 0 ? `<span class="text-[9px] font-bold text-white bg-brand-500 px-1.5 py-0.5 rounded-full">${dayPosts.length}</span>` : ''}
                 </div>
-                <div class="space-y-1.5 overflow-y-auto max-h-[90px] scrollbar-thin">
+                <div class="space-y-1 flex-1 overflow-y-auto pr-0.5" style="scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;">
                     ${dayPosts.map(p => {
                         const time = p.scheduled_date ? new Date(p.scheduled_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : '';
-                        const statusStyle = p.status === 'SCHEDULED' 
-                            ? 'border-l-indigo-500 bg-indigo-50' 
-                            : 'border-l-emerald-500 bg-emerald-50';
                         
-                        // Parse platforms
+                        // Status styling
+                        const isScheduled = p.status === 'SCHEDULED';
+                        const statusDot = isScheduled ? 'bg-indigo-500' : 'bg-emerald-500';
+                        
+                        // Platforms
                         let platforms = [];
                         if (p.platforms) {
                             platforms = typeof p.platforms === 'string' ? JSON.parse(p.platforms) : p.platforms;
-                        } else if (p.platform) {
-                            platforms = [p.platform];
                         }
                         
-                        // Generate platform icons for first 2 platforms
-                        const platformIconsHtml = platforms.slice(0, 2).map(plat => {
-                            const pIcon = platformIcons[plat] || '<i class="fa-solid fa-share-nodes"></i>';
-                            const pColor = platformColors[plat] || 'bg-slate-600';
-                            return `<span class="flex-shrink-0 w-4 h-4 ${pColor} text-white rounded flex items-center justify-center text-[8px]">${pIcon}</span>`;
+                        const iconsHtml = platforms.slice(0, 2).map(plat => {
+                            const icon = platformIcons[plat] || 'fa-solid fa-share-nodes';
+                            const color = platformColors[plat] || 'text-slate-400';
+                            return `<i class="${icon} ${color} text-[9px]"></i>`;
                         }).join('');
-                        const moreCount = platforms.length > 2 ? `<span class="text-[8px] text-slate-400">+${platforms.length - 2}</span>` : '';
                         
+                        // Compact card
                         return `
-                            <div onclick="openViewModal(${p.id})" class="calendar-post group cursor-pointer p-1.5 rounded-md border-l-3 ${statusStyle} hover:shadow-sm transition-all">
-                                <div class="flex items-start gap-1.5">
-                                    <div class="flex items-center gap-0.5">${platformIconsHtml}${moreCount}</div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="text-xs font-medium text-slate-700 truncate group-hover:text-slate-900">${escapeHtml(p.title)}</div>
-                                        <div class="flex items-center gap-1.5 mt-0.5">
-                                            ${time ? `<span class="text-[10px] text-slate-500">${time}</span>` : ''}
-                                            <span class="text-[10px] ${p.status === 'SCHEDULED' ? 'text-indigo-600' : 'text-emerald-600'} font-medium">${p.status === 'SCHEDULED' ? '📅' : '✓'}</span>
-                                        </div>
-                                    </div>
+                            <div onclick="openViewModal(${p.id})" class="cursor-pointer p-1.5 rounded border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all group">
+                                <div class="flex items-center gap-1 mb-0.5">
+                                    <div class="w-1 h-1 rounded-full ${statusDot} flex-shrink-0"></div>
+                                    <span class="text-[9px] font-mono text-slate-400">${time}</span>
                                 </div>
+                                <div class="text-[10px] font-semibold text-slate-700 truncate leading-tight group-hover:text-brand-600 transition-colors">${escapeHtml(p.title)}</div>
+                                <div class="flex items-center gap-1 mt-0.5">${iconsHtml}</div>
                             </div>
                         `;
                     }).join('')}
@@ -2418,6 +2703,15 @@ function renderCalendar() {
     }
     
     grid.innerHTML = html;
+}
+
+// Show all posts for a specific day in a modal/popup
+function showDayPosts(dateStr) {
+    const dayPosts = calendarPosts.filter(p => (p.scheduled_date || p.published_date || '').startsWith(dateStr));
+    if (dayPosts.length > 0) {
+        // Open the first post for now (can be enhanced to show a list modal)
+        openViewModal(dayPosts[0].id);
+    }
 }
 
 // ==================== USERS MANAGEMENT ====================
@@ -2570,12 +2864,29 @@ document.getElementById('addUserForm').addEventListener('submit', async function
 
 
 function toast(msg, type = 'info') {
-    const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500' };
+    const config = { 
+        success: { bg: 'bg-emerald-600', icon: 'fa-circle-check' }, 
+        error: { bg: 'bg-rose-600', icon: 'fa-circle-exclamation' }, 
+        info: { bg: 'bg-slate-800', icon: 'fa-circle-info' } 
+    };
+    const style = config[type] || config.info;
+    
     const t = document.createElement('div');
-    t.className = `${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-pulse`;
-    t.textContent = msg;
+    t.className = `${style.bg} text-white px-6 py-3 rounded-lg shadow-xl text-sm font-medium flex items-center gap-3 transform translate-y-4 opacity-0 transition-all duration-300 min-w-[300px] border border-white/10 z-50`;
+    t.innerHTML = `<i class="fa-solid ${style.icon} text-lg opacity-90"></i> <span>${msg}</span>`;
+    
     document.getElementById('toasts').appendChild(t);
-    setTimeout(() => t.remove(), 3000);
+    
+    // Animate in
+    requestAnimationFrame(() => {
+        t.classList.remove('translate-y-4', 'opacity-0');
+    });
+
+    // Remove after delay
+    setTimeout(() => {
+        t.classList.add('translate-y-4', 'opacity-0');
+        setTimeout(() => t.remove(), 300);
+    }, 3500);
 }
 
 document.addEventListener('click', e => { 

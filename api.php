@@ -445,15 +445,16 @@ try {
             $endDate = date('Y-m-t', strtotime($startDate));
             
             $posts = fetchAll(
-                "SELECT id, title, status, platforms, scheduled_date, published_date 
-                 FROM posts 
-                 WHERE company_id = ?
-                 AND (status IN ('SCHEDULED', 'PUBLISHED'))
+                "SELECT p.id, p.title, p.status, p.platforms, p.scheduled_date, p.published_date,
+                        (SELECT file_path FROM media_files WHERE post_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
+                 FROM posts p
+                 WHERE p.company_id = ?
+                 AND (p.status IN ('SCHEDULED', 'PUBLISHED'))
                  AND (
-                     (scheduled_date BETWEEN ? AND ?)
-                     OR (published_date BETWEEN ? AND ?)
+                     (p.scheduled_date BETWEEN ? AND ?)
+                     OR (p.published_date BETWEEN ? AND ?)
                  )
-                 ORDER BY COALESCE(scheduled_date, published_date) ASC",
+                 ORDER BY COALESCE(p.scheduled_date, p.published_date) ASC",
                 [$companyId, $startDate, $endDate . ' 23:59:59', $startDate, $endDate . ' 23:59:59']
             );
             
@@ -675,7 +676,30 @@ try {
                     $whereClause
                     ORDER BY p.urgency DESC, p.updated_at DESC";
             
-            sendResponse(true, fetchAll($sql, $params));
+            $posts = fetchAll($sql, $params);
+            
+            // Populate media for all posts efficiently
+            if (!empty($posts)) {
+                $postIds = array_column($posts, 'id');
+                // Fetch all media for these posts
+                if (!empty($postIds)) {
+                    $placeholders = str_repeat('?,', count($postIds) - 1) . '?';
+                    $mediaFiles = fetchAll("SELECT id, post_id, file_path, file_type as type FROM media_files WHERE post_id IN ($placeholders)", $postIds);
+                    
+                    // Group media by post_id
+                    $mediaMap = [];
+                    foreach ($mediaFiles as $file) {
+                        $mediaMap[$file['post_id']][] = $file;
+                    }
+                    
+                    // Attach to posts
+                    foreach ($posts as &$post) {
+                        $post['media'] = $mediaMap[$post['id']] ?? [];
+                    }
+                }
+            }
+            
+            sendResponse(true, $posts);
             break;
         
         case 'get_calendar_posts':
@@ -1221,7 +1245,9 @@ try {
             sendResponse(false, null, 'Invalid action', 400);
     }
     
-} catch (Exception $e) {
-    error_log("API Error: " . $e->getMessage());
-    sendResponse(false, null, ENVIRONMENT === 'development' ? $e->getMessage() : 'Server error', 500);
+    
+} catch (Throwable $e) {
+    error_log("API Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
 }
