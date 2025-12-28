@@ -334,33 +334,33 @@ $csrfToken = generateCSRFToken();
             </div>
             
             <!-- Status Tabs -->
-            <div class="bg-white rounded-xl border border-slate-200 mb-6 overflow-hidden">
+            <div class="bg-white rounded-lg border border-slate-200 mb-6 overflow-hidden">
                 <div class="flex flex-wrap border-b border-slate-200">
-                    <button onclick="setStatusFilter('')" id="tabAll" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <button onclick="setStatusFilter('')" id="tabAll" class="status-tab px-3 py-2 text-xs font-bold text-slate-800 border-b-2 border-slate-800 bg-transparent transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-gradient-to-r from-violet-400 to-slate-400"></span>
                         All <span id="countAll" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="setStatusFilter('IDEA')" id="tabIDEA" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <button onclick="setStatusFilter('IDEA')" id="tabIDEA" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-violet-400"></span>
                         Ideas <span id="countIDEA" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="setStatusFilter('DRAFT')" id="tabDRAFT" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <button onclick="setStatusFilter('DRAFT')" id="tabDRAFT" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-sky-400"></span>
                         Drafts <span id="countDRAFT" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="setStatusFilter('PENDING_REVIEW')" id="tabPENDING_REVIEW" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <button onclick="setStatusFilter('PENDING_REVIEW')" id="tabPENDING_REVIEW" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-amber-400"></span>
                         Pending <span id="countPENDING_REVIEW" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="setStatusFilter('APPROVED')" id="tabAPPROVED" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <button onclick="setStatusFilter('APPROVED')" id="tabAPPROVED" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                         Approved <span id="countAPPROVED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="setStatusFilter('SCHEDULED')" id="tabSCHEDULED" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <button onclick="setStatusFilter('SCHEDULED')" id="tabSCHEDULED" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
                         Scheduled <span id="countSCHEDULED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="setStatusFilter('PUBLISHED')" id="tabPUBLISHED" class="status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <button onclick="setStatusFilter('PUBLISHED')" id="tabPUBLISHED" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                         Published <span id="countPUBLISHED" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
@@ -368,6 +368,7 @@ $csrfToken = generateCSRFToken();
             </div>
             
             <!-- Posts Grid -->
+
             <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 <!-- Posts will be rendered here -->
             </div>
@@ -1447,15 +1448,6 @@ function setStatusFilter(status) {
 
 function updateActiveTab() {
     const tabs = ['All', 'IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
-    const statusColors = {
-        '': 'border-slate-600',
-        'IDEA': 'border-violet-500',
-        'DRAFT': 'border-sky-500',
-        'PENDING_REVIEW': 'border-amber-500',
-        'APPROVED': 'border-emerald-500',
-        'SCHEDULED': 'border-indigo-500',
-        'PUBLISHED': 'border-slate-500'
-    };
     
     tabs.forEach(tab => {
         const tabId = tab === 'All' ? 'tabAll' : 'tab' + tab;
@@ -1463,12 +1455,12 @@ function updateActiveTab() {
         if (!tabEl) return;
         
         const isActive = (tab === 'All' && currentStatusFilter === '') || currentStatusFilter === tab;
-        const borderColor = statusColors[tab === 'All' ? '' : tab] || 'border-slate-600';
         
+        // Minimalist Tab Style
         if (isActive) {
-            tabEl.className = `status-tab px-4 py-3 text-sm font-semibold border-b-2 ${borderColor} bg-slate-50 transition-colors flex items-center gap-2 text-slate-800`;
+            tabEl.className = `status-tab px-3 py-2 text-xs font-bold text-slate-800 border-b-2 border-slate-800 bg-transparent transition-all flex items-center gap-2`;
         } else {
-            tabEl.className = 'status-tab px-4 py-3 text-sm font-medium border-b-2 border-transparent hover:bg-slate-50 transition-colors flex items-center gap-2 text-slate-600';
+            tabEl.className = 'status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2';
         }
     });
 }
@@ -1476,7 +1468,7 @@ function updateActiveTab() {
 function cardHTML(post) {
     const hasChanges = post.status === 'CHANGES_REQUESTED';
     
-    // Parse platforms - handle JSON string, array, or legacy single platform
+    // Parse platforms
     let platforms = [];
     if (post.platforms) {
         platforms = typeof post.platforms === 'string' ? JSON.parse(post.platforms) : post.platforms;
@@ -1484,63 +1476,83 @@ function cardHTML(post) {
         platforms = [post.platform];
     }
     
-    // Status badge colors
-    const statusBadgeColors = {
-        'IDEA': 'bg-violet-100 text-violet-700 border-violet-200',
-        'DRAFT': 'bg-sky-100 text-sky-700 border-sky-200',
-        'PENDING_REVIEW': 'bg-amber-100 text-amber-700 border-amber-200',
-        'CHANGES_REQUESTED': 'bg-orange-100 text-orange-700 border-orange-200',
-        'APPROVED': 'bg-emerald-100 text-emerald-700 border-emerald-200',
-        'SCHEDULED': 'bg-indigo-100 text-indigo-700 border-indigo-200',
-        'PUBLISHED': 'bg-slate-100 text-slate-600 border-slate-200'
+    // Minimalist Status Indicators
+    const statusConfig = {
+        'IDEA': { color: 'bg-violet-50 text-violet-600', dot: 'bg-violet-400', label: 'Idea', border: 'border-violet-400' },
+        'DRAFT': { color: 'bg-sky-50 text-sky-600', dot: 'bg-sky-400', label: 'Draft', border: 'border-sky-400' },
+        'PENDING_REVIEW': { color: 'bg-amber-50 text-amber-600', dot: 'bg-amber-400', label: 'Pending', border: 'border-amber-400' },
+        'CHANGES_REQUESTED': { color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400', label: 'Revise', border: 'border-orange-400' },
+        'APPROVED': { color: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500', label: 'Approved', border: 'border-emerald-400' },
+        'SCHEDULED': { color: 'bg-indigo-50 text-indigo-600', dot: 'bg-indigo-500', label: 'Scheduled', border: 'border-indigo-400' },
+        'PUBLISHED': { color: 'bg-slate-50 text-slate-600', dot: 'bg-slate-500', label: 'Published', border: 'border-slate-400' }
     };
     
-    const statusBadgeLabels = {
-        'IDEA': '💡 Idea',
-        'DRAFT': '📝 Draft',
-        'PENDING_REVIEW': '🔍 Pending',
-        'CHANGES_REQUESTED': '🔄 Changes',
-        'APPROVED': '✅ Approved',
-        'SCHEDULED': '📅 Scheduled',
-        'PUBLISHED': '🚀 Published'
-    };
+    const config = statusConfig[post.status] || { color: 'bg-slate-50 text-slate-500', dot: 'bg-slate-400', label: post.status, border: 'border-slate-300' };
     
-    const statusBadgeColor = statusBadgeColors[post.status] || 'bg-slate-100 text-slate-600';
-    const statusBadgeLabel = statusBadgeLabels[post.status] || post.status;
-    
-    // Handle media (image vs video)
+    // Media - Fixed Height 10rem (h-40)
     let mediaHtml = '';
     if (post.primary_image) {
         if (isVideoFile(post.primary_image)) {
-            mediaHtml = `<video src="${post.primary_image}" class="w-full h-32 object-cover rounded-lg mb-3" muted></video>`;
+            mediaHtml = `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 relative group-hover:border-slate-200 transition-colors flex-shrink-0"><video src="${post.primary_image}" class="w-full h-full object-cover" muted></video><div class="absolute inset-0 flex items-center justify-center bg-black/10"><div class="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-play text-[8px] text-slate-800 ml-0.5"></i></div></div></div>`;
         } else {
-            mediaHtml = `<img src="${post.primary_image}" class="w-full h-32 object-cover rounded-lg mb-3">`;
+            mediaHtml = `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 group-hover:border-slate-200 transition-colors flex-shrink-0"><img src="${post.primary_image}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"></div>`;
         }
     }
     
-    // Generate platform badges HTML
-    const platformBadgesHtml = platforms.map(p => {
-        const color = PLATFORM_COLORS[p] || 'bg-slate-500';
-        const icon = PLATFORM_ICONS[p] || 'fa-solid fa-share-nodes';
-        return `<span class="text-[10px] px-1.5 py-0.5 rounded text-white ${color}"><i class="${icon}"></i></span>`;
-    }).join('');
-    
+    // Changes Requested Indicator (Minimal)
+    const changesIndicator = hasChanges ? 
+        `<div class="flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded mb-2"><i class="fa-solid fa-circle-exclamation"></i> Revision Requested</div>` : '';
 
+    // Date Logic
+    const updatedDate = formatDate(post.updated_at || post.created_at);
+
+    // Platform Icons
+    const platformIcons = platforms.map(p => {
+        const color = PLATFORM_COLORS[p] || 'text-slate-400';
+        const icon = PLATFORM_ICONS[p] || 'fa-solid fa-share-nodes';
+        const textColor = color.replace('bg-', 'text-').replace('-500', '-600');
+        return `<span class="${textColor} text-xs"><i class="${icon}"></i></span>`; // Increased size slightly
+    }).join('');
+
+    // --- HTML Structure ---
+    // Added border-t-4 for status distinction
+    // Fixed height h-96 (24rem)
     return `
-        <div class="post-card bg-white rounded-xl shadow-sm p-4 border border-slate-200" onclick="openViewModal(${post.id})">
-            <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-medium px-2 py-1 rounded-md border ${statusBadgeColor}">${statusBadgeLabel}</span>
-                ${post.urgency == 1 ? '<span class="text-red-600 text-xs font-bold bg-red-50 px-2 py-0.5 rounded">🔥 URGENT</span>' : ''}
+        <div class="group bg-white rounded-lg p-4 border border-slate-200 border-t-4 ${config.border} hover:shadow-md transition-all cursor-pointer h-96 flex flex-col" onclick="openViewModal(${post.id})">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">${config.label}</span>
+                </div>
+                ${post.urgency == 1 ? '<div class="text-[10px] font-bold text-rose-600 flex items-center gap-1 bg-rose-50 px-1.5 py-0.5 rounded"><i class="fa-solid fa-bolt"></i> Urgent</div>' : ''}
             </div>
-            ${hasChanges ? '<div class="text-orange-600 text-xs font-medium mb-2 bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-200">⚠️ Revision Requested</div>' : ''}
+
+            ${changesIndicator}
             ${mediaHtml}
-            <h4 class="font-semibold text-slate-800 mb-1 line-clamp-2">${escapeHtml(post.title)}</h4>
-            <p class="text-slate-500 text-sm mb-3 line-clamp-2">${escapeHtml(post.content)}</p>
-            <div class="flex items-center justify-between">
-                <div class="flex flex-wrap items-center gap-1">${platformBadgesHtml}</div>
-                <span class="text-xs text-slate-400">${post.author_name}</span>
+            
+            <!-- Content (Flex Grow) -->
+            <div class="flex-1 min-h-0 flex flex-col">
+                <h4 class="text-sm font-bold text-slate-800 mb-1 leading-snug line-clamp-2 group-hover:text-brand-600 transition-colors">${escapeHtml(post.title)}</h4>
+                <p class="text-[11px] text-slate-500 leading-relaxed line-clamp-3 overflow-hidden">${escapeHtml(post.content)}</p>
+                
+                <!-- Spacer to push footer down if content is short -->
+                <div class="flex-grow"></div>
             </div>
-            ${post.comment_count > 0 ? `<div class="text-xs text-slate-400 mt-2 flex items-center gap-1"><i class="fa-regular fa-comment"></i> ${post.comment_count}</div>` : ''}
+            
+            <!-- Footer -->
+            <div class="flex items-center justify-between pt-3 mt-2 border-t border-slate-50 flex-shrink-0">
+                <div class="flex items-center gap-2 text-xs">
+                   ${platformIcons ? `<div class="flex gap-2 opacity-70 group-hover:opacity-100 transition-opacity">${platformIcons}</div>` : ''}
+                </div>
+                <div class="flex flex-col items-end">
+                     <div class="flex items-center gap-1.5 mb-0.5">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${post.author_name?.split(' ')[0]}</span>
+                        ${post.comment_count > 0 ? `<div class="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 px-1 rounded"><i class="fa-regular fa-comment"></i> ${post.comment_count}</div>` : ''}
+                     </div>
+                     <span class="text-[9px] text-slate-300 font-medium">${updatedDate}</span>
+                </div>
+            </div>
         </div>
     `;
 }
