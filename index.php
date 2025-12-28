@@ -1393,31 +1393,11 @@ async function loadPosts(checkChanges = false) {
 let currentStatusFilter = '';
 
 function renderBoard() {
-    const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [], CHANGES_REQUESTED: [] };
+    const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
     
-    // Sort posts by updated_at (most recent first) before grouping
-    const sortedPosts = [...app.posts].sort((a, b) => {
-        const dateA = new Date(a.updated_at || a.created_at);
-        const dateB = new Date(b.updated_at || b.created_at);
-        return dateB - dateA;
-    });
-    
-    sortedPosts.forEach(p => {
-        if (p.status === 'CHANGES_REQUESTED') {
-            grouped.CHANGES_REQUESTED.push(p);
-            grouped.DRAFT.push(p); // Also count in DRAFT for tab count
-        } else if (grouped[p.status]) {
-            grouped[p.status].push(p);
-        }
-    });
-    
-    // Sort each group by updated_at (most recent first)
-    Object.keys(grouped).forEach(key => {
-        grouped[key].sort((a, b) => {
-            const dateA = new Date(a.updated_at || a.created_at);
-            const dateB = new Date(b.updated_at || b.created_at);
-            return dateB - dateA;
-        });
+    app.posts.forEach(p => {
+        if (p.status === 'CHANGES_REQUESTED') grouped.DRAFT.push(p);
+        else if (grouped[p.status]) grouped[p.status].push(p);
     });
     
     // Update all tab counts
@@ -1433,69 +1413,27 @@ function renderBoard() {
     const countAllEl = document.getElementById('countAll');
     if (countAllEl) countAllEl.textContent = totalCount;
     
-    // Render posts
+    // Filter posts based on current status filter
+    let filteredPosts = [];
+    if (currentStatusFilter === '') {
+        // Show all posts
+        STATUS_LIST.forEach(status => {
+            filteredPosts = filteredPosts.concat(grouped[status] || []);
+        });
+    } else {
+        filteredPosts = grouped[currentStatusFilter] || [];
+    }
+    
+    // Render posts in grid
     const grid = document.getElementById('postsGrid');
     const emptyState = document.getElementById('emptyState');
     
-    if (currentStatusFilter === '') {
-        // Show all posts grouped by status with headers
-        let hasPosts = false;
-        let html = '';
-        
-        // Define status order and labels for "All" view
-        const statusOrder = [
-            { key: 'PENDING_REVIEW', label: 'Pending Review', icon: '🔍', color: 'amber' },
-            { key: 'CHANGES_REQUESTED', label: 'Changes Requested', icon: '🔄', color: 'orange' },
-            { key: 'APPROVED', label: 'Approved', icon: '✅', color: 'emerald' },
-            { key: 'SCHEDULED', label: 'Scheduled', icon: '📅', color: 'indigo' },
-            { key: 'DRAFT', label: 'Drafts', icon: '📝', color: 'sky' },
-            { key: 'PUBLISHED', label: 'Published', icon: '🚀', color: 'slate' },
-            { key: 'IDEA', label: 'Ideas', icon: '💡', color: 'violet' }
-        ];
-        
-        statusOrder.forEach(({ key, label, icon, color }) => {
-            const posts = grouped[key] || [];
-            if (posts.length > 0) {
-                hasPosts = true;
-                html += `
-                    <div class="w-full mb-8">
-                        <div class="flex items-center gap-3 mb-4 pb-2 border-b-2 border-${color}-200">
-                            <span class="text-2xl">${icon}</span>
-                            <h3 class="text-lg font-semibold text-slate-800">${label}</h3>
-                            <span class="text-sm text-slate-500 bg-slate-100 px-2 py-1 rounded-full">${posts.length}</span>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            ${posts.map(p => cardHTML(p)).join('')}
-                        </div>
-                    </div>
-                `;
-            }
-        });
-        
-        if (hasPosts) {
-            // Change grid to a regular div container for grouped view
-            grid.className = 'space-y-6';
-            grid.innerHTML = html;
-            emptyState.classList.add('hidden');
-        } else {
-            // Restore grid layout for filtered view
-            grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-            grid.innerHTML = '';
-            emptyState.classList.remove('hidden');
-        }
+    if (filteredPosts.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
     } else {
-        // Show filtered posts for specific status
-        // Restore grid layout for filtered view
-        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
-        const filteredPosts = grouped[currentStatusFilter] || [];
-        
-        if (filteredPosts.length === 0) {
-            grid.innerHTML = '';
-            emptyState.classList.remove('hidden');
-        } else {
-            emptyState.classList.add('hidden');
-            grid.innerHTML = filteredPosts.map(p => cardHTML(p)).join('');
-        }
+        emptyState.classList.add('hidden');
+        grid.innerHTML = filteredPosts.map(p => cardHTML(p)).join('');
     }
     
     // Update active tab styling
@@ -1587,37 +1525,22 @@ function cardHTML(post) {
         return `<span class="text-[10px] px-1.5 py-0.5 rounded text-white ${color}"><i class="${icon}"></i></span>`;
     }).join('');
     
-    const updatedDate = formatDate(post.updated_at || post.created_at);
-    const scheduledDate = post.scheduled_date ? formatDate(post.scheduled_date) : null;
-    
+
     return `
-        <div class="post-card bg-white rounded-xl shadow-sm p-4 border border-slate-200 hover:shadow-md transition-shadow" onclick="openViewModal(${post.id})">
-            <div class="flex items-center justify-between mb-3">
-                <span class="text-xs font-medium px-2.5 py-1 rounded-md border ${statusBadgeColor}">${statusBadgeLabel}</span>
-                ${post.urgency == 1 ? '<span class="text-red-600 text-xs font-bold bg-red-50 px-2 py-0.5 rounded border border-red-200">🔥 URGENT</span>' : ''}
+        <div class="post-card bg-white rounded-xl shadow-sm p-4 border border-slate-200" onclick="openViewModal(${post.id})">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-medium px-2 py-1 rounded-md border ${statusBadgeColor}">${statusBadgeLabel}</span>
+                ${post.urgency == 1 ? '<span class="text-red-600 text-xs font-bold bg-red-50 px-2 py-0.5 rounded">🔥 URGENT</span>' : ''}
             </div>
             ${hasChanges ? '<div class="text-orange-600 text-xs font-medium mb-2 bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-200">⚠️ Revision Requested</div>' : ''}
             ${mediaHtml}
-            <h4 class="font-semibold text-slate-800 mb-2 line-clamp-2 text-sm leading-tight">${escapeHtml(post.title)}</h4>
-            <p class="text-slate-500 text-xs mb-3 line-clamp-2 leading-relaxed">${escapeHtml(post.content)}</p>
-            
-            <div class="space-y-2 pt-2 border-t border-slate-100">
-                <div class="flex items-center justify-between">
-                    <div class="flex flex-wrap items-center gap-1.5">${platformBadgesHtml}</div>
-                    ${post.comment_count > 0 ? `<div class="text-xs text-slate-500 flex items-center gap-1"><i class="fa-regular fa-comment"></i> ${post.comment_count}</div>` : ''}
-                </div>
-                <div class="flex items-center justify-between text-xs">
-                    <div class="flex items-center gap-1.5 text-slate-500">
-                        <i class="fa-regular fa-user text-slate-400"></i>
-                        <span class="font-medium">${escapeHtml(post.author_full_name || post.author_name || 'Unknown')}</span>
-                    </div>
-                    <div class="text-slate-400 flex items-center gap-1">
-                        <i class="fa-regular fa-clock text-[10px]"></i>
-                        <span>${updatedDate}</span>
-                    </div>
-                </div>
-                ${scheduledDate ? `<div class="text-xs text-indigo-600 flex items-center gap-1.5 mt-1"><i class="fa-regular fa-calendar"></i> Scheduled: ${scheduledDate}</div>` : ''}
+            <h4 class="font-semibold text-slate-800 mb-1 line-clamp-2">${escapeHtml(post.title)}</h4>
+            <p class="text-slate-500 text-sm mb-3 line-clamp-2">${escapeHtml(post.content)}</p>
+            <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center gap-1">${platformBadgesHtml}</div>
+                <span class="text-xs text-slate-400">${post.author_name}</span>
             </div>
+            ${post.comment_count > 0 ? `<div class="text-xs text-slate-400 mt-2 flex items-center gap-1"><i class="fa-regular fa-comment"></i> ${post.comment_count}</div>` : ''}
         </div>
     `;
 }
