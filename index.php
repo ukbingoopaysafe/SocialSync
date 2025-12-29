@@ -46,7 +46,7 @@ $csrfToken = generateCSRFToken();
     <div class="flex min-h-screen">
         
         <!-- Dark Sidebar -->
-        <aside id="sidebar" class="w-16 hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col fixed h-full z-50 group">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 w-64 lg:w-16 lg:hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col z-50 group">
             <!-- Logo -->
             <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-2 overflow-hidden">
                 <!-- Dynamic Company Logo -->
@@ -56,22 +56,22 @@ $csrfToken = generateCSRFToken();
             
             <!-- Navigation -->
             <nav class="flex-1 py-4 px-2 space-y-1">
-                <button onclick="switchTab('dashboard')" id="tabDashboard" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                <button onclick="switchTab('dashboard'); closeSidebarOnMobile()" id="tabDashboard" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Dashboard</span>
+                    <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Dashboard</span>
                 </button>
-                <button onclick="switchTab('board')" id="tabBoard" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                <button onclick="switchTab('board'); closeSidebarOnMobile()" id="tabBoard" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Board</span>
+                    <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Board</span>
                 </button>
-                <button onclick="switchTab('calendar')" id="tabCalendar" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                <button onclick="switchTab('calendar'); closeSidebarOnMobile()" id="tabCalendar" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Calendar</span>
+                    <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Calendar</span>
                 </button>
                 <div id="adminLink" class="hidden">
-                    <button onclick="switchTab('users')" id="tabUsers" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <button onclick="switchTab('users'); closeSidebarOnMobile()" id="tabUsers" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Users</span>
+                        <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Users</span>
                     </button>
                 </div>
             </nav>
@@ -80,28 +80,35 @@ $csrfToken = generateCSRFToken();
             <div class="p-2 border-t border-slate-700/50">
                 <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                    <span class="text-sm font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Logout</span>
+                    <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Logout</span>
                 </button>
             </div>
         </aside>
         
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden backdrop-blur-sm"></div>
+        
         <!-- Main Content Area -->
-        <div class="flex-1 ml-16">
+        <div class="flex-1 lg:ml-16 w-full min-w-0 transition-all duration-300">
             <!-- Top Header -->
-            <header class="h-14 bg-[#0a1628] border-b border-slate-700/50 sticky top-0 z-40 flex items-center justify-between px-6">
+            <header class="h-14 bg-[#0a1628] border-b border-slate-700/50 sticky top-0 z-40 flex items-center justify-between px-4 lg:px-6">
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
                 <div class="flex items-center gap-4">
-                    <h1 id="pageTitle" class="text-lg font-semibold text-white">Dashboard</h1>
+                    <h1 id="pageTitle" class="text-base lg:text-lg font-semibold text-white truncate max-w-[120px] sm:max-w-none">Dashboard</h1>
                 </div>
                 <div class="flex items-center gap-4">
                     <!-- Search -->
-                    <div class="relative">
-                        <input type="text" id="globalSearch" placeholder="Search..." class="w-64 pl-10 pr-4 py-2 bg-white/10 border-0 rounded-lg text-sm text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:bg-white/20 transition-colors">
+                    <div class="relative hidden sm:block">
+                        <input type="text" id="globalSearch" placeholder="Search..." class="w-32 lg:w-64 pl-10 pr-4 py-2 bg-white/10 border-0 rounded-lg text-sm text-white placeholder-slate-400 focus:ring-2 focus:ring-brand-500 focus:bg-white/20 transition-colors">
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
                     <!-- New Post Button -->
-                    <button onclick="openCreateModal()" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                        New Post
+                    <button onclick="openCreateModal()" class="bg-brand-500 hover:bg-brand-600 text-white p-2 lg:px-4 lg:py-2 rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">
+                        <svg class="w-5 h-5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                        <span class="hidden lg:inline text-right">New Post</span>
                     </button>
                     <!-- Notifications -->
                     <div class="relative">
@@ -129,13 +136,13 @@ $csrfToken = generateCSRFToken();
             </header>
             
             <!-- Content -->
-            <main class="p-6">
+            <main class="p-4 lg:p-6 min-h-[calc(100vh-3.5rem)]">
         <!-- Dashboard View - Advanced Analytics -->
         <div id="dashboardView" class="hidden max-w-7xl mx-auto">
             <!-- Pulse Header: Health + Main KPIs -->
-            <div class="pulse-header flex flex-col lg:flex-row gap-8 items-center">
+            <div class="pulse-header flex flex-col lg:flex-row gap-6 lg:gap-8 items-center p-4 lg:p-6">
                 <!-- Health Pulse -->
-                <div class="flex items-center gap-6 pr-8 border-r border-white/10">
+                <div class="flex items-center gap-6 lg:pr-8 lg:border-r border-white/10 w-full lg:w-auto">
                     <div class="relative w-24 h-24">
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                             <circle class="text-white/10" stroke="currentColor" stroke-width="3" fill="none" r="16" cy="18" cx="18"></circle>
@@ -160,7 +167,7 @@ $csrfToken = generateCSRFToken();
                 </div>
 
                 <!-- Snapshot Row -->
-                <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+                <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                     <div class="glass-stat">
                         <div class="text-white/50 text-[10px] uppercase font-bold mb-1">Total Impact</div>
                         <div class="flex items-baseline gap-2">
@@ -209,7 +216,7 @@ $csrfToken = generateCSRFToken();
                             Strategic Intelligence
                         </h3>
                     </div>
-                    <div id="recommendationsSection" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                    <div id="recommendationsSection" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                 </div>
 
                 <!-- Delivery Efficiency -->
@@ -247,7 +254,7 @@ $csrfToken = generateCSRFToken();
                              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-brand-500"></span> FLOW</span>
                         </div>
                     </div>
-                    <div id="workflowFunnel" class="flex items-end justify-between h-56 gap-4"></div>
+                    <div id="workflowFunnel" class="flex items-end justify-between h-40 lg:h-56 gap-2 lg:gap-4"></div>
                 </div>
                 
                 <!-- Platform Dominance -->
@@ -279,7 +286,7 @@ $csrfToken = generateCSRFToken();
                         </div>
                         <span id="teamMemberCount" class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-1 rounded-full uppercase"></span>
                     </div>
-                    <div id="userPerformanceCards" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar"></div>
+                    <div id="userPerformanceCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:max-h-[600px] lg:overflow-y-auto pr-2 custom-scrollbar"></div>
                 </div>
                 
                 <!-- Right Rail: Bottlenecks & Schedule -->
@@ -317,7 +324,7 @@ $csrfToken = generateCSRFToken();
         <!-- Board View -->
         <div id="boardView" class="hidden">
             <!-- Filters Row -->
-            <div class="mb-4 flex flex-wrap gap-3 items-center">
+            <div class="mb-4 flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center">
                 <select id="platformFilter" onchange="loadPosts()" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                     <option value="">All Platforms</option>
                     <option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="LinkedIn">LinkedIn</option>
@@ -327,7 +334,7 @@ $csrfToken = generateCSRFToken();
                     <input type="checkbox" id="myPostsFilter" onchange="loadPosts()" class="rounded border-slate-300 text-brand-500 focus:ring-brand-500">
                     My Posts
                 </label>
-                <div class="relative flex-1 max-w-xs">
+                <div class="relative w-full sm:flex-1 sm:max-w-xs">
                     <input type="text" id="searchInput" placeholder="Search posts..." onkeyup="debounceSearch()" class="w-full px-4 py-2 pl-10 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                     <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
@@ -335,7 +342,7 @@ $csrfToken = generateCSRFToken();
             
             <!-- Status Tabs -->
             <div class="bg-white rounded-lg border border-slate-200 mb-6 overflow-hidden">
-                <div class="flex flex-wrap border-b border-slate-200">
+                <div class="flex overflow-x-auto scrollbar-none whitespace-nowrap border-b border-slate-200">
                     <button onclick="setStatusFilter('')" id="tabAll" class="status-tab px-3 py-2 text-xs font-bold text-slate-800 border-b-2 border-slate-800 bg-transparent transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-gradient-to-r from-violet-400 to-slate-400"></span>
                         All <span id="countAll" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
@@ -439,45 +446,50 @@ $csrfToken = generateCSRFToken();
         </div>
 
         <!-- Users View (Admin Only) -->
-        <div id="usersView" class="hidden max-w-7xl mx-auto">
-            <div class="flex flex-wrap items-center justify-between gap-6 mb-8">
-                <div class="flex gap-4 flex-1">
-                    <div class="bg-white rounded-xl px-6 py-5 border border-slate-200 shadow-sm flex-1 max-w-[200px]">
+        <div id="usersView" class="hidden max-w-7xl mx-auto px-4 lg:px-0">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8">
+                <div class="flex gap-4 w-full lg:flex-1 overflow-x-auto pb-2 lg:pb-0 scrollbar-none">
+                    <div class="bg-white rounded-xl px-4 lg:px-6 py-4 lg:py-5 border border-slate-200 shadow-sm flex-1 min-w-[140px] max-w-[200px]">
                         <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Users</div>
-                        <div id="totalUsersCount" class="text-3xl font-bold text-slate-800 tracking-tight">0</div>
+                        <div id="totalUsersCount" class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">0</div>
                     </div>
-                    <div class="bg-white rounded-xl px-6 py-5 border border-slate-200 shadow-sm flex-1 max-w-[200px]">
+                    <div class="bg-white rounded-xl px-4 lg:px-6 py-4 lg:py-5 border border-slate-200 shadow-sm flex-1 min-w-[140px] max-w-[200px]">
                         <div class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-1">Active</div>
-                        <div id="activeUsersCount" class="text-3xl font-bold text-emerald-600 tracking-tight">0</div>
+                        <div id="activeUsersCount" class="text-2xl lg:text-3xl font-bold text-emerald-600 tracking-tight">0</div>
                     </div>
-                    <div class="bg-white rounded-xl px-6 py-5 border border-slate-200 shadow-sm flex-1 max-w-[200px]">
+                    <div class="bg-white rounded-xl px-4 lg:px-6 py-4 lg:py-5 border border-slate-200 shadow-sm flex-1 min-w-[140px] max-w-[200px]">
                          <div class="text-[10px] font-bold text-purple-500 uppercase tracking-wider mb-1">Admins</div>
-                        <div id="adminUsersCount" class="text-3xl font-bold text-purple-600 tracking-tight">0</div>
+                        <div id="adminUsersCount" class="text-2xl lg:text-3xl font-bold text-purple-600 tracking-tight">0</div>
                     </div>
                 </div>
                 <!-- User Actions Container -->
-                <div id="userActionsContainer"></div>
+                <div id="userActionsContainer" class="w-full lg:w-auto"></div>
             </div>
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50/50 border-b border-slate-200">
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Joined</th>
-                            <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
-                </table>
+            <div class="users-container">
+                <!-- Desktop View -->
+                <div class="hidden lg:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-200">
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Joined</th>
+                                <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+                <!-- Mobile View -->
+                <div id="usersMobileGrid" class="lg:hidden grid grid-cols-1 gap-4"></div>
             </div>
         </div>
     </main>
 
     <!-- ==================== CREATE POST MODAL ==================== -->
-    <div id="createModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col my-8">
+    <div id="createModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 lg:p-4">
+        <div class="bg-white rounded-none lg:rounded-xl shadow-2xl w-full max-w-2xl h-full lg:h-auto lg:max-h-[90vh] flex flex-col">
             <!-- Header -->
             <div class="bg-white px-6 py-4 flex justify-between items-center rounded-t-xl border-b border-slate-100 flex-shrink-0">
                 <h2 class="text-lg font-bold text-slate-800">New Post</h2>
@@ -622,8 +634,8 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- ==================== VIEW POST MODAL (Read-Only) ==================== -->
-    <div id="viewModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 lg:p-8">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-7xl h-full max-h-[90vh] flex flex-col lg:flex-row overflow-hidden border border-slate-100 text-right">
+    <div id="viewModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-0 lg:p-8">
+        <div class="bg-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-7xl h-full lg:h-[85vh] flex flex-col lg:flex-row overflow-hidden border border-slate-100 text-right">
             
             <!-- Left Column: Media (Dark Mode) - Reduced Width -->
             <div id="viewMediaColumn" class="hidden lg:flex lg:w-[48%] xl:w-[48%] bg-slate-900 items-center justify-center relative group border-l border-slate-100">
@@ -634,7 +646,7 @@ $csrfToken = generateCSRFToken();
             <div class="flex-1 flex flex-col bg-white h-full relative w-full lg:w-[52%] xl:w-[52%]">
                 
                 <!-- Fixed Header (Sticky) -->
-                <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100 bg-white flex-shrink-0 gap-4 z-10 sticky top-0">
+                <div class="px-4 lg:px-6 py-4 flex justify-between items-center border-b border-slate-100 bg-white flex-shrink-0 gap-4 z-10 sticky top-0">
                      <!-- Status & Platforms -->
                     <div class="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
                         <span id="viewStatusBadge" class="status-badge px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 flex-shrink-0">DRAFT</span>
@@ -1953,7 +1965,7 @@ async function openViewModal(id) {
                 
                 return `<div class="media-slide w-full h-full flex items-center justify-center transition-opacity duration-300 ${isActive}" data-index="${idx}">
                     ${isVid 
-                        ? `<video src="${m.file_path}" controls class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm bg-black"></video>` 
+                        ? `<video src="${m.file_path}" controls playsinline webkit-playsinline class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm bg-black"></video>` 
                         : `<img src="${m.file_path}" class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm mx-auto">`}
                 </div>`;
             }).join('');
@@ -1980,8 +1992,8 @@ async function openViewModal(id) {
                     </button>
                     
                     <!-- Dots -->
-                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                        ${p.media.map((_, i) => `<div class="w-2 h-2 rounded-full transition-colors ${i === 0 ? 'bg-white' : 'bg-white/40'}" id="dot-${isMobile ? 'mo' : 'dt'}-${i}"></div>`).join('')}
+                    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
+                        ${p.media.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full transition-colors pointer-events-auto ${i === 0 ? 'bg-white' : 'bg-white/40'}" id="dot-${isMobile ? 'mo' : 'dt'}-${i}"></div>`).join('')}
                     </div>
                 </div>
             `;
@@ -2022,17 +2034,30 @@ async function openViewModal(id) {
         }
 
         if (hasMedia) {
+            const isMobile = window.innerWidth < 1024;
+            
             // Desktop: Show Left Column
             if (mediaColumn && mediaWrapper) {
-                mediaColumn.classList.remove('hidden');
-                mediaColumn.classList.add('flex'); // Ensure flex is working
-                mediaWrapper.innerHTML = getMediaHtml(false);
+                if (!isMobile) {
+                    mediaColumn.classList.remove('hidden');
+                    mediaColumn.classList.add('flex');
+                    mediaWrapper.innerHTML = getMediaHtml(false);
+                } else {
+                    mediaColumn.classList.add('hidden');
+                    mediaColumn.classList.remove('flex');
+                    mediaWrapper.innerHTML = '';
+                }
             }
             
             // Mobile: Show Top Section
             if (mediaMobile) {
-                mediaMobile.classList.remove('hidden');
-                mediaMobile.innerHTML = `<div class="p-6 flex justify-center">${getMediaHtml(true)}</div>`;
+                if (isMobile) {
+                    mediaMobile.classList.remove('hidden');
+                    mediaMobile.innerHTML = `<div class="p-6 flex justify-center">${getMediaHtml(true)}</div>`;
+                } else {
+                    mediaMobile.classList.add('hidden');
+                    mediaMobile.innerHTML = '';
+                }
             }
         } else {
             // No Media: Hide both AND clear content
@@ -2831,7 +2856,11 @@ async function loadUsers() {
 }
 
 function renderUsersTable() {
-    document.getElementById('usersTableBody').innerHTML = allUsers.map(u => `
+    const tableBody = document.getElementById('usersTableBody');
+    const mobileGrid = document.getElementById('usersMobileGrid');
+    
+    // Desktop HTML
+    const desktopHtml = allUsers.map(u => `
         <tr class="hover:bg-slate-50">
             <td class="px-6 py-4">
                 <div class="flex items-center gap-3">
@@ -2869,6 +2898,47 @@ function renderUsersTable() {
             </td>
         </tr>
     `).join('') || '<tr><td colspan="5" class="text-center py-8 text-slate-400">No users found</td></tr>';
+
+    // Mobile HTML
+    const mobileHtml = allUsers.map(u => `
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center font-bold">
+                        ${(u.full_name || u.username)[0].toUpperCase()}
+                    </div>
+                    <div>
+                        <div class="font-bold text-slate-800">${escapeHtml(u.full_name || u.username)}</div>
+                        <div class="text-xs text-slate-400">@${u.username}</div>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end gap-1">
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : (u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')}">
+                        ${u.role}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                        ${u.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </div>
+            </div>
+            <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Joined: ${formatDate(u.created_at)}</span>
+                <div class="flex gap-2">
+                    ${app.user?.role?.toLowerCase() === 'manager' ? `
+                    <button onclick="openEditUserModal(${u.id})" class="p-2 text-brand-600 bg-brand-50 rounded-lg hover:bg-brand-100">
+                        <i class="fa-solid fa-pen text-sm"></i>
+                    </button>
+                    <button onclick="toggleUserStatus(${u.id}, ${u.is_active ? 0 : 1})" class="p-2 ${u.is_active ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'} rounded-lg">
+                        <i class="fa-solid ${u.is_active ? 'fa-user-slash' : 'fa-user-check'} text-sm"></i>
+                    </button>
+                    ` : '<span class="text-[10px] font-bold text-slate-300">READ ONLY</span>'}
+                </div>
+            </div>
+        </div>
+    `).join('') || '<div class="text-center py-8 text-slate-400">No users found</div>';
+
+    if (tableBody) tableBody.innerHTML = desktopHtml;
+    if (mobileGrid) mobileGrid.innerHTML = mobileHtml;
 }
 
 async function toggleUserStatus(id, active) {
@@ -2993,6 +3063,65 @@ function toast(msg, type = 'info') {
 
 document.addEventListener('click', e => { 
     if (!e.target.closest('.relative')) document.getElementById('notifDropdown').classList.add('hidden'); 
+    
+    // Auto-close sidebar when clicking outside on mobile
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button[onclick="toggleSidebar()"]')) {
+        closeSidebarOnMobile();
+    }
+});
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const isHidden = sidebar.classList.contains('-translate-x-full');
+    
+    if (isHidden) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+function closeSidebarOnMobile() {
+    if (window.innerWidth < 1024) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+// Reset sidebar and modal state on window resize (smart refresh)
+let lastWidth = window.innerWidth;
+window.addEventListener('resize', () => {
+    const currentWidth = window.innerWidth;
+    const isLg = currentWidth >= 1024;
+    const wasLg = lastWidth >= 1024;
+    
+    if (isLg) {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sidebar) sidebar.classList.remove('-translate-x-full');
+        if (overlay) overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+    } else {
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) sidebar.classList.add('-translate-x-full');
+    }
+    
+    // Refresh view modal if open ONLY if breakpoint changed (to fix media layout without resetting video)
+    if (isLg !== wasLg && app.currentPost && !document.getElementById('viewModal').classList.contains('hidden')) {
+        openViewModal(app.currentPost.id);
+    }
+    
+    lastWidth = currentWidth;
 });
 
 // ==================== AUDIO / NOTIFICATIONS ====================
