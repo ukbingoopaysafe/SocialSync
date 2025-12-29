@@ -91,7 +91,7 @@ $csrfToken = generateCSRFToken();
         <!-- Main Content Area -->
         <div class="flex-1 lg:ml-16 w-full min-w-0 transition-all duration-300">
             <!-- Top Header -->
-            <header class="h-14 bg-[#0a1628] border-b border-slate-700/50 sticky top-0 z-40 flex items-center justify-between px-4 lg:px-6">
+            <header class="h-14 bg-[#0a1628] border-b border-slate-700/50 sticky top-0 z-50 flex items-center justify-between px-4 lg:px-6">
                 <!-- Mobile Menu Button -->
                 <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -116,7 +116,7 @@ $csrfToken = generateCSRFToken();
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                             <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-medium">0</span>
                         </button>
-                        <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-slate-200 z-50">
+                        <div id="notifDropdown" class="hidden fixed lg:absolute left-4 right-4 lg:left-auto lg:right-0 top-16 lg:top-full mt-2 lg:w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50">
                             <div class="px-4 py-3 border-b border-slate-100 flex justify-between items-center">
                                 <span class="font-semibold text-slate-800">Notifications</span>
                                 <button onclick="markAllRead()" class="text-xs text-brand-500 hover:underline">Mark all read</button>
@@ -2668,18 +2668,23 @@ async function loadNotifications() {
             }
         
         const notifList = document.getElementById('notifList');
-        const notifHtml = data.data.notifications.slice(0, 10).map(n => `
-            <div class="p-3 border-b border-slate-100 cursor-pointer transition-colors ${n.is_read ? 'bg-white hover:bg-slate-50' : 'bg-blue-50 hover:bg-blue-100 border-l-4 border-l-brand-500'}" onclick="notifClick(${n.id}, ${n.post_id})">
-                <div class="flex items-start gap-2">
-                    ${!n.is_read ? '<span class="w-2 h-2 bg-brand-500 rounded-full mt-1.5 flex-shrink-0"></span>' : ''}
-                    <div class="flex-1">
-                        <div class="${n.is_read ? 'font-medium text-slate-600' : 'font-semibold text-slate-800'} text-sm">${n.title}</div>
-                        <div class="text-xs ${n.is_read ? 'text-slate-400' : 'text-slate-600'} line-clamp-2">${n.message}</div>
-                        <div class="text-xs text-slate-400 mt-1">${formatDate(n.created_at)}</div>
+        const notifHtml = data.data.notifications.slice(0, 15).map(n => `
+            <div class="p-4 border-b border-slate-50 cursor-pointer transition-all ${n.is_read ? 'bg-white hover:bg-slate-50' : 'bg-brand-50/30 hover:bg-brand-50/50 border-l-4 border-l-brand-500'}" onclick="notifClick(${n.id}, ${n.post_id})">
+                <div class="flex items-start gap-4">
+                    <div class="w-10 h-10 rounded-full ${n.is_read ? 'bg-slate-100 text-slate-400' : 'bg-brand-100 text-brand-600'} flex items-center justify-center flex-shrink-0 transition-colors">
+                        <i class="fa-solid ${n.title.toLowerCase().includes('approval') ? 'fa-check-double' : (n.title.toLowerCase().includes('comment') ? 'fa-comment' : 'fa-bell')} text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="${n.is_read ? 'font-medium text-slate-600' : 'font-bold text-slate-900'} text-sm mb-1 line-clamp-1">${n.title}</div>
+                        <div class="text-[13px] ${n.is_read ? 'text-slate-400' : 'text-slate-600'} line-clamp-2 leading-relaxed mb-2">${n.message}</div>
+                        <div class="flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                             <span class="flex items-center gap-1"><i class="fa-regular fa-clock"></i> ${formatDate(n.created_at)}</span>
+                             ${!n.is_read ? '<span class="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>' : ''}
+                        </div>
                     </div>
                 </div>
             </div>
-        `).join('') || '<p class="p-4 text-slate-400 text-center">No notifications</p>';
+        `).join('') || '<div class="flex flex-col items-center justify-center py-12 px-6 text-center"><div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-3"><i class="fa-solid fa-bell-slash text-xl"></i></div><p class="text-slate-400 text-sm font-medium">No notifications yet</p></div>';
         
         notifList.innerHTML = notifHtml;
     }
@@ -2688,7 +2693,33 @@ async function loadNotifications() {
     }
 }
 
-function toggleNotifications() { document.getElementById('notifDropdown').classList.toggle('hidden'); }
+function toggleNotifications() { 
+    const dropdown = document.getElementById('notifDropdown');
+    const isHidden = dropdown.classList.contains('hidden');
+    dropdown.classList.toggle('hidden');
+    
+    // Smart mobile backdrop
+    if (window.innerWidth < 1024) {
+        let overlay = document.getElementById('notifOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'notifOverlay';
+            overlay.className = 'fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 hidden transition-opacity duration-300 opacity-0';
+            overlay.onclick = toggleNotifications;
+            document.body.appendChild(overlay);
+        }
+        
+        if (isHidden) {
+            overlay.classList.remove('hidden');
+            setTimeout(() => overlay.style.opacity = '1', 10);
+            document.body.style.overflow = 'hidden';
+        } else {
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+            document.body.style.overflow = '';
+        }
+    }
+}
 async function notifClick(id, postId) { 
     await api('mark_notification_read', 'POST', { id }); 
     toggleNotifications(); 
@@ -3062,8 +3093,19 @@ function toast(msg, type = 'info') {
 }
 
 document.addEventListener('click', e => { 
-    if (!e.target.closest('.relative')) document.getElementById('notifDropdown').classList.add('hidden'); 
+    // Specific check for notification dropdown to avoid accidental closures or non-closures
+    const notifDropdown = document.getElementById('notifDropdown');
+    const isNotifButton = e.target.closest('button[onclick="toggleNotifications()"]');
+    const isInsideNotif = e.target.closest('#notifDropdown');
     
+    if (!isNotifButton && !isInsideNotif) {
+        notifDropdown.classList.add('hidden');
+    }
+
+    // Handle other dropdowns (like notification badge clicks or others that might use .relative if any)
+    if (!e.target.closest('.relative') && !isInsideNotif) {
+         // This is a bit generic, keeping it for other possible future dropdowns but specifically excluded notif
+    }    
     // Auto-close sidebar when clicking outside on mobile
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
