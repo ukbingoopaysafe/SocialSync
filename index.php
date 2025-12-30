@@ -2131,11 +2131,11 @@ function renderActionButtons(p) {
     const btnSecondary = 'bg-white hover:bg-slate-50 text-slate-600 font-medium py-2.5 px-4 rounded-md text-sm border border-slate-200 transition-colors';
     
     if (p.status === 'IDEA') {
-        if (isAdmin) {
+        if (isAdmin || isManager) {
             buttons.push(`<button onclick="approveIdea()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Convert to Draft</button>`);
         }
     } else if (p.status === 'DRAFT' || p.status === 'CHANGES_REQUESTED') {
-        if (isOwner || isAdmin) {
+        if (isOwner || isAdmin || isManager) {
             buttons.push(`<button onclick="submitForReview()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>Submit for Review</button>`);
         }
     } else if (p.status === 'PENDING_REVIEW') {
