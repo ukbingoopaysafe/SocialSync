@@ -887,7 +887,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- ==================== REQUEST CHANGES MODAL ==================== -->
-    <div id="changesModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-50 flex items-center justify-center p-4">
+    <div id="changesModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/50 modal-backdrop z-[70] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6 border border-slate-200">
             <h3 class="text-lg font-semibold mb-4 text-slate-800">Request Changes</h3>
             <p class="text-slate-500 text-sm mb-4">Please explain what changes are needed. This feedback will be visible to the post author.</p>
@@ -900,7 +900,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- ==================== SCHEDULE MODAL ==================== -->
-    <div id="scheduleModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div id="scheduleModal" dir="rtl" class="hidden fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <h3 class="text-xl font-bold mb-4 flex items-center gap-2">📅 Schedule for Publishing</h3>
             <p class="text-slate-600 text-sm mb-4">Select when this post should be published. The post will automatically move to Published at the scheduled time.</p>
