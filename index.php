@@ -68,6 +68,10 @@ $csrfToken = generateCSRFToken();
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Calendar</span>
                 </button>
+                <button onclick="switchTab('ideas'); closeSidebarOnMobile()" id="tabIdeas" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">My Ideas</span>
+                </button>
                 <div id="adminLink" class="hidden">
                     <button onclick="switchTab('users'); closeSidebarOnMobile()" id="tabUsers" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
@@ -347,10 +351,6 @@ $csrfToken = generateCSRFToken();
                         <span class="w-2 h-2 rounded-full bg-gradient-to-r from-violet-400 to-slate-400"></span>
                         All <span id="countAll" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
                     </button>
-                    <button onclick="setStatusFilter('IDEA')" id="tabIDEA" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
-                        <span class="w-2 h-2 rounded-full bg-violet-400"></span>
-                        Ideas <span id="countIDEA" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
-                    </button>
                     <button onclick="setStatusFilter('DRAFT')" id="tabDRAFT" class="status-tab px-3 py-2 text-xs font-medium text-slate-500 border-b-2 border-transparent hover:text-slate-700 hover:bg-slate-50 transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-sky-400"></span>
                         Drafts <span id="countDRAFT" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">0</span>
@@ -485,7 +485,139 @@ $csrfToken = generateCSRFToken();
                 <div id="usersMobileGrid" class="lg:hidden grid grid-cols-1 gap-4"></div>
             </div>
         </div>
+
+        <!-- Ideas View (Personal Workspace) -->
+        <div id="ideasView" class="hidden max-w-7xl mx-auto px-4 lg:px-0">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                        <span class="text-3xl">🧠</span> My Ideas
+                    </h2>
+                    <p class="text-slate-500 text-sm mt-1">Your personal brain space — jot down ideas without pressure</p>
+                </div>
+                <button onclick="openIdeaModal()" class="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium text-sm shadow-lg shadow-violet-600/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-plus"></i>
+                    New Idea
+                </button>
+            </div>
+            
+            <!-- Ideas Grid -->
+            <div id="ideasGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Ideas will be rendered here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="ideasEmptyState" class="hidden text-center py-16">
+                <div class="text-6xl mb-4">💭</div>
+                <p class="text-slate-500 text-lg mb-2">No ideas yet</p>
+                <p class="text-slate-400 text-sm mb-6">Start capturing your thoughts — no pressure!</p>
+                <button onclick="openIdeaModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg font-medium text-sm transition-colors">
+                    <i class="fa-solid fa-plus"></i>
+                    Create Your First Idea
+                </button>
+            </div>
+        </div>
     </main>
+
+    <!-- ==================== IDEA MODAL (Create/Edit) ==================== -->
+    <div id="ideaModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 lg:p-4">
+        <div class="bg-white rounded-none lg:rounded-xl shadow-2xl w-full max-w-xl h-full lg:h-auto lg:max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-4 flex justify-between items-center rounded-t-xl flex-shrink-0">
+                <h2 id="ideaModalTitle" class="text-lg font-bold text-white flex items-center gap-2">
+                    <span>💡</span> New Idea
+                </h2>
+                <button onclick="closeIdeaModal()" class="text-white/80 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Content -->
+            <form id="ideaForm" class="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
+                <input type="hidden" id="ideaId">
+                
+                <!-- Title (Optional) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Title (optional)</label>
+                    <input type="text" id="ideaTitle" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all font-medium text-slate-800 placeholder-slate-400" placeholder="Give your idea a name...">
+                </div>
+                
+                <!-- Content (Required) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Brain Dump 💭</label>
+                    <textarea id="ideaContent" rows="6" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-slate-700 placeholder-slate-400 resize-none" placeholder="Write freely... bullet points, links, emojis — anything goes! 🚀"></textarea>
+                    <p class="text-xs text-slate-400 mt-2">No rules here. Just let your ideas flow.</p>
+                </div>
+                
+                <!-- Media Upload -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">📎 Attachments</label>
+                    
+                    <!-- Media Preview Grid -->
+                    <div id="ideaMediaPreview" class="grid grid-cols-3 gap-2 mb-3"></div>
+                    
+                    <!-- Upload Zone -->
+                    <div id="ideaDropZone" onclick="document.getElementById('ideaFileInput').click()" class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/50 transition-all">
+                        <input type="file" id="ideaFileInput" class="hidden" accept="image/*,video/mp4,video/webm" multiple onchange="handleIdeaFileSelect(event)">
+                        <div class="text-slate-400">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl mb-2"></i>
+                            <p class="text-sm">Click or drag files here</p>
+                            <p class="text-xs text-slate-400 mt-1">Images & Videos (Max 100MB each)</p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Footer Actions -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
+                <button type="button" onclick="closeIdeaModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="button" onclick="saveIdea()" class="flex-1 px-5 py-2.5 bg-violet-600 text-white font-bold text-sm rounded-lg hover:bg-violet-700 transition-colors shadow-lg shadow-violet-600/20">Save Idea</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW IDEA MODAL ==================== -->
+    <div id="viewIdeaModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 lg:p-4">
+        <div class="bg-white rounded-none lg:rounded-xl shadow-2xl w-full max-w-2xl h-full lg:h-auto lg:max-h-[90vh] flex flex-col">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-4 flex justify-between items-center rounded-t-xl flex-shrink-0">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span>💡</span> <span id="viewIdeaTitle">Idea Details</span>
+                </h2>
+                <button onclick="closeViewIdeaModal()" class="text-white/80 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Content -->
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
+                <!-- Media Gallery -->
+                <div id="viewIdeaMediaGallery" class="mb-5"></div>
+                
+                <!-- Content Text -->
+                <div id="viewIdeaContent" class="prose prose-slate max-w-none text-slate-700 whitespace-pre-wrap"></div>
+                
+                <!-- Meta Info -->
+                <div id="viewIdeaMeta" class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-4 text-sm text-slate-400">
+                    <span id="viewIdeaDate"></span>
+                </div>
+            </div>
+            
+            <!-- Footer Actions -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
+                <button type="button" onclick="viewIdeaEdit()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                </button>
+                <button type="button" onclick="viewIdeaConvert()" class="flex-1 px-5 py-2.5 bg-violet-600 text-white font-bold text-sm rounded-lg hover:bg-violet-700 transition-colors shadow-lg shadow-violet-600/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Convert to Draft
+                </button>
+                <button type="button" onclick="viewIdeaDelete()" class="px-5 py-2.5 bg-white border border-red-200 text-red-500 font-bold text-sm rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ==================== CREATE POST MODAL ==================== -->
     <div id="createModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 lg:p-4">
@@ -594,7 +726,6 @@ $csrfToken = generateCSRFToken();
                             <div class="relative">
                                 <select id="createStatus" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
                                     <option value="DRAFT">Draft</option>
-                                    <option value="IDEA">Idea</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
                                     <i class="fa-solid fa-chevron-down text-xs"></i>
@@ -1007,9 +1138,8 @@ $csrfToken = generateCSRFToken();
 
 <script>
 const app = { user: null, posts: [], currentPost: null, lastUnreadCount: 0, notificationsInitialized: false };
-const STATUS_LIST = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+const STATUS_LIST = ['DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
 const STATUS_COLORS = {
-    'IDEA': 'bg-violet-100 text-violet-700',
     'DRAFT': 'bg-sky-100 text-sky-700',
     'PENDING_REVIEW': 'bg-amber-100 text-amber-700',
     'REVIEWED': 'bg-orange-100 text-orange-700',
@@ -1019,7 +1149,6 @@ const STATUS_COLORS = {
     'PUBLISHED': 'bg-slate-100 text-slate-600'
 };
 const STATUS_LABELS = {
-    'IDEA': 'Idea',
     'DRAFT': 'Draft',
     'PENDING_REVIEW': 'In Review',
     'REVIEWED': 'Reviewed',
@@ -1150,8 +1279,8 @@ async function loadUser() {
 async function logout() { await api('logout', 'POST'); location.href = 'login.php'; }
 
 function switchTab(tab) {
-    const allTabs = ['dashboard', 'board', 'calendar', 'users'];
-    const titles = { dashboard: 'Dashboard', board: 'Content Board', calendar: 'Calendar', users: 'User Management' };
+    const allTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
+    const titles = { dashboard: 'Dashboard', board: 'Content Board', calendar: 'Calendar', ideas: 'My Ideas', users: 'User Management' };
     
     allTabs.forEach(t => {
         const view = document.getElementById(t + 'View');
@@ -1173,7 +1302,397 @@ function switchTab(tab) {
     
     if (tab === 'dashboard') loadDashboard();
     if (tab === 'calendar') loadCalendar();
+    if (tab === 'ideas') loadIdeas();
     if (tab === 'users') loadUsers();
+}
+
+// ==================== IDEAS WORKSPACE ====================
+let userIdeas = [];
+
+async function loadIdeas() {
+    try {
+        const data = await api('get_user_ideas');
+        if (!data.success) return;
+        
+        userIdeas = data.data || [];
+        renderIdeas();
+    } catch (error) {
+        console.error('Failed to load ideas:', error);
+    }
+}
+
+function renderIdeas() {
+    const grid = document.getElementById('ideasGrid');
+    const emptyState = document.getElementById('ideasEmptyState');
+    
+    if (userIdeas.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    emptyState.classList.add('hidden');
+    
+    grid.innerHTML = userIdeas.map(idea => {
+        const title = idea.title || 'Untitled Idea';
+        const content = idea.content || '';
+        const preview = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        const date = new Date(idea.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const media = idea.media || [];
+        const hasMedia = media.length > 0;
+        const primaryMedia = media.find(m => m.is_primary) || media[0];
+        const isVideo = primaryMedia?.file_type?.startsWith('video/');
+        
+        // Media thumbnail section
+        let mediaThumbnail = '';
+        if (hasMedia && primaryMedia) {
+            mediaThumbnail = isVideo 
+                ? `<div class="relative mb-3 rounded-lg overflow-hidden bg-slate-100 aspect-video">
+                     <video src="${primaryMedia.file_path}" class="w-full h-full object-cover"></video>
+                     <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                       <i class="fa-solid fa-play text-white text-xl"></i>
+                     </div>
+                     ${media.length > 1 ? `<span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">+${media.length - 1}</span>` : ''}
+                   </div>`
+                : `<div class="relative mb-3 rounded-lg overflow-hidden bg-slate-100 aspect-video">
+                     <img src="${primaryMedia.file_path}" class="w-full h-full object-cover" alt="">
+                     ${media.length > 1 ? `<span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">+${media.length - 1}</span>` : ''}
+                   </div>`;
+        }
+        
+        return `
+            <div class="group bg-white rounded-xl border border-slate-200 hover:border-violet-300 hover:shadow-lg transition-all p-5 flex flex-col cursor-pointer" onclick="viewIdea(${idea.id})">
+                <div class="flex items-start justify-between mb-3">
+                    <h3 class="font-semibold text-slate-800 text-sm line-clamp-1">${escapeHtml(title)}</h3>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="event.stopPropagation(); editIdea(${idea.id})" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors" title="Edit">
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); deleteIdea(${idea.id})" class="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors" title="Delete">
+                            <i class="fa-solid fa-trash text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+                ${mediaThumbnail}
+                <p class="text-slate-500 text-sm flex-1 mb-4 whitespace-pre-line line-clamp-3">${escapeHtml(preview)}</p>
+                <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <span class="text-xs text-slate-400">${date}${hasMedia ? ` • <i class="fa-solid fa-paperclip"></i> ${media.length}` : ''}</span>
+                    <button onclick="event.stopPropagation(); convertIdeaToDraft(${idea.id})" class="text-xs font-medium text-violet-600 hover:text-violet-700 flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        Convert to Draft
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+let currentIdeaMedia = [];
+
+function openIdeaModal(ideaId = null) {
+    document.getElementById('ideaId').value = ideaId || '';
+    document.getElementById('ideaTitle').value = '';
+    document.getElementById('ideaContent').value = '';
+    currentIdeaMedia = [];
+    renderIdeaMediaPreview();
+    document.getElementById('ideaModalTitle').innerHTML = ideaId ? '<span>✏️</span> Edit Idea' : '<span>💡</span> New Idea';
+    document.getElementById('ideaModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeIdeaModal() {
+    document.getElementById('ideaModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    currentIdeaMedia = [];
+}
+
+async function saveIdea() {
+    const id = document.getElementById('ideaId').value;
+    const title = document.getElementById('ideaTitle').value.trim();
+    const content = document.getElementById('ideaContent').value.trim();
+    
+    if (!content) {
+        alert('Please write something in your idea!');
+        return;
+    }
+    
+    try {
+        const action = id ? 'update_idea' : 'create_idea';
+        const payload = { title, content };
+        if (id) payload.id = parseInt(id);
+        
+        const data = await api(action, 'POST', payload);
+        
+        if (data.success) {
+            closeIdeaModal();
+            loadIdeas();
+        } else {
+            alert(data.message || 'Failed to save idea');
+        }
+    } catch (error) {
+        console.error('Save idea error:', error);
+        alert('An error occurred while saving your idea');
+    }
+}
+
+function editIdea(ideaId) {
+    const idea = userIdeas.find(i => i.id == ideaId);
+    if (!idea) return;
+    
+    document.getElementById('ideaId').value = idea.id;
+    document.getElementById('ideaTitle').value = idea.title || '';
+    document.getElementById('ideaContent').value = idea.content || '';
+    currentIdeaMedia = idea.media || [];
+    renderIdeaMediaPreview();
+    document.getElementById('ideaModalTitle').innerHTML = '<span>✏️</span> Edit Idea';
+    document.getElementById('ideaModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+async function deleteIdea(ideaId) {
+    if (!confirm('Delete this idea? This cannot be undone.')) return;
+    
+    try {
+        const data = await api(`delete_idea&id=${ideaId}`, 'GET');
+        if (data.success) {
+            loadIdeas();
+        } else {
+            alert(data.message || 'Failed to delete idea');
+        }
+    } catch (error) {
+        console.error('Delete idea error:', error);
+        alert('An error occurred while deleting the idea');
+    }
+}
+
+async function convertIdeaToDraft(ideaId) {
+    if (!confirm('Convert this idea to a Draft post?\n\nThis will create a new Draft in your workflow. You can choose to keep or delete the original idea.')) return;
+    
+    const deleteAfter = confirm('Do you want to delete the idea after converting?\n\nClick OK to delete, Cancel to keep it.');
+    
+    try {
+        const data = await api('convert_idea_to_draft', 'POST', { idea_id: ideaId, delete_idea: deleteAfter });
+        
+        if (data.success) {
+            alert('✅ Idea converted to Draft successfully!\n\nSwitch to the Board to see your new draft.');
+            if (deleteAfter) {
+                loadIdeas();
+            }
+        } else {
+            alert(data.message || 'Failed to convert idea');
+        }
+    } catch (error) {
+        console.error('Convert idea error:', error);
+        alert('An error occurred while converting the idea');
+    }
+}
+
+// --- Idea Media Functions ---
+
+function renderIdeaMediaPreview() {
+    const container = document.getElementById('ideaMediaPreview');
+    if (!container) return;
+    
+    if (currentIdeaMedia.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    container.innerHTML = currentIdeaMedia.map(m => {
+        const isVideo = m.file_type?.startsWith('video/');
+        return `
+            <div class="relative group rounded-lg overflow-hidden bg-slate-100 aspect-square">
+                ${isVideo 
+                    ? `<video src="${m.file_path}" class="w-full h-full object-cover"></video>
+                       <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                         <i class="fa-solid fa-play text-white text-sm"></i>
+                       </div>`
+                    : `<img src="${m.file_path}" class="w-full h-full object-cover" alt="">`
+                }
+                <button onclick="deleteIdeaMedia(${m.id})" class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+async function handleIdeaFileSelect(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    const ideaId = document.getElementById('ideaId').value;
+    
+    // If no idea ID yet, we need to create the idea first
+    if (!ideaId) {
+        const title = document.getElementById('ideaTitle').value.trim();
+        const content = document.getElementById('ideaContent').value.trim() || 'New idea with attachments';
+        
+        // Create idea first
+        const createData = await api('create_idea', 'POST', { title, content });
+        if (!createData.success) {
+            alert('Please save the idea first before adding files');
+            return;
+        }
+        
+        document.getElementById('ideaId').value = createData.data.id;
+        document.getElementById('ideaContent').value = content;
+    }
+    
+    const currentIdeaId = document.getElementById('ideaId').value;
+    
+    for (const file of files) {
+        await uploadIdeaMedia(currentIdeaId, file);
+    }
+    
+    // Reload ideas to get updated media list
+    await loadIdeas();
+    const idea = userIdeas.find(i => i.id == currentIdeaId);
+    if (idea) {
+        currentIdeaMedia = idea.media || [];
+        renderIdeaMediaPreview();
+    }
+    
+    // Clear file input
+    event.target.value = '';
+}
+
+async function uploadIdeaMedia(ideaId, file) {
+    const formData = new FormData();
+    formData.append('idea_id', ideaId);
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch(`api.php?action=upload_idea_media`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        if (!data.success) {
+            alert(data.message || 'Failed to upload file');
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        alert('Failed to upload file');
+    }
+}
+
+async function deleteIdeaMedia(mediaId) {
+    if (!confirm('Delete this attachment?')) return;
+    
+    try {
+        const data = await api(`delete_idea_media&id=${mediaId}`, 'GET');
+        if (data.success) {
+            currentIdeaMedia = currentIdeaMedia.filter(m => m.id != mediaId);
+            renderIdeaMediaPreview();
+            loadIdeas(); // Refresh in background
+        } else {
+            alert(data.message || 'Failed to delete attachment');
+        }
+    } catch (error) {
+        console.error('Delete media error:', error);
+        alert('Failed to delete attachment');
+    }
+}
+
+// --- View Idea Modal Functions ---
+let currentViewIdea = null;
+
+function viewIdea(ideaId) {
+    const idea = userIdeas.find(i => i.id == ideaId);
+    if (!idea) return;
+    
+    currentViewIdea = idea;
+    
+    // Set title
+    document.getElementById('viewIdeaTitle').textContent = idea.title || 'Untitled Idea';
+    
+    // Set content
+    document.getElementById('viewIdeaContent').textContent = idea.content || '';
+    
+    // Set date
+    const createdDate = new Date(idea.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+    const updatedDate = new Date(idea.updated_at).toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    });
+    document.getElementById('viewIdeaDate').innerHTML = `
+        <i class="fa-regular fa-clock"></i> Created: ${createdDate}
+        ${idea.created_at !== idea.updated_at ? `<span class="mx-2">•</span> Updated: ${updatedDate}` : ''}
+    `;
+    
+    // Render media gallery
+    const media = idea.media || [];
+    const galleryContainer = document.getElementById('viewIdeaMediaGallery');
+    
+    if (media.length === 0) {
+        galleryContainer.innerHTML = '';
+    } else if (media.length === 1) {
+        const m = media[0];
+        const isVideo = m.file_type?.startsWith('video/');
+        galleryContainer.innerHTML = isVideo 
+            ? `<video src="${m.file_path}" controls class="w-full rounded-lg max-h-80 object-contain bg-black"></video>`
+            : `<img src="${m.file_path}" class="w-full rounded-lg max-h-80 object-contain bg-slate-100" alt="">`;
+    } else {
+        galleryContainer.innerHTML = `
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                ${media.map(m => {
+                    const isVideo = m.file_type?.startsWith('video/');
+                    return `
+                        <div class="relative rounded-lg overflow-hidden bg-slate-100 aspect-video cursor-pointer" onclick="window.open('${m.file_path}', '_blank')">
+                            ${isVideo 
+                                ? `<video src="${m.file_path}" class="w-full h-full object-cover"></video>
+                                   <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                                     <i class="fa-solid fa-play text-white text-lg"></i>
+                                   </div>`
+                                : `<img src="${m.file_path}" class="w-full h-full object-cover" alt="">`
+                            }
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    document.getElementById('viewIdeaModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeViewIdeaModal() {
+    document.getElementById('viewIdeaModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    currentViewIdea = null;
+}
+
+function viewIdeaEdit() {
+    if (!currentViewIdea) return;
+    const ideaId = currentViewIdea.id;
+    closeViewIdeaModal();
+    editIdea(ideaId);
+}
+
+function viewIdeaConvert() {
+    if (!currentViewIdea) return;
+    const ideaId = currentViewIdea.id;
+    closeViewIdeaModal();
+    convertIdeaToDraft(ideaId);
+}
+
+function viewIdeaDelete() {
+    if (!currentViewIdea) return;
+    const ideaId = currentViewIdea.id;
+    closeViewIdeaModal();
+    deleteIdea(ideaId);
+}
+
+// Helper function for HTML escaping
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 let platformChart = null;
@@ -1273,11 +1792,10 @@ async function loadDashboard() {
     }).join('') || '<p class="text-slate-400 text-[10px] font-bold uppercase py-4">Efficiency data pending...</p>';
     
     // === Workflow Funnel ===
-    const statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+    const statuses = ['DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
     const maxCount = Math.max(...statuses.map(s => d.by_status?.[s] || 0), 1);
-    const statusLabels = ['Ideas', 'Drafts', 'Review', 'Reviewed', 'Approved', 'Sched', 'Pub'];
+    const statusLabels = ['Drafts', 'Review', 'Reviewed', 'Approved', 'Sched', 'Pub'];
     const gradients = [
-        'from-violet-400 to-violet-600',
         'from-sky-400 to-sky-600', 
         'from-amber-400 to-amber-600',
         'from-orange-400 to-orange-600',
@@ -1478,7 +1996,7 @@ async function loadDashboard() {
     };
     
     const activityStatusColors = {
-        'IDEA': 'bg-violet-500', 'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
+        'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
         'REVIEWED': 'bg-orange-500', 'CHANGES_REQUESTED': 'bg-orange-500', 'APPROVED': 'bg-emerald-500',
         'SCHEDULED': 'bg-indigo-500', 'PUBLISHED': 'bg-slate-600'
     };
@@ -1550,7 +2068,7 @@ async function loadPosts(checkChanges = false) {
 let currentStatusFilter = '';
 
 function renderBoard() {
-    const grouped = { IDEA: [], DRAFT: [], PENDING_REVIEW: [], REVIEWED: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
+    const grouped = { DRAFT: [], PENDING_REVIEW: [], REVIEWED: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
     
     app.posts.forEach(p => {
         if (p.status === 'CHANGES_REQUESTED') grouped.DRAFT.push(p);
@@ -1603,7 +2121,7 @@ function setStatusFilter(status) {
 }
 
 function updateActiveTab() {
-    const tabs = ['All', 'IDEA', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+    const tabs = ['All', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
     
     tabs.forEach(tab => {
         const tabId = tab === 'All' ? 'tabAll' : 'tab' + tab;
@@ -1634,7 +2152,6 @@ function cardHTML(post) {
     
     // Minimalist Status Indicators
     const statusConfig = {
-        'IDEA': { color: 'bg-violet-50 text-violet-600', dot: 'bg-violet-400', label: 'Idea', border: 'border-violet-400' },
         'DRAFT': { color: 'bg-sky-50 text-sky-600', dot: 'bg-sky-400', label: 'Draft', border: 'border-sky-400' },
         'PENDING_REVIEW': { color: 'bg-amber-50 text-amber-600', dot: 'bg-amber-400', label: 'Pending', border: 'border-amber-400' },
         'CHANGES_REQUESTED': { color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400', label: 'Revise', border: 'border-orange-400' },
@@ -1886,7 +2403,6 @@ async function openViewModal(id) {
         if (statusBadge) {
             statusBadge.textContent = (STATUS_LABELS && STATUS_LABELS[p.status]) || p.status;
             const statusColors = {
-                'IDEA': 'bg-violet-100 text-violet-700 border-violet-200',
                 'DRAFT': 'bg-slate-100 text-slate-700 border-slate-200',
                 'PENDING_REVIEW': 'bg-amber-50 text-amber-700 border-amber-200',
                 'CHANGES_REQUESTED': 'bg-orange-50 text-orange-700 border-orange-200',
@@ -2096,7 +2612,7 @@ async function openViewModal(id) {
         const isManager = app.user.role === 'manager';
         const isAdminOrManager = ['admin', 'manager'].includes(app.user.role);
         const isOwner = p.author_id == app.user.id;
-        const canEditStatus = ['DRAFT', 'CHANGES_REQUESTED', 'IDEA'].includes(p.status);
+        const canEditStatus = ['DRAFT', 'CHANGES_REQUESTED'].includes(p.status);
         const isApprovedOrLater = ['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(p.status);
         
         // Hide edit button for posts after manager approval
@@ -2105,7 +2621,7 @@ async function openViewModal(id) {
         
         // Hide delete button for posts after manager approval
         const deleteBtn = document.getElementById('viewDeleteBtn');
-        if (deleteBtn) deleteBtn.classList.toggle('hidden', isApprovedOrLater || !(isAdminOrManager || (isOwner && ['DRAFT', 'IDEA'].includes(p.status))));
+        if (deleteBtn) deleteBtn.classList.toggle('hidden', isApprovedOrLater || !(isAdminOrManager || (isOwner && p.status === 'DRAFT')));
         
         const modal = document.getElementById('viewModal');
         if (modal) modal.classList.remove('hidden');
@@ -2130,11 +2646,8 @@ function renderActionButtons(p) {
     const btnWarning = 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm border border-slate-200 transition-colors';
     const btnSecondary = 'bg-white hover:bg-slate-50 text-slate-600 font-medium py-2.5 px-4 rounded-md text-sm border border-slate-200 transition-colors';
     
-    if (p.status === 'IDEA') {
-        if (isAdmin || isManager) {
-            buttons.push(`<button onclick="approveIdea()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Convert to Draft</button>`);
-        }
-    } else if (p.status === 'DRAFT' || p.status === 'CHANGES_REQUESTED') {
+    
+    if (p.status === 'DRAFT' || p.status === 'CHANGES_REQUESTED') {
         if (isOwner || isAdmin || isManager) {
             buttons.push(`<button onclick="submitForReview()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>Submit for Review</button>`);
         }
@@ -2222,7 +2735,7 @@ function renderViewActivity(activities) {
     };
     
     const statusLabels = {
-        'IDEA': 'Idea', 'DRAFT': 'Draft', 'PENDING_REVIEW': 'Pending Review',
+        'DRAFT': 'Draft', 'PENDING_REVIEW': 'Pending Review',
         'CHANGES_REQUESTED': 'Changes Requested', 'APPROVED': 'Approved',
         'SCHEDULED': 'Scheduled', 'PUBLISHED': 'Published'
     };

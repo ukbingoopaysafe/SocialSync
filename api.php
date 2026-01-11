@@ -236,7 +236,7 @@ try {
             
             // === POSTS BY STATUS (Funnel) - filtered by company ===
             $analytics['by_status'] = [];
-            $statuses = ['IDEA', 'DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+            $statuses = ['DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
             foreach ($statuses as $status) {
                 $analytics['by_status'][$status] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = ?", [$companyId, $status])['c'];
             }
@@ -269,7 +269,6 @@ try {
             $userQuery = $isAdminOrManager 
                 ? "SELECT u.id, u.username, u.full_name, u.role,
                       -- Authoring stats (Staff focus)
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'IDEA' AND p2.created_at >= ?) as ideas_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('PENDING_REVIEW', 'REVIEWED') AND p2.created_at >= ?) as pending_review_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
@@ -284,7 +283,6 @@ try {
                       (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p5 ON al2.post_id = p5.id WHERE al2.user_id = u.id AND p5.company_id = ?) as last_activity
                    FROM users u WHERE u.is_active = 1 ORDER BY u.role DESC, u.full_name ASC"
                 : "SELECT u.id, u.username, u.full_name, u.role,
-                      (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'IDEA' AND p2.created_at >= ?) as ideas_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('PENDING_REVIEW', 'REVIEWED') AND p2.created_at >= ?) as pending_review_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
@@ -296,7 +294,6 @@ try {
             // Common params: company_id, date_from
             if ($isAdminOrManager) {
                 $userParams = [
-                    $companyId, $dateFrom, // ideas
                     $companyId, $dateFrom, // drafts
                     $companyId, $dateFrom, // pending
                     $companyId, $dateFrom, // approved
@@ -308,7 +305,6 @@ try {
                 ];
             } else {
                 $userParams = [
-                    $companyId, $dateFrom, // ideas
                     $companyId, $dateFrom, // drafts
                     $companyId, $dateFrom, // pending
                     $companyId, $dateFrom, // approved
@@ -323,7 +319,6 @@ try {
             
             foreach ($users as &$u) {
                 // Ensure all keys exist to prevent JS errors
-                $u['ideas_created'] = (int)($u['ideas_created'] ?? 0);
                 $u['drafts_created'] = (int)($u['drafts_created'] ?? 0);
                 $u['pending_review_count'] = (int)($u['pending_review_count'] ?? 0);
                 $u['approved_count'] = (int)($u['approved_count'] ?? 0);
@@ -332,8 +327,8 @@ try {
                 $u['reviews_rejected'] = (int)($u['reviews_rejected'] ?? 0);
                 $u['comments_count'] = (int)($u['comments_count'] ?? 0);
                 
-                // Keep approval rate calc for reference if needed
-                $totalAuthoring = $u['ideas_created'] + $u['drafts_created'] + $u['approved_count'];
+                // Calculate approval rate based on drafts and approved
+                $totalAuthoring = $u['drafts_created'] + $u['approved_count'];
                 $u['author_approval_rate'] = $totalAuthoring > 0 ? round(($u['approved_count'] / $totalAuthoring) * 100) : 0;
             }
             $analytics['user_performance'] = $users;
@@ -813,8 +808,8 @@ try {
             if (empty($content)) sendResponse(false, null, 'Content required', 400);
             if (empty($platforms)) sendResponse(false, null, 'At least one platform required', 400);
             
-            // Staff can only create IDEA or DRAFT
-            if ($user['role'] === 'staff' && !in_array($status, ['IDEA', 'DRAFT'])) {
+            // Staff can only create DRAFT posts (Ideas are now separate)
+            if ($user['role'] === 'staff' && $status !== 'DRAFT') {
                 $status = 'DRAFT';
             }
             
@@ -834,7 +829,7 @@ try {
                     if ($existing['author_id'] != $user['id']) {
                         sendResponse(false, null, 'Cannot edit others posts', 403);
                     }
-                    if (!in_array($existing['status'], ['DRAFT', 'CHANGES_REQUESTED', 'IDEA'])) {
+                    if (!in_array($existing['status'], ['DRAFT', 'CHANGES_REQUESTED'])) {
                         sendResponse(false, null, 'Cannot edit post in current status', 403);
                     }
                 }
@@ -934,9 +929,6 @@ try {
             
             // Validate transitions
             $allowed = false;
-            
-            // IDEA -> DRAFT (Admin approves idea)
-            if ($oldStatus === 'IDEA' && $newStatus === 'DRAFT' && $isAdminOrManager) $allowed = true;
             
             // DRAFT -> PENDING_REVIEW (Owner submits)
             if ($oldStatus === 'DRAFT' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdminOrManager)) $allowed = true;
@@ -1076,10 +1068,10 @@ try {
                 sendResponse(false, null, 'Cannot delete post after manager approval', 403);
             }
             
-            // Staff can only delete own drafts/ideas
+            // Staff can only delete own drafts
             if ($user['role'] === 'staff') {
                 if ($post['author_id'] != $user['id']) sendResponse(false, null, 'Cannot delete', 403);
-                if (!in_array($post['status'], ['IDEA', 'DRAFT'])) sendResponse(false, null, 'Cannot delete submitted post', 403);
+                if ($post['status'] !== 'DRAFT') sendResponse(false, null, 'Cannot delete submitted post', 403);
             }
             
             // Delete media files
@@ -1304,6 +1296,237 @@ try {
             
             executeQuery("DELETE FROM users WHERE id = ?", [$id]);
             sendResponse(true, null, 'User deleted');
+            break;
+        
+        // ===== PERSONAL IDEAS WORKSPACE =====
+        
+        case 'get_user_ideas':
+            requireAuth();
+            $user = getCurrentUser();
+            $companyId = $_SESSION['company_id'] ?? 1;
+            
+            // Only fetch ideas owned by the current user
+            $ideas = fetchAll(
+                "SELECT * FROM staff_ideas 
+                 WHERE user_id = ? AND company_id = ? 
+                 ORDER BY updated_at DESC",
+                [$user['id'], $companyId]
+            );
+            
+            // Attach media to each idea
+            foreach ($ideas as &$idea) {
+                $idea['media'] = fetchAll(
+                    "SELECT * FROM idea_media WHERE idea_id = ? ORDER BY is_primary DESC, id ASC",
+                    [$idea['id']]
+                );
+            }
+            
+            sendResponse(true, $ideas);
+            break;
+        
+        case 'create_idea':
+            requireAuth();
+            $user = getCurrentUser();
+            $companyId = $_SESSION['company_id'] ?? 1;
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $title = sanitizeString(trim($input['title'] ?? ''), 255);
+            $content = sanitizeString(trim($input['content'] ?? ''));
+            
+            if (empty($content)) sendResponse(false, null, 'Content is required', 400);
+            
+            executeQuery(
+                "INSERT INTO staff_ideas (user_id, company_id, title, content) VALUES (?, ?, ?, ?)",
+                [$user['id'], $companyId, $title ?: null, $content]
+            );
+            
+            $ideaId = lastInsertId();
+            $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ?", [$ideaId]);
+            
+            sendResponse(true, $idea, 'Idea created successfully', 201);
+            break;
+        
+        case 'update_idea':
+            requireAuth();
+            $user = getCurrentUser();
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $id = $input['id'] ?? 0;
+            $title = sanitizeString(trim($input['title'] ?? ''), 255);
+            $content = sanitizeString(trim($input['content'] ?? ''));
+            
+            if (!$id) sendResponse(false, null, 'Idea ID required', 400);
+            if (empty($content)) sendResponse(false, null, 'Content is required', 400);
+            
+            // Verify ownership
+            $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$id, $user['id']]);
+            if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
+            
+            executeQuery(
+                "UPDATE staff_ideas SET title = ?, content = ?, updated_at = NOW() WHERE id = ?",
+                [$title ?: null, $content, $id]
+            );
+            
+            $updatedIdea = fetchOne("SELECT * FROM staff_ideas WHERE id = ?", [$id]);
+            sendResponse(true, $updatedIdea, 'Idea updated successfully');
+            break;
+        
+        case 'delete_idea':
+            requireAuth();
+            $user = getCurrentUser();
+            
+            $id = $_GET['id'] ?? 0;
+            if (!$id) sendResponse(false, null, 'Idea ID required', 400);
+            
+            // Verify ownership
+            $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$id, $user['id']]);
+            if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
+            
+            // Delete media files from disk
+            $media = fetchAll("SELECT file_path FROM idea_media WHERE idea_id = ?", [$id]);
+            foreach ($media as $m) {
+                $path = __DIR__ . '/' . $m['file_path'];
+                if (file_exists($path)) unlink($path);
+            }
+            
+            executeQuery("DELETE FROM staff_ideas WHERE id = ?", [$id]);
+            sendResponse(true, null, 'Idea deleted successfully');
+            break;
+        
+        case 'convert_idea_to_draft':
+            requireAuth();
+            $user = getCurrentUser();
+            $companyId = $_SESSION['company_id'] ?? 1;
+            
+            $input = json_decode(file_get_contents('php://input'), true);
+            $ideaId = $input['idea_id'] ?? 0;
+            
+            if (!$ideaId) sendResponse(false, null, 'Idea ID required', 400);
+            
+            // Verify ownership
+            $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$ideaId, $user['id']]);
+            if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
+            
+            // Create a new DRAFT post from the idea (clean start, no history)
+            $title = $idea['title'] ?: 'Untitled Post';
+            $content = $idea['content'];
+            
+            executeQuery(
+                "INSERT INTO posts (company_id, title, content, platforms, status, author_id, created_at, updated_at) 
+                 VALUES (?, ?, ?, '[]', 'DRAFT', ?, NOW(), NOW())",
+                [$companyId, $title, $content, $user['id']]
+            );
+            
+            $postId = lastInsertId();
+            
+            // Copy media from idea to post
+            $ideaMedia = fetchAll("SELECT * FROM idea_media WHERE idea_id = ?", [$ideaId]);
+            $copiedMediaCount = 0;
+            foreach ($ideaMedia as $m) {
+                $fileType = str_starts_with($m['file_type'] ?? '', 'image/') ? 'image' : 'video';
+                try {
+                    executeQuery(
+                        "INSERT INTO media_files (post_id, original_name, file_name, file_path, file_type, mime_type, file_size, is_primary, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        [$postId, $m['file_name'] ?? '', basename($m['file_path'] ?? ''), $m['file_path'] ?? '', $fileType, $m['file_type'] ?? '', $m['file_size'] ?? 0, $m['is_primary'] ?? 0, $user['id']]
+                    );
+                    $copiedMediaCount++;
+                } catch (Exception $e) {
+                    error_log("Failed to copy idea media: " . $e->getMessage());
+                }
+            }
+            
+            // Log the creation (fresh start)
+            logActivity($postId, $user['id'], 'created', null, null, 'Created from personal idea');
+            
+            // Optionally delete the idea after converting (user can also keep it)
+            $deleteAfterConvert = $input['delete_idea'] ?? false;
+            if ($deleteAfterConvert) {
+                // Note: We don't delete the files since they're now used by the post
+                executeQuery("DELETE FROM idea_media WHERE idea_id = ?", [$ideaId]);
+                executeQuery("DELETE FROM staff_ideas WHERE id = ?", [$ideaId]);
+            }
+            
+            $post = fetchOne("SELECT * FROM posts WHERE id = ?", [$postId]);
+            $post['media'] = fetchAll("SELECT * FROM media_files WHERE post_id = ?", [$postId]);
+            sendResponse(true, $post, 'Idea converted to draft successfully', 201);
+            break;
+        
+        case 'upload_idea_media':
+            requireAuth();
+            $user = getCurrentUser();
+            
+            $ideaId = $_POST['idea_id'] ?? 0;
+            if (!$ideaId) sendResponse(false, null, 'Idea ID required', 400);
+            
+            // Verify ownership
+            $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$ideaId, $user['id']]);
+            if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
+            
+            if (empty($_FILES['file'])) sendResponse(false, null, 'No file uploaded', 400);
+            
+            $file = $_FILES['file'];
+            $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+            
+            if (!in_array($file['type'], $allowed)) {
+                sendResponse(false, null, 'Invalid file type. Allowed: JPG, PNG, GIF, WebP, MP4, WebM', 400);
+            }
+            
+            if ($file['size'] > 100 * 1024 * 1024) {
+                sendResponse(false, null, 'File too large. Max 100MB', 400);
+            }
+            
+            // Create uploads/ideas directory if it doesn't exist
+            $uploadDir = __DIR__ . '/uploads/ideas/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+            
+            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $filename = 'idea_' . $ideaId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+            $filePath = 'uploads/ideas/' . $filename;
+            
+            if (!move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+                sendResponse(false, null, 'Failed to save file', 500);
+            }
+            
+            // Check if this is first media (make it primary)
+            $existingMedia = fetchOne("SELECT COUNT(*) as c FROM idea_media WHERE idea_id = ?", [$ideaId]);
+            $isPrimary = ($existingMedia['c'] == 0) ? 1 : 0;
+            
+            executeQuery(
+                "INSERT INTO idea_media (idea_id, file_path, file_type, file_name, file_size, is_primary) VALUES (?, ?, ?, ?, ?, ?)",
+                [$ideaId, $filePath, $file['type'], $file['name'], $file['size'], $isPrimary]
+            );
+            
+            $mediaId = lastInsertId();
+            $media = fetchOne("SELECT * FROM idea_media WHERE id = ?", [$mediaId]);
+            
+            sendResponse(true, $media, 'File uploaded successfully', 201);
+            break;
+        
+        case 'delete_idea_media':
+            requireAuth();
+            $user = getCurrentUser();
+            
+            $mediaId = $_GET['id'] ?? 0;
+            if (!$mediaId) sendResponse(false, null, 'Media ID required', 400);
+            
+            // Get media and verify ownership through idea
+            $media = fetchOne(
+                "SELECT m.*, i.user_id FROM idea_media m 
+                 JOIN staff_ideas i ON m.idea_id = i.id 
+                 WHERE m.id = ?",
+                [$mediaId]
+            );
+            
+            if (!$media || $media['user_id'] != $user['id']) {
+                sendResponse(false, null, 'Media not found or access denied', 404);
+            }
+            
+            // Delete file from disk
+            $path = __DIR__ . '/' . $media['file_path'];
+            if (file_exists($path)) unlink($path);
+            
+            executeQuery("DELETE FROM idea_media WHERE id = ?", [$mediaId]);
+            sendResponse(true, null, 'Media deleted successfully');
             break;
         
         default:
