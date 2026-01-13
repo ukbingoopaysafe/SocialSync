@@ -515,14 +515,14 @@ try {
             if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
             if (!in_array($role, ['admin', 'staff', 'manager'])) sendResponse(false, null, 'Invalid role', 400);
             
+            // Check if user exists and get current role
+            $existingUser = fetchOne("SELECT id, role FROM users WHERE id = ?", [$userId]);
+            if (!$existingUser) sendResponse(false, null, 'User not found', 404);
+            
             // Prevent changing your own role (security measure)
-            if ($userId == $_SESSION['user_id'] && $role !== 'admin') {
+            if ($userId == $_SESSION['user_id'] && $existingUser['role'] !== $role) {
                 sendResponse(false, null, 'Cannot demote yourself', 400);
             }
-            
-            // Check if user exists
-            $existingUser = fetchOne("SELECT id FROM users WHERE id = ?", [$userId]);
-            if (!$existingUser) sendResponse(false, null, 'User not found', 404);
             
             // Update user
             if (!empty($password)) {
