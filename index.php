@@ -846,6 +846,19 @@ $csrfToken = generateCSRFToken();
                             <p id="viewContent" class="whitespace-pre-wrap"></p>
                         </div>
                         
+                        <!-- Admin Approvals -->
+                        <div id="viewApprovalsSection" class="hidden">
+                            <div class="bg-slate-50 border border-slate-100 rounded-lg p-4">
+                                <h3 class="text-sm font-bold text-slate-800 flex items-center justify-between gap-2 mb-3">
+                                    <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-user-check text-slate-400"></i> Admin Approvals
+                                    </div>
+                                    <span id="viewApprovalProgress" class="text-xs font-medium text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-100">0/0</span>
+                                </h3>
+                                <div id="viewApprovalsList" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
+                        
                         <!-- Action Area -->
                         <div id="viewActions" class="pt-2">
                             <div id="actionButtons" class="flex flex-wrap gap-3"></div>
@@ -2461,6 +2474,31 @@ async function openViewModal(id) {
         const contentEl = document.getElementById('viewContent');
         if (contentEl) contentEl.textContent = p.content;
         
+        // Approvals section
+        const approvalsSection = document.getElementById('viewApprovalsSection');
+        const approvalsList = document.getElementById('viewApprovalsList');
+        const approvalProgress = document.getElementById('viewApprovalProgress');
+        
+        if (approvalsSection && p.status === 'PENDING_REVIEW') {
+            approvalsSection.classList.remove('hidden');
+            approvalProgress.textContent = `${p.approvals.length}/${p.total_admins}`;
+            
+            if (p.approvals.length > 0) {
+                approvalsList.innerHTML = p.approvals.map(a => `
+                    <div class="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-100 rounded text-[11px] font-medium text-slate-700 shadow-sm" title="Approved at ${formatDate(a.created_at)}">
+                        <div class="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px]">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        ${a.full_name || a.username}
+                    </div>
+                `).join('');
+            } else {
+                approvalsList.innerHTML = '<p class="text-[11px] text-slate-400 italic">No approvals yet. Needs all admins to approve.</p>';
+            }
+        } else if (approvalsSection) {
+            approvalsSection.classList.add('hidden');
+        }
+        
         // Media Gallery - Handle Split View (Desktop) and Mobile Fallback
         const mediaColumn = document.getElementById('viewMediaColumn');
         const mediaWrapper = document.getElementById('viewMediaWrapper'); // Desktop
@@ -2653,7 +2691,12 @@ function renderActionButtons(p) {
         }
     } else if (p.status === 'PENDING_REVIEW') {
         if (isAdmin) {
-            buttons.push(`<button onclick="sendToReviewed()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Send to Manager</button>`);
+            const alreadyApproved = p.approvals && p.approvals.some(a => a.admin_id == app.user.id);
+            const approvalText = alreadyApproved ? 'Approved' : `Approve (${p.approvals.length}/${p.total_admins})`;
+            const approvalClass = alreadyApproved ? 'flex-1 bg-slate-100 text-slate-400 font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm border border-slate-200 cursor-not-allowed' : btnSuccess;
+            const approvalOnClick = alreadyApproved ? '' : 'onclick="sendToReviewed()"';
+            
+            buttons.push(`<button ${approvalOnClick} class="${approvalClass}" ${alreadyApproved ? 'disabled' : ''}><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>${approvalText}</button>`);
             buttons.push(`<button onclick="openChangesModal()" class="${btnWarning}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Request Changes</button>`);
         }
         if (isOwner) {
@@ -2729,6 +2772,7 @@ function renderViewActivity(activities) {
         'media_uploaded': { icon: '📎', color: 'text-purple-500', label: 'uploaded media' },
         'media_deleted': { icon: '🗑', color: 'text-red-500', label: 'removed media' },
         'rejected': { icon: '✕', color: 'text-red-500', label: 'rejected' },
+        'admin_approved': { icon: '★', color: 'text-emerald-500', label: 'approved (partially)' },
         'approved': { icon: '✓', color: 'text-emerald-500', label: 'approved' },
         'scheduled': { icon: '📅', color: 'text-indigo-500', label: 'scheduled' },
         'published': { icon: '🚀', color: 'text-slate-600', label: 'published' }
@@ -2875,9 +2919,16 @@ async function sendToReviewed() {
     if (!app.currentPost) return;
     const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'REVIEWED' });
     if (data.success) {
-        toast('Sent to manager for approval!', 'success');
-        closeViewModal();
-        loadPosts();
+        if (data.data && data.data.status === 'PENDING_REVIEW') {
+            // Partial approval
+            toast(data.message || 'Approval recorded!', 'success');
+            openViewModal(app.currentPost.id); // Refresh view to show new progress
+        } else {
+            // Full approval
+            toast('Sent to manager for approval!', 'success');
+            closeViewModal();
+            loadPosts();
+        }
     } else {
         toast(data.message || 'Error', 'error');
     }
