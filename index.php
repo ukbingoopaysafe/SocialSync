@@ -766,15 +766,15 @@ $csrfToken = generateCSRFToken();
 
     <!-- ==================== VIEW POST MODAL (Read-Only) ==================== -->
     <div id="viewModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-0 lg:p-8">
-        <div class="bg-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-7xl h-full lg:h-[85vh] flex flex-col lg:flex-row overflow-hidden border border-slate-100 text-right">
+        <div id="viewModalContainer" class="bg-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-7xl h-full lg:h-[85vh] flex flex-col lg:flex-row overflow-hidden border border-slate-100 text-right">
             
             <!-- Left Column: Media (Dark Mode) - Reduced Width -->
-            <div id="viewMediaColumn" class="hidden lg:flex lg:w-[48%] xl:w-[48%] bg-slate-900 items-center justify-center relative group border-l border-slate-100">
+            <div id="viewMediaColumn" class="hidden lg:w-[48%] xl:w-[48%] flex-shrink-0 bg-slate-900 items-center justify-center relative group border-l border-slate-100">
                  <div id="viewMediaWrapper" class="w-full h-full flex items-center justify-center p-4"></div>
             </div>
 
             <!-- Right Column: Content & Details - Increased Width -->
-            <div class="flex-1 flex flex-col bg-white h-full relative w-full lg:w-[52%] xl:w-[52%]">
+            <div id="viewContentColumn" class="flex-1 flex flex-col bg-white h-full relative w-full">
                 
                 <!-- Fixed Header (Sticky) -->
                 <div class="px-4 lg:px-6 py-4 flex justify-between items-center border-b border-slate-100 bg-white flex-shrink-0 gap-4 z-10 sticky top-0">
@@ -2503,6 +2503,8 @@ async function openViewModal(id) {
         const mediaColumn = document.getElementById('viewMediaColumn');
         const mediaWrapper = document.getElementById('viewMediaWrapper'); // Desktop
         const mediaMobile = document.getElementById('viewMediaMobile');   // Mobile
+        const modalContainer = document.getElementById('viewModalContainer');
+        const contentColumn = document.getElementById('viewContentColumn');
         
         const hasMedia = p.media && p.media.length > 0;
         
@@ -2590,15 +2592,27 @@ async function openViewModal(id) {
         if (hasMedia) {
             const isMobile = window.innerWidth < 1024;
             
+            // Adjust modal width for media
+            if (modalContainer) {
+                modalContainer.classList.remove('max-w-2xl');
+                modalContainer.classList.add('max-w-7xl');
+            }
+
+            // Restore split layout balance
+            if (contentColumn) {
+                contentColumn.classList.remove('lg:w-full');
+                contentColumn.classList.add('lg:w-[52%]');
+            }
+
             // Desktop: Show Left Column
             if (mediaColumn && mediaWrapper) {
                 if (!isMobile) {
                     mediaColumn.classList.remove('hidden');
-                    mediaColumn.classList.add('flex');
+                    mediaColumn.classList.add('lg:flex');
                     mediaWrapper.innerHTML = getMediaHtml(false);
                 } else {
                     mediaColumn.classList.add('hidden');
-                    mediaColumn.classList.remove('flex');
+                    mediaColumn.classList.remove('lg:flex');
                     mediaWrapper.innerHTML = '';
                 }
             }
@@ -2614,10 +2628,22 @@ async function openViewModal(id) {
                 }
             }
         } else {
-            // No Media: Hide both AND clear content
+            // No Media: Adjust modal width for text-only
+            if (modalContainer) {
+                modalContainer.classList.remove('max-w-7xl');
+                modalContainer.classList.add('max-w-2xl');
+            }
+
+            // Make content column full width
+            if (contentColumn) {
+                contentColumn.classList.remove('lg:w-[52%]');
+                contentColumn.classList.add('lg:w-full');
+            }
+
+            // Hide both AND clear content
             if (mediaColumn) {
                 mediaColumn.classList.add('hidden');
-                mediaColumn.classList.remove('flex');
+                mediaColumn.classList.remove('lg:flex');
             }
             if (mediaWrapper) mediaWrapper.innerHTML = '';
             if (mediaMobile) {
