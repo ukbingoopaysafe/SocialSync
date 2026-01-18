@@ -46,12 +46,12 @@ $csrfToken = generateCSRFToken();
     <div class="flex min-h-screen">
         
         <!-- Dark Sidebar -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 w-64 lg:w-16 lg:hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col z-50 group">
+        <aside id="sidebar" class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 w-64 lg:w-16 lg:hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col z-[60] group">
             <!-- Logo -->
-            <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-2 overflow-hidden">
+            <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-0 overflow-hidden">
                 <!-- Dynamic Company Logo -->
-                <img id="sidebarLogo" src="images/Final_Logo White.png" alt="Company" class="h-8 max-w-full object-contain hidden group-hover:block">
-                <img id="sidebarLogoSmall" src="images/Final_Logo White.png" alt="Company" class="w-10 h-10 object-contain group-hover:hidden" style="image-rendering: -webkit-optimize-contrast;">
+                <img id="sidebarLogo" src="images/Final_Logo White.png" alt="Company" class="h-11 max-w-[180px] object-contain hidden group-hover:block transition-all duration-300">
+                <img id="sidebarLogoSmall" src="images/Final_Logo White.png" alt="Company" class="h-10 w-auto max-w-[58px] object-contain group-hover:hidden" style="image-rendering: -webkit-optimize-contrast;">
             </div>
             
             <!-- Navigation -->

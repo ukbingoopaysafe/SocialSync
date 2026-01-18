@@ -6,11 +6,11 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <div class="flex min-h-screen">
     
     <!-- Dark Sidebar -->
-    <aside id="sidebar" class="w-16 hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col fixed h-full z-50 group">
+    <aside id="sidebar" class="w-16 hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col fixed h-full z-[60] group">
         <!-- Logo -->
-        <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-4">
-            <img src="images/Final_Logo White.png" alt="BroMan" class="h-8 hidden group-hover:block">
-            <img src="images/Final_Logo White.png" alt="BroMan" class="h-7 group-hover:hidden">
+        <div class="h-14 flex items-center justify-center border-b border-slate-700/50 px-0 overflow-hidden">
+            <img id="sidebarLogo" src="images/Final_Logo White.png" alt="BroMan" class="h-11 max-w-[180px] object-contain hidden group-hover:block transition-all duration-300">
+            <img id="sidebarLogoSmall" src="images/Final_Logo White.png" alt="BroMan" class="h-10 w-auto max-w-[58px] object-contain group-hover:hidden" style="image-rendering: -webkit-optimize-contrast;">
         </div>
         
         <!-- Navigation -->
@@ -41,7 +41,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
     </aside>
     
     <!-- Main Content Area -->
-    <div class="flex-1 ml-16">
+    <div class="flex-1 ml-16 transition-all duration-300">
         <!-- Top Header -->
         <header class="h-14 bg-[#0a1628] border-b border-slate-700/50 sticky top-0 z-40 flex items-center justify-between px-6">
             <div class="flex items-center gap-4">
