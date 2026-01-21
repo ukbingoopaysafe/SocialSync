@@ -242,8 +242,26 @@ try {
             }
             $analytics['by_status']['CHANGES_REQUESTED'] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'CHANGES_REQUESTED'", [$companyId])['c'];
             
-            // === POSTS BY PLATFORM (disabled - multi-platform now) ===
-            $analytics['by_platform'] = []; // Multi-platform support - grouping by platform no longer applicable
+            // === POSTS BY PLATFORM (counts each platform from JSON arrays) ===
+            $allPosts = fetchAll("SELECT platforms FROM posts WHERE company_id = ? AND platforms IS NOT NULL AND platforms != ''", [$companyId]);
+            $platformCounts = [];
+            foreach ($allPosts as $post) {
+                $platforms = json_decode($post['platforms'], true);
+                if (is_array($platforms)) {
+                    foreach ($platforms as $platform) {
+                        $platform = trim($platform);
+                        if ($platform) {
+                            $platformCounts[$platform] = ($platformCounts[$platform] ?? 0) + 1;
+                        }
+                    }
+                }
+            }
+            // Convert to array format for chart
+            $analytics['by_platform'] = [];
+            arsort($platformCounts); // Sort by count descending
+            foreach ($platformCounts as $platform => $count) {
+                $analytics['by_platform'][] = ['platform' => $platform, 'count' => $count];
+            }
             
             // === TIME-BASED INSIGHTS - filtered by company ===
             $bestDay = fetchOne(
@@ -268,6 +286,8 @@ try {
             // === USER PERFORMANCE WITH DETAILED METRICS (filtered by company) ===
             $userQuery = $isAdminOrManager 
                 ? "SELECT u.id, u.username, u.full_name, u.role,
+                      -- Ideas from staff_ideas table
+                      (SELECT COUNT(*) FROM staff_ideas si WHERE si.user_id = u.id AND si.company_id = ? AND si.created_at >= ?) as ideas_created,
                       -- Authoring stats (Staff focus)
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('PENDING_REVIEW', 'REVIEWED') AND p2.created_at >= ?) as pending_review_count,
@@ -283,6 +303,7 @@ try {
                       (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p5 ON al2.post_id = p5.id WHERE al2.user_id = u.id AND p5.company_id = ?) as last_activity
                    FROM users u WHERE u.is_active = 1 ORDER BY u.role DESC, u.full_name ASC"
                 : "SELECT u.id, u.username, u.full_name, u.role,
+                      (SELECT COUNT(*) FROM staff_ideas si WHERE si.user_id = u.id AND si.company_id = ? AND si.created_at >= ?) as ideas_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'DRAFT' AND p2.created_at >= ?) as drafts_created,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('PENDING_REVIEW', 'REVIEWED') AND p2.created_at >= ?) as pending_review_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
@@ -294,6 +315,7 @@ try {
             // Common params: company_id, date_from
             if ($isAdminOrManager) {
                 $userParams = [
+                    $companyId, $dateFrom, // ideas_created
                     $companyId, $dateFrom, // drafts
                     $companyId, $dateFrom, // pending
                     $companyId, $dateFrom, // approved
@@ -305,6 +327,7 @@ try {
                 ];
             } else {
                 $userParams = [
+                    $companyId, $dateFrom, // ideas_created
                     $companyId, $dateFrom, // drafts
                     $companyId, $dateFrom, // pending
                     $companyId, $dateFrom, // approved
@@ -319,6 +342,7 @@ try {
             
             foreach ($users as &$u) {
                 // Ensure all keys exist to prevent JS errors
+                $u['ideas_created'] = (int)($u['ideas_created'] ?? 0);
                 $u['drafts_created'] = (int)($u['drafts_created'] ?? 0);
                 $u['pending_review_count'] = (int)($u['pending_review_count'] ?? 0);
                 $u['approved_count'] = (int)($u['approved_count'] ?? 0);

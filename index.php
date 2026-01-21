@@ -1928,7 +1928,7 @@ async function loadDashboard() {
                 <div class="grid grid-cols-2 gap-2 py-3 border-y border-slate-50 mb-3">
                     <div class="px-3 py-2 bg-violet-50/50 rounded-xl">
                         <div class="text-[10px] text-violet-400 font-black uppercase tracking-widest mb-0.5">Ideas</div>
-                        <div class="text-sm font-black text-violet-600">${u.ideas_created}</div>
+                        <div class="text-sm font-black text-violet-600">${u.ideas_created || 0}</div>
                     </div>
                     <div class="px-3 py-2 bg-sky-50/50 rounded-xl">
                         <div class="text-[10px] text-sky-400 font-black uppercase tracking-widest mb-0.5">Drafts</div>
