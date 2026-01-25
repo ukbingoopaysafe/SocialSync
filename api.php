@@ -1019,8 +1019,8 @@ try {
             // CHANGES_REQUESTED -> DRAFT (internal, same as just editing)
             if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'DRAFT' && ($isOwner || $isAdminOrManager)) $allowed = true;
             
-            // APPROVED -> SCHEDULED (Admin/Manager schedules for publishing)
-            if ($oldStatus === 'APPROVED' && $newStatus === 'SCHEDULED' && $isAdminOrManager) {
+            // APPROVED -> SCHEDULED (Admin/Manager/Staff schedules for publishing)
+            if ($oldStatus === 'APPROVED' && $newStatus === 'SCHEDULED' && ($isAdminOrManager || $user['role'] === 'staff')) {
                 if (!$scheduledDate) {
                     sendResponse(false, null, 'Scheduled date is required', 400);
                 }
@@ -1033,8 +1033,8 @@ try {
             // SCHEDULED -> PUBLISHED (Admin/Manager or system publishes)
             if ($oldStatus === 'SCHEDULED' && $newStatus === 'PUBLISHED' && $isAdminOrManager) $allowed = true;
             
-            // SCHEDULED -> APPROVED (Admin/Manager unschedules)
-            if ($oldStatus === 'SCHEDULED' && $newStatus === 'APPROVED' && $isAdminOrManager) $allowed = true;
+            // SCHEDULED -> APPROVED (Admin/Manager/Staff unschedules)
+            if ($oldStatus === 'SCHEDULED' && $newStatus === 'APPROVED' && ($isAdminOrManager || $user['role'] === 'staff')) $allowed = true;
             
             if (!$allowed) {
                 sendResponse(false, null, "Cannot change from $oldStatus to $newStatus", 403);

@@ -2738,7 +2738,7 @@ function renderActionButtons(p) {
             buttons.push(`<div class="flex-1 text-center py-2.5 px-5 bg-orange-50 text-orange-600 font-medium rounded-md text-sm border border-orange-200"><svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Awaiting Manager Approval</div>`);
         }
     } else if (p.status === 'APPROVED') {
-        if (isAdminOrManager) {
+        if (isAdminOrManager || app.user.role === 'staff') {
             buttons.push(`<button onclick="openScheduleModal()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Schedule for Publishing</button>`);
         }
         if (isManager) {
@@ -2750,6 +2750,8 @@ function renderActionButtons(p) {
         buttons.push(`<div class="flex-1 text-center py-2.5 px-5 bg-slate-50 text-slate-600 font-medium rounded-md text-sm border border-slate-200"><svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Scheduled: ${schedStr}</div>`);
         if (isAdminOrManager) {
             buttons.push(`<button onclick="publishNow()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>Publish Now</button>`);
+        }
+        if (isAdminOrManager || app.user.role === 'staff') {
             buttons.push(`<button onclick="unschedulePost()" class="${btnSecondary}">Unschedule</button>`);
         }
     } else if (p.status === 'PUBLISHED') {
