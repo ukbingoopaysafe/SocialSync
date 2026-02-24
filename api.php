@@ -785,14 +785,7 @@ try {
                  JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at", [$id]
             );
             
-            // Add approval details
-            $post['approvals'] = fetchAll(
-                "SELECT a.admin_id, u.full_name, u.username, a.created_at 
-                 FROM admin_approvals a 
-                 JOIN users u ON a.admin_id = u.id 
-                 WHERE a.post_id = ? AND u.is_active = 1", [$id]
-            );
-            $post['total_admins'] = (int)fetchOne("SELECT COUNT(*) as c FROM users WHERE role = 'admin' AND is_active = 1")['c'];
+
             
             $post['activity'] = fetchAll(
                 "SELECT al.*, u.username FROM activity_log al 
@@ -970,51 +963,23 @@ try {
             // CHANGES_REQUESTED -> PENDING_REVIEW (Owner resubmits)
             if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdminOrManager)) $allowed = true;
             
-            // PENDING_REVIEW -> REVIEWED (Admin reviews and passes to manager)
-            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'REVIEWED' && $isAdmin) {
-                // Record admin approval
-                executeQuery("INSERT IGNORE INTO admin_approvals (post_id, admin_id) VALUES (?, ?)", [$id, $user['id']]);
-                
-                // Check if all admins have approved
-                $totalAdmins = (int)fetchOne("SELECT COUNT(*) as c FROM users WHERE role = 'admin' AND is_active = 1")['c'];
-                $currentApprovals = (int)fetchOne("SELECT COUNT(*) as c FROM admin_approvals a JOIN users u ON a.admin_id = u.id WHERE a.post_id = ? AND u.is_active = 1", [$id])['c'];
-                
-                if ($currentApprovals < $totalAdmins) {
-                    // Not everyone approved yet
-                    logActivity($id, $user['id'], 'admin_approved', $oldStatus, $oldStatus, "{$user['full_name']} approved (Progress: $currentApprovals/$totalAdmins)");
-                    sendResponse(true, ['id' => $id, 'status' => $oldStatus, 'approvals' => $currentApprovals, 'total_admins' => $totalAdmins], "Approval recorded ($currentApprovals/$totalAdmins)");
-                    exit; // Stop here, don't update status to REVIEWED yet
-                }
-                
-                $allowed = true;
-            }
+            // PENDING_REVIEW -> REVIEWED (Any admin reviews and passes to manager)
+            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'REVIEWED' && $isAdmin) $allowed = true;
             
             // PENDING_REVIEW -> DRAFT (Owner recalls from review)
-            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'DRAFT' && $isOwner) {
-                executeQuery("DELETE FROM admin_approvals WHERE post_id = ?", [$id]);
-                $allowed = true;
-            }
+            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'DRAFT' && $isOwner) $allowed = true;
             
             // PENDING_REVIEW -> CHANGES_REQUESTED (Admin requests changes)
-            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'CHANGES_REQUESTED' && $isAdmin) {
-                executeQuery("DELETE FROM admin_approvals WHERE post_id = ?", [$id]);
-                $allowed = true;
-            }
+            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'CHANGES_REQUESTED' && $isAdmin) $allowed = true;
             
             // REVIEWED -> APPROVED (Manager final approval)
             if ($oldStatus === 'REVIEWED' && $newStatus === 'APPROVED' && $isManager) $allowed = true;
             
             // REVIEWED -> PENDING_REVIEW (Admin recalls from manager)
-            if ($oldStatus === 'REVIEWED' && $newStatus === 'PENDING_REVIEW' && $isAdmin) {
-                executeQuery("DELETE FROM admin_approvals WHERE post_id = ?", [$id]);
-                $allowed = true;
-            }
+            if ($oldStatus === 'REVIEWED' && $newStatus === 'PENDING_REVIEW' && $isAdmin) $allowed = true;
             
             // REVIEWED -> CHANGES_REQUESTED (Manager requests changes)
-            if ($oldStatus === 'REVIEWED' && $newStatus === 'CHANGES_REQUESTED' && $isManager) {
-                executeQuery("DELETE FROM admin_approvals WHERE post_id = ?", [$id]);
-                $allowed = true;
-            }
+            if ($oldStatus === 'REVIEWED' && $newStatus === 'CHANGES_REQUESTED' && $isManager) $allowed = true;
             
             // CHANGES_REQUESTED -> DRAFT (internal, same as just editing)
             if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'DRAFT' && ($isOwner || $isAdminOrManager)) $allowed = true;
