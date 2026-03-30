@@ -78,6 +78,12 @@ $csrfToken = generateCSRFToken();
                         <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Users</span>
                     </button>
                 </div>
+                <div id="managerLogsLink" class="hidden">
+                    <a href="logs.php" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                        <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Activity Logs</span>
+                    </a>
+                </div>
             </nav>
             
             <!-- Bottom Actions -->
@@ -1257,6 +1263,7 @@ async function loadUser() {
         document.getElementById('userRole').textContent = data.data.role;
         document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
         if (['admin', 'manager'].includes(data.data.role)) document.getElementById('adminLink').classList.remove('hidden');
+        if (data.data.role === 'manager') document.getElementById('managerLogsLink').classList.remove('hidden');
         
         // Update company branding (use white logo for dark sidebar)
         if (data.data.company_logo) {

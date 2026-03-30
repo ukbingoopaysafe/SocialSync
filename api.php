@@ -428,16 +428,20 @@ try {
                 'by_platform' => [], // Disabled after migration to multi-platform
             ];
             
-            // === RECENT ACTIVITY - filtered by company ===
-            $analytics['recent_activity'] = fetchAll(
-                "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platforms, p.id as post_id
-                 FROM activity_log al 
-                 JOIN users u ON al.user_id = u.id 
-                 JOIN posts p ON al.post_id = p.id 
-                 WHERE p.company_id = ?
-                 ORDER BY al.created_at DESC LIMIT 25",
-                [$companyId]
-            );
+            // === RECENT ACTIVITY - filtered by company, manager only ===
+            if ($isManager) {
+                $analytics['recent_activity'] = fetchAll(
+                    "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platforms, p.id as post_id
+                     FROM activity_log al 
+                     JOIN users u ON al.user_id = u.id 
+                     LEFT JOIN posts p ON al.post_id = p.id 
+                     WHERE (p.company_id = ? OR al.post_id IS NULL)
+                     ORDER BY al.created_at DESC LIMIT 25",
+                    [$companyId]
+                );
+            } else {
+                $analytics['recent_activity'] = [];
+            }
             
             // === UPCOMING SCHEDULED - filtered by company ===
             $analytics['upcoming_scheduled'] = fetchAll(
@@ -861,11 +865,47 @@ try {
                     }
                 }
                 
+                // Track what changed for detailed logging
+                $changes = [];
+                $oldData = [];
+                $newData = [];
+                
+                if ($existing['title'] !== $title) {
+                    $changes[] = 'العنوان';
+                    $oldData['title'] = $existing['title'];
+                    $newData['title'] = $title;
+                }
+                if ($existing['content'] !== $content) {
+                    $changes[] = 'المحتوى';
+                    $oldData['content'] = mb_substr($existing['content'], 0, 200);
+                    $newData['content'] = mb_substr($content, 0, 200);
+                }
+                if ($existing['platforms'] !== $platformsJson) {
+                    $changes[] = 'المنصات';
+                    $oldData['platforms'] = $existing['platforms'];
+                    $newData['platforms'] = $platformsJson;
+                }
+                if ((bool)$existing['urgency'] !== $urgency) {
+                    $changes[] = 'الأولوية العاجلة';
+                    $oldData['urgency'] = (bool)$existing['urgency'];
+                    $newData['urgency'] = $urgency;
+                }
+                if ($existing['priority'] !== $priority) {
+                    $changes[] = 'درجة الأهمية';
+                    $oldData['priority'] = $existing['priority'];
+                    $newData['priority'] = $priority;
+                }
+                
                 executeQuery(
                     "UPDATE posts SET title=?, content=?, platforms=?, urgency=?, priority=?, scheduled_date=? WHERE id=?",
                     [$title, $content, $platformsJson, $urgency, $priority, $scheduled_date, $id]
                 );
-                logActivity($id, $user['id'], 'updated', null, null, 'Content updated');
+                
+                $changeDesc = !empty($changes) ? 'تم تعديل: ' . implode('، ', $changes) : 'Content updated';
+                logActivity($id, $user['id'], 'updated', 
+                    !empty($oldData) ? json_encode($oldData, JSON_UNESCAPED_UNICODE) : null, 
+                    !empty($newData) ? json_encode($newData, JSON_UNESCAPED_UNICODE) : null, 
+                    $changeDesc);
                 $postId = $id;
             } else {
                 // Get current company from session
@@ -1101,6 +1141,21 @@ try {
                 if ($post['status'] !== 'DRAFT') sendResponse(false, null, 'Cannot delete submitted post', 403);
             }
             
+            // Log deletion BEFORE deleting (post_id will become NULL after deletion due to SET NULL FK)
+            $deletedPostInfo = json_encode([
+                'title' => $post['title'],
+                'status' => $post['status'],
+                'platforms' => $post['platforms'],
+                'content' => mb_substr($post['content'], 0, 200)
+            ], JSON_UNESCAPED_UNICODE);
+            
+            // Get author name for the description
+            $postAuthor = fetchOne("SELECT full_name FROM users WHERE id = ?", [$post['author_id']]);
+            $authorName = $postAuthor['full_name'] ?? 'Unknown';
+            
+            logActivity($id, $user['id'], 'post_deleted', $deletedPostInfo, null, 
+                'تم حذف بوست: "' . mb_substr($post['title'], 0, 50) . '" (الكاتب: ' . $authorName . ')');
+            
             // Delete media files
             $media = fetchAll("SELECT file_path FROM media_files WHERE post_id = ?", [$id]);
             foreach ($media as $m) {
@@ -1157,11 +1212,18 @@ try {
         
         case 'delete_media':
             requireAuth();
+            $user = getCurrentUser();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'ID required', 400);
             
             $media = fetchOne("SELECT * FROM media_files WHERE id = ?", [$id]);
             if (!$media) sendResponse(false, null, 'Not found', 404);
+            
+            // Log media deletion
+            logActivity($media['post_id'], $user['id'], 'media_deleted', 
+                json_encode(['file_name' => $media['original_name'], 'file_type' => $media['file_type']], JSON_UNESCAPED_UNICODE), 
+                null, 
+                'تم حذف ملف: ' . $media['original_name']);
             
             $path = __DIR__ . '/' . $media['file_path'];
             if (file_exists($path)) unlink($path);
@@ -1554,6 +1616,101 @@ try {
             
             executeQuery("DELETE FROM idea_media WHERE id = ?", [$mediaId]);
             sendResponse(true, null, 'Media deleted successfully');
+            break;
+        
+        // ===== ACTIVITY LOGS (Manager Only) =====
+        
+        case 'get_all_logs':
+            requireAuth();
+            $user = getCurrentUser();
+            if ($user['role'] !== 'manager') sendResponse(false, null, 'Manager access required', 403);
+            
+            $companyId = $_SESSION['company_id'] ?? 1;
+            $page = max(1, intval($_GET['page'] ?? 1));
+            $limit = min(100, max(10, intval($_GET['limit'] ?? 50)));
+            $offset = ($page - 1) * $limit;
+            
+            // Build filter conditions
+            $where = ["(p.company_id = ? OR al.post_id IS NULL)"];
+            $params = [$companyId];
+            
+            // Filter by action type
+            if (!empty($_GET['action_type'])) {
+                $where[] = "al.action = ?";
+                $params[] = $_GET['action_type'];
+            }
+            
+            // Filter by user
+            if (!empty($_GET['user_id'])) {
+                $where[] = "al.user_id = ?";
+                $params[] = intval($_GET['user_id']);
+            }
+            
+            // Filter by date range
+            if (!empty($_GET['date_from'])) {
+                $where[] = "al.created_at >= ?";
+                $params[] = $_GET['date_from'] . ' 00:00:00';
+            }
+            if (!empty($_GET['date_to'])) {
+                $where[] = "al.created_at <= ?";
+                $params[] = $_GET['date_to'] . ' 23:59:59';
+            }
+            
+            // Search in description
+            if (!empty($_GET['search'])) {
+                $where[] = "(al.description LIKE ? OR p.title LIKE ? OR u.full_name LIKE ?)";
+                $term = '%' . $_GET['search'] . '%';
+                $params[] = $term;
+                $params[] = $term;
+                $params[] = $term;
+            }
+            
+            $whereClause = implode(' AND ', $where);
+            
+            // Get total count
+            $total = (int)fetchOne(
+                "SELECT COUNT(*) as c FROM activity_log al 
+                 JOIN users u ON al.user_id = u.id 
+                 LEFT JOIN posts p ON al.post_id = p.id 
+                 WHERE $whereClause",
+                $params
+            )['c'];
+            
+            // Get logs
+            $logParams = array_merge($params, [$limit, $offset]);
+            $logs = fetchAll(
+                "SELECT al.*, u.username, u.full_name as user_full_name, 
+                        p.title as post_title, p.status as post_status
+                 FROM activity_log al 
+                 JOIN users u ON al.user_id = u.id 
+                 LEFT JOIN posts p ON al.post_id = p.id 
+                 WHERE $whereClause
+                 ORDER BY al.created_at DESC 
+                 LIMIT ? OFFSET ?",
+                $logParams
+            );
+            
+            // Get available action types for filter
+            $actionTypes = fetchAll(
+                "SELECT DISTINCT action FROM activity_log ORDER BY action"
+            );
+            
+            // Get users for filter
+            $logUsers = fetchAll(
+                "SELECT DISTINCT u.id, u.full_name, u.username 
+                 FROM activity_log al JOIN users u ON al.user_id = u.id 
+                 ORDER BY u.full_name"
+            );
+            
+            sendResponse(true, [
+                'logs' => $logs,
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'total_pages' => ceil($total / $limit),
+                'action_types' => array_column($actionTypes, 'action'),
+                'users' => $logUsers
+            ]);
             break;
         
         default:
