@@ -141,6 +141,7 @@ $pageTitle = 'User Management';
                         <select id="role" required 
                                 class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-gold-500">
                             <option value="staff">Staff</option>
+                            <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
                         </select>
                     </div>

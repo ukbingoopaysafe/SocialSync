@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Dec 28, 2025 at 04:38 PM
+-- Generation Time: Apr 09, 2026 at 04:56 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -29,11 +29,11 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `activity_log` (
   `id` int(11) NOT NULL,
-  `post_id` int(11) NOT NULL,
+  `post_id` int(11) DEFAULT NULL,
   `user_id` int(11) NOT NULL,
   `action` varchar(50) NOT NULL,
-  `old_value` varchar(100) DEFAULT NULL,
-  `new_value` varchar(100) DEFAULT NULL,
+  `old_value` text DEFAULT NULL,
+  `new_value` text DEFAULT NULL,
   `description` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -90,7 +90,6 @@ INSERT INTO `activity_log` (`id`, `post_id`, `user_id`, `action`, `old_value`, `
 (49, 4, 2, 'status_changed', 'APPROVED', 'SCHEDULED', 'Scheduled for Dec 26, 2025 7:00 AM', '2025-12-25 14:10:35'),
 (50, 3, 4, 'auto_published', 'SCHEDULED', 'PUBLISHED', 'Automatically published on schedule', '2025-12-25 14:11:01'),
 (51, 11, 3, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-25 15:03:08'),
-(52, 12, 3, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-25 15:03:24'),
 (53, 13, 3, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-25 15:03:45'),
 (54, 13, 3, 'updated', NULL, NULL, 'Content updated', '2025-12-25 15:04:04'),
 (55, 13, 3, 'updated', NULL, NULL, 'Content updated', '2025-12-25 15:04:12'),
@@ -171,15 +170,46 @@ INSERT INTO `activity_log` (`id`, `post_id`, `user_id`, `action`, `old_value`, `
 (137, 11, 2, 'updated', NULL, NULL, 'Content updated', '2025-12-28 15:00:48'),
 (138, 19, 5, 'status_changed', 'APPROVED', 'REVIEWED', NULL, '2025-12-28 15:05:52'),
 (139, 15, 2, 'status_changed', 'IDEA', 'DRAFT', NULL, '2025-12-28 15:08:59'),
-(140, 12, 2, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-28 15:09:12'),
-(141, 22, 3, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-28 15:10:47'),
-(142, 22, 3, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-28 15:10:48'),
-(143, 22, 3, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-28 15:10:51'),
-(144, 12, 3, 'status_changed', 'PENDING_REVIEW', 'DRAFT', NULL, '2025-12-28 15:11:13'),
-(145, 22, 3, 'status_changed', 'PENDING_REVIEW', 'DRAFT', NULL, '2025-12-28 15:11:17'),
 (146, 11, 2, 'status_changed', 'REVIEWED', 'PENDING_REVIEW', NULL, '2025-12-28 15:12:28'),
-(147, 22, 3, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'Nada Mohammed changed status: PENDING_REVIEW', '2025-12-28 15:32:55'),
-(148, 22, 3, 'status_changed', 'PENDING_REVIEW', 'DRAFT', 'Nada Mohammed changed status: Recalled from review - returned to draft', '2025-12-28 15:33:02');
+(149, 17, 3, 'auto_published', 'SCHEDULED', 'PUBLISHED', 'Automatically published on schedule', '2025-12-29 09:09:19'),
+(150, 16, 5, 'updated', NULL, NULL, 'Content updated', '2025-12-29 09:31:12'),
+(151, 11, 2, 'status_changed', 'PENDING_REVIEW', 'REVIEWED', 'John changed status: Admin approved - forwarded to manager', '2025-12-29 09:36:06'),
+(152, 11, 5, 'status_changed', 'REVIEWED', 'APPROVED', 'Alaa Almallah changed status: Manager final approval', '2025-12-29 09:37:31'),
+(155, 16, 2, 'updated', NULL, NULL, 'Content updated', '2025-12-29 11:04:05'),
+(156, 16, 2, 'status_changed', 'IDEA', 'DRAFT', 'John changed status: DRAFT', '2025-12-30 13:35:19'),
+(157, 23, 3, 'created', NULL, NULL, 'Created as IDEA', '2025-12-30 13:38:29'),
+(158, 23, 5, 'status_changed', 'IDEA', 'DRAFT', 'Alaa Almallah changed status: DRAFT', '2025-12-30 13:52:03'),
+(159, 23, 5, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'Alaa Almallah changed status: PENDING_REVIEW', '2025-12-30 13:52:12'),
+(160, 19, 5, 'status_changed', 'REVIEWED', 'CHANGES_REQUESTED', 'Alaa Almallah changed status: za', '2025-12-30 13:52:59'),
+(161, 27, 4, 'created', NULL, NULL, 'Created from personal idea', '2026-01-11 10:38:33'),
+(162, 28, 3, 'created', NULL, NULL, 'Created from personal idea', '2026-01-11 10:45:36'),
+(163, 20, 3, 'auto_published', 'SCHEDULED', 'PUBLISHED', 'Automatically published on schedule', '2026-01-18 09:20:41'),
+(172, 23, 5, 'updated', NULL, NULL, 'Content updated', '2026-01-18 16:12:23'),
+(173, 14, 5, 'status_changed', 'APPROVED', 'SCHEDULED', 'Alaa Almallah changed status: Scheduled for Jan 26, 2026 7:00 AM', '2026-01-25 12:41:24'),
+(174, 14, 5, 'status_changed', 'SCHEDULED', 'APPROVED', 'Alaa Almallah changed status: APPROVED', '2026-01-25 12:41:29'),
+(175, 13, 5, 'status_changed', 'APPROVED', 'SCHEDULED', 'Alaa Almallah changed status: Scheduled for Jan 26, 2026 7:00 AM', '2026-01-25 12:41:33'),
+(176, 13, 5, 'status_changed', 'SCHEDULED', 'APPROVED', 'Alaa Almallah changed status: APPROVED', '2026-01-25 12:41:38'),
+(177, 21, 4, 'status_changed', 'APPROVED', 'SCHEDULED', 'Sara Alaa changed status: Scheduled for Jan 25, 2026 3:00 PM', '2026-01-25 12:51:11'),
+(178, 21, 4, 'status_changed', 'SCHEDULED', 'APPROVED', 'Sara Alaa changed status: APPROVED', '2026-01-25 12:51:24'),
+(182, NULL, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-03-30 23:56:40'),
+(183, NULL, 1, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'M. Yassin changed status: PENDING_REVIEW', '2026-03-30 23:56:51'),
+(184, NULL, 1, 'status_changed', 'PENDING_REVIEW', 'REVIEWED', 'M. Yassin changed status: Admin approved - forwarded to manager', '2026-03-30 23:56:56'),
+(185, NULL, 1, 'post_deleted', '{\"title\":\"ef\",\"status\":\"REVIEWED\",\"platforms\":\"[\\\"Instagram\\\"]\",\"content\":\"fe\"}', NULL, 'تم حذف بوست: \"ef\" (الكاتب: Sara Alaa)', '2026-03-30 23:57:05'),
+(186, 31, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-03-30 23:57:41'),
+(187, 31, 4, 'updated', '{\"title\":\"dfvdff\",\"content\":\"dfddf\",\"platforms\":\"[\\\"LinkedIn\\\"]\"}', '{\"title\":\"zzz\",\"content\":\"zzzzzzzz\",\"platforms\":\"[\\\"Facebook\\\"]\"}', 'تم تعديل: العنوان، المحتوى، المنصات', '2026-03-30 23:57:55');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admin_approvals`
+--
+
+CREATE TABLE `admin_approvals` (
+  `id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
+  `admin_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -236,6 +266,32 @@ INSERT INTO `companies` (`id`, `name`, `slug`, `logo_url`, `primary_color`, `cre
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `idea_media`
+--
+
+CREATE TABLE `idea_media` (
+  `id` int(11) NOT NULL,
+  `idea_id` int(11) NOT NULL,
+  `file_path` varchar(500) NOT NULL,
+  `file_type` varchar(50) NOT NULL,
+  `file_name` varchar(255) DEFAULT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `is_primary` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `idea_media`
+--
+
+INSERT INTO `idea_media` (`id`, `idea_id`, `file_path`, `file_type`, `file_name`, `file_size`, `is_primary`, `created_at`) VALUES
+(5, 4, 'uploads/ideas/idea_4_1768126270_6a27cd2f.png', 'image/png', '2b2291ae-e213-4087-9374-38e8679440e0.png', 3039100, 1, '2026-01-11 10:11:10'),
+(6, 4, 'uploads/ideas/idea_4_1768126271_d4805447.jpg', 'image/jpeg', '147670929-400x300.jpg', 28518, 0, '2026-01-11 10:11:11'),
+(7, 4, 'uploads/ideas/idea_4_1768126271_d2b8a40d.jpg', 'image/jpeg', 'pexels-binyaminmellish-186077.jpg', 920097, 0, '2026-01-11 10:11:11');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `media_files`
 --
 
@@ -284,7 +340,14 @@ INSERT INTO `media_files` (`id`, `post_id`, `original_name`, `file_name`, `file_
 (34, 21, 'WhatsApp Image 2025-12-04 at 16.10.38_dcd117dc.jpg', '6951421641a7d_8f5fe231.jpg', 'uploads/2025/12/6951421641a7d_8f5fe231.jpg', 'image', 'image/jpeg', 224289, 1, 3, '2025-12-28 14:43:34'),
 (35, 21, 'WhatsApp Image 2025-12-04 at 16.16.09_99c1d221.jpg', '6951421656a5c_7640b4f5.jpg', 'uploads/2025/12/6951421656a5c_7640b4f5.jpg', 'image', 'image/jpeg', 833289, 0, 3, '2025-12-28 14:43:34'),
 (36, 21, 'whatsapp_template_pic.jpg', '695142166989a_9cac3f9e.jpg', 'uploads/2025/12/695142166989a_9cac3f9e.jpg', 'image', 'image/jpeg', 101969, 0, 3, '2025-12-28 14:43:34'),
-(37, 22, 'whatsapp_template_pic.jpg', '6951487801517_70c1cb4b.jpg', 'uploads/2025/12/6951487801517_70c1cb4b.jpg', 'image', 'image/jpeg', 101969, 1, 3, '2025-12-28 15:10:48');
+(38, 16, 'Dubai real estate is going to X.mp4', '69526022dd61a_437f267c.mp4', 'uploads/2025/12/69526022dd61a_437f267c.mp4', 'video', 'video/mp4', 8371524, 0, 2, '2025-12-29 11:04:02'),
+(42, 27, '2b2291ae-e213-4087-9374-38e8679440e0.png', 'idea_4_1768126270_6a27cd2f.png', 'uploads/ideas/idea_4_1768126270_6a27cd2f.png', 'image', 'image/png', 3039100, 1, 4, '2026-01-11 10:38:33'),
+(43, 27, '147670929-400x300.jpg', 'idea_4_1768126271_d4805447.jpg', 'uploads/ideas/idea_4_1768126271_d4805447.jpg', 'image', 'image/jpeg', 28518, 0, 4, '2026-01-11 10:38:33'),
+(44, 27, 'pexels-binyaminmellish-186077.jpg', 'idea_4_1768126271_d2b8a40d.jpg', 'uploads/ideas/idea_4_1768126271_d2b8a40d.jpg', 'image', 'image/jpeg', 920097, 0, 4, '2026-01-11 10:38:33'),
+(45, 28, 'whatsapp_template_pic.jpg', 'idea_5_1768128308_6b056dcd.jpg', 'uploads/ideas/idea_5_1768128308_6b056dcd.jpg', 'image', 'image/jpeg', 101969, 1, 3, '2026-01-11 10:45:36'),
+(46, 27, 'WhatsApp Image 2025-12-04 at 16.10.38_dcd117dc.jpg', '696d051d5b9d1_8c8c0061.jpg', 'uploads/2026/01/696d051d5b9d1_8c8c0061.jpg', 'image', 'image/jpeg', 224289, 0, 5, '2026-01-18 16:06:53'),
+(47, 24, 'WhatsApp Image 2025-12-04 at 16.10.38_dcd117dc.jpg', '696d0627742c1_f7296a46.jpg', 'uploads/2026/01/696d0627742c1_f7296a46.jpg', 'image', 'image/jpeg', 224289, 1, 5, '2026-01-18 16:11:19'),
+(48, 23, 'التشطيبات في كمبوند ماونتن فيو أكتوبربارك.jpg', '696d0664dde7f_a07f9741.jpg', 'uploads/2026/01/696d0664dde7f_a07f9741.jpg', 'image', 'image/jpeg', 117087, 1, 5, '2026-01-18 16:12:20');
 
 -- --------------------------------------------------------
 
@@ -437,14 +500,34 @@ INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `post_
 (135, 3, 'scheduled', 'Post Scheduled', 'Your post \'1\' is scheduled for publishing!', 17, 2, 1, '2025-12-28 14:59:40'),
 (136, 5, 'manager_approval_needed', 'Manager Approval Needed', 'Post \'3\' needs your final approval', 19, 5, 1, '2025-12-28 15:05:52'),
 (137, 3, 'reviewed', 'Post Under Manager Review', 'Your post \'3\' is now under manager review', 19, 5, 1, '2025-12-28 15:05:52'),
-(138, 1, 'review_needed', 'Review Needed', 'Post \'ؤصضؤ\' needs review', 12, 2, 0, '2025-12-28 15:09:12'),
-(139, 2, 'review_needed', 'Review Needed', 'Post \'ؤصضؤ\' needs review', 12, 2, 1, '2025-12-28 15:09:12'),
-(140, 1, 'review_needed', 'Review Needed', 'Post \'يصضي\' needs review', 22, 3, 0, '2025-12-28 15:10:52'),
-(141, 2, 'review_needed', 'Review Needed', 'Post \'يصضي\' needs review', 22, 3, 1, '2025-12-28 15:10:52'),
 (142, 1, 'review_needed', 'Review Needed', 'Post \'ؤضص\' needs review', 11, 2, 0, '2025-12-28 15:12:28'),
 (143, 2, 'review_needed', 'Review Needed', 'Post \'ؤضص\' needs review', 11, 2, 1, '2025-12-28 15:12:28'),
-(144, 1, 'review_needed', 'Review Needed', 'Post \'يصضي\' needs review', 22, 3, 0, '2025-12-28 15:32:55'),
-(145, 2, 'review_needed', 'Review Needed', 'Post \'يصضي\' needs review', 22, 3, 1, '2025-12-28 15:32:55');
+(146, 3, 'published', 'Post Published', 'Your post \'1\' has been automatically published!', 17, NULL, 1, '2025-12-29 09:09:19'),
+(147, 5, 'manager_approval_needed', 'Manager Approval Needed', 'Post \'ؤضص\' needs your final approval', 11, 2, 1, '2025-12-29 09:36:06'),
+(148, 3, 'reviewed', 'Post Under Manager Review', 'Your post \'ؤضص\' is now under manager review', 11, 2, 1, '2025-12-29 09:36:06'),
+(149, 3, 'approved', 'Post Approved', 'Your post \'ؤضص\' was approved!', 11, 5, 1, '2025-12-29 09:37:31'),
+(150, 1, 'post_approved', 'Post Ready for Scheduling', 'Post \'ؤضص\' was approved and is ready for scheduling', 11, 5, 0, '2025-12-29 09:37:31'),
+(151, 2, 'post_approved', 'Post Ready for Scheduling', 'Post \'ؤضص\' was approved and is ready for scheduling', 11, 5, 1, '2025-12-29 09:37:31'),
+(156, 1, 'review_needed', 'Review Needed', 'Post \'dqd\' needs review', 23, 5, 0, '2025-12-30 13:52:12'),
+(157, 2, 'review_needed', 'Review Needed', 'Post \'dqd\' needs review', 23, 5, 1, '2025-12-30 13:52:12'),
+(158, 6, 'review_needed', 'Review Needed', 'Post \'dqd\' needs review', 23, 5, 0, '2025-12-30 13:52:12'),
+(159, 3, 'changes_requested', 'Changes Requested', 'Changes requested on \'3\': za', 19, 5, 1, '2025-12-30 13:52:59'),
+(160, 3, 'published', 'Post Published', 'Your post \'4\' has been automatically published!', 20, NULL, 0, '2026-01-18 09:20:42'),
+(172, 3, 'scheduled', 'Post Scheduled', 'Your post \'ؤضصص\' is scheduled for publishing!', 14, 5, 0, '2026-01-25 12:41:24'),
+(173, 3, 'approved', 'Post Approved', 'Your post \'ؤضصص\' was approved!', 14, 5, 0, '2026-01-25 12:41:29'),
+(174, 1, 'post_approved', 'Post Ready for Scheduling', 'Post \'ؤضصص\' was approved and is ready for scheduling', 14, 5, 0, '2026-01-25 12:41:29'),
+(175, 2, 'post_approved', 'Post Ready for Scheduling', 'Post \'ؤضصص\' was approved and is ready for scheduling', 14, 5, 0, '2026-01-25 12:41:29'),
+(176, 6, 'post_approved', 'Post Ready for Scheduling', 'Post \'ؤضصص\' was approved and is ready for scheduling', 14, 5, 0, '2026-01-25 12:41:29'),
+(177, 3, 'scheduled', 'Post Scheduled', 'Your post \'qqqq\' is scheduled for publishing!', 13, 5, 0, '2026-01-25 12:41:33'),
+(178, 3, 'approved', 'Post Approved', 'Your post \'qqqq\' was approved!', 13, 5, 0, '2026-01-25 12:41:38'),
+(179, 1, 'post_approved', 'Post Ready for Scheduling', 'Post \'qqqq\' was approved and is ready for scheduling', 13, 5, 0, '2026-01-25 12:41:38'),
+(180, 2, 'post_approved', 'Post Ready for Scheduling', 'Post \'qqqq\' was approved and is ready for scheduling', 13, 5, 0, '2026-01-25 12:41:38'),
+(181, 6, 'post_approved', 'Post Ready for Scheduling', 'Post \'qqqq\' was approved and is ready for scheduling', 13, 5, 0, '2026-01-25 12:41:38'),
+(182, 3, 'scheduled', 'Post Scheduled', 'Your post \'test new feat 1\' is scheduled for publishing!', 21, 4, 0, '2026-01-25 12:51:11'),
+(183, 3, 'approved', 'Post Approved', 'Your post \'test new feat 1\' was approved!', 21, 4, 0, '2026-01-25 12:51:24'),
+(184, 1, 'post_approved', 'Post Ready for Scheduling', 'Post \'test new feat 1\' was approved and is ready for scheduling', 21, 4, 0, '2026-01-25 12:51:24'),
+(185, 2, 'post_approved', 'Post Ready for Scheduling', 'Post \'test new feat 1\' was approved and is ready for scheduling', 21, 4, 0, '2026-01-25 12:51:24'),
+(186, 6, 'post_approved', 'Post Ready for Scheduling', 'Post \'test new feat 1\' was approved and is ready for scheduling', 21, 4, 0, '2026-01-25 12:51:24');
 
 -- --------------------------------------------------------
 
@@ -458,7 +541,7 @@ CREATE TABLE `posts` (
   `title` varchar(255) NOT NULL,
   `content` text NOT NULL,
   `platforms` text DEFAULT NULL,
-  `status` enum('IDEA','DRAFT','PENDING_REVIEW','REVIEWED','CHANGES_REQUESTED','APPROVED','SCHEDULED','PUBLISHED') NOT NULL DEFAULT 'DRAFT',
+  `status` enum('DRAFT','PENDING_REVIEW','REVIEWED','CHANGES_REQUESTED','APPROVED','SCHEDULED','PUBLISHED') NOT NULL DEFAULT 'DRAFT',
   `urgency` tinyint(1) DEFAULT 0,
   `priority` enum('low','normal','high','critical') DEFAULT 'normal',
   `author_id` int(11) NOT NULL,
@@ -483,17 +566,21 @@ INSERT INTO `posts` (`id`, `company_id`, `title`, `content`, `platforms`, `statu
 (6, 1, 'مش سنة تجربة… دي سنة قرارات عقارية محسوبة 2026', 'لو هتدخل 2026 بخطوة عقارية\nخليها مبنية على: موقع + توقيت + مطور + مسوق عقاري فاهم \n\nاللي هيفهم السوق في 2026\nهو اللي هيصنع قيمة حقيقية بعد كده.\n\n#عقار # |استثمار_عقاري | #RealEstate  | #شراء_شقة # |2026 |  # |موقع_توقيت_مطور', '[\"Facebook\",\"Instagram\"]', 'CHANGES_REQUESTED', 1, 'normal', 4, 2, NULL, NULL, 'محتاج البوست ذى ما هينزل بالظبط', 2, '2025-12-22 16:33:49', '2025-12-22 13:33:20', '2025-12-28 10:55:46'),
 (7, 1, 'تقول ايه لبرومان فى أخر السنة ؟', 'احنا اتكلمنا كتير لكن جه الوقت اللى نسمعك فيه\r\n \r\n منتظرين كومينتتكم \r\n\r\n#برومان | #برومان_العقارية  | #مستشار_عقاري  | #2026', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 1, 'normal', 4, 2, '2025-12-28 14:00:00', '2025-12-28 14:00:47', 'محتاج البوست ذي ما هبنزل بالظبط', 2, '2025-12-22 16:33:15', '2025-12-22 13:41:37', '2025-12-28 12:00:47'),
 (8, 1, 'مقارنة بين ايطاليا والعاصمة الجديدة', 'طراز معمارية ايطاليا والعاصمة الجديدة', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 1, 'normal', 1, 2, '2025-12-28 13:20:00', '2025-12-28 13:20:47', NULL, NULL, NULL, '2025-12-22 14:23:36', '2025-12-28 11:20:47'),
-(11, 1, 'ؤضص', 'ضؤصؤصببب', '[\"YouTube\"]', 'PENDING_REVIEW', 0, 'normal', 3, 2, NULL, NULL, NULL, NULL, NULL, '2025-12-25 15:03:08', '2025-12-28 15:12:28'),
-(12, 1, 'ؤصضؤ', 'صؤضصؤ', '[\"Snapchat\",\"Website\"]', 'DRAFT', 0, 'normal', 3, 3, NULL, NULL, NULL, NULL, NULL, '2025-12-25 15:03:24', '2025-12-28 15:11:13'),
-(13, 1, 'qqqq', 'qqqqqqqqqqq', '[\"Facebook\",\"Instagram\",\"LinkedIn\",\"X\",\"TikTok\",\"YouTube\",\"Snapchat\",\"Website\"]', 'APPROVED', 0, 'normal', 3, 2, NULL, NULL, NULL, NULL, NULL, '2025-12-25 15:03:45', '2025-12-28 14:49:43'),
-(14, 1, 'ؤضصص', 'صؤضصؤص', '[\"X\",\"Website\"]', 'APPROVED', 0, 'normal', 3, 2, NULL, NULL, NULL, NULL, NULL, '2025-12-25 15:04:26', '2025-12-28 11:10:13'),
+(11, 1, 'ؤضص', 'ضؤصؤصببب', '[\"YouTube\"]', 'APPROVED', 0, 'normal', 3, 5, NULL, NULL, NULL, NULL, NULL, '2025-12-25 15:03:08', '2025-12-29 09:37:31'),
+(13, 1, 'qqqq', 'qqqqqqqqqqq', '[\"Facebook\",\"Instagram\",\"LinkedIn\",\"X\",\"TikTok\",\"YouTube\",\"Snapchat\",\"Website\"]', 'APPROVED', 0, 'normal', 3, 5, '2026-01-26 07:00:00', NULL, NULL, NULL, NULL, '2025-12-25 15:03:45', '2026-01-25 12:41:37'),
+(14, 1, 'ؤضصص', 'صؤضصؤص', '[\"X\",\"Website\"]', 'APPROVED', 0, 'normal', 3, 5, '2026-01-26 07:00:00', NULL, NULL, NULL, NULL, '2025-12-25 15:04:26', '2026-01-25 12:41:29'),
 (15, 1, 'dqwqwdw', 'wdwdqwwqdqwdwdqwqwdqwdq', '[\"Facebook\",\"Instagram\",\"LinkedIn\",\"X\",\"TikTok\",\"YouTube\",\"Snapchat\",\"Website\"]', 'DRAFT', 0, 'normal', 2, 2, NULL, NULL, NULL, NULL, NULL, '2025-12-28 10:52:53', '2025-12-28 15:08:59'),
-(16, 1, 'asd', 'تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳', '[\"Facebook\",\"Instagram\",\"LinkedIn\",\"X\",\"TikTok\",\"YouTube\",\"Snapchat\",\"Website\"]', 'IDEA', 1, 'normal', 3, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-28 10:54:29', '2025-12-28 12:23:14'),
-(17, 1, '1', '111111 \n111111 \n111111 \n111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 \n111111 \n111111 \n111111 \n111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111', '[\"Facebook\",\"Instagram\"]', 'SCHEDULED', 0, 'normal', 3, 2, '2025-12-29 07:00:00', NULL, NULL, NULL, NULL, '2025-12-28 13:15:17', '2025-12-28 14:59:40'),
-(19, 1, '3', '22222 \n22222 22222 \n22222 22222 22222 \n22222 22222 22222 22222 \n22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 22222 \n22222 \n22222 22222 \n22222 22222 22222 \n22222 22222 22222 22222 \n22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 22222', '[\"X\",\"Snapchat\"]', 'REVIEWED', 0, 'normal', 3, 5, '2026-01-14 07:00:00', NULL, NULL, NULL, NULL, '2025-12-28 13:17:12', '2025-12-28 15:05:52'),
-(20, 1, '4', '22222 \r\n22222 22222 \r\n22222 22222 22222 \r\n22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 22222 \r\n22222 \r\n22222 22222 \r\n22222 22222 22222 \r\n22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 22222', '[\"TikTok\",\"YouTube\",\"Snapchat\"]', 'SCHEDULED', 0, 'normal', 3, 2, '2026-01-14 07:00:00', NULL, NULL, NULL, NULL, '2025-12-28 13:17:52', '2025-12-28 13:23:43'),
-(21, 1, 'test new feat 1', 'test edit new feat 1', '[\"X\",\"TikTok\"]', 'APPROVED', 0, 'normal', 3, 5, NULL, NULL, 'test manager request 1', 5, '2025-12-28 16:48:27', '2025-12-28 14:43:34', '2025-12-28 14:50:13'),
-(22, 1, 'يصضي', 'ضصيي', '[\"X\",\"TikTok\"]', 'DRAFT', 0, 'normal', 3, 3, NULL, NULL, NULL, NULL, NULL, '2025-12-28 15:10:47', '2025-12-28 15:33:02');
+(16, 1, 'asd', 'Jdjsjjskskkdk\n\nSjjsjsjjajajsjjss\n\nSjjsjaioaowokzkz', '[\"Facebook\",\"Instagram\",\"LinkedIn\",\"X\",\"TikTok\",\"YouTube\",\"Snapchat\",\"Website\"]', 'DRAFT', 1, 'normal', 3, 2, NULL, NULL, NULL, NULL, NULL, '2025-12-28 10:54:29', '2025-12-30 13:35:19'),
+(17, 1, '1', '111111 \n111111 \n111111 \n111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 \n111111 \n111111 \n111111 \n111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 \n111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111 111111', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 0, 'normal', 3, 2, '2025-12-29 07:00:00', '2025-12-29 11:09:18', NULL, NULL, NULL, '2025-12-28 13:15:17', '2025-12-29 09:09:18'),
+(19, 1, '3', '22222 \n22222 22222 \n22222 22222 22222 \n22222 22222 22222 22222 \n22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 22222 \n22222 \n22222 22222 \n22222 22222 22222 \n22222 22222 22222 22222 \n22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 22222', '[\"X\",\"Snapchat\"]', 'CHANGES_REQUESTED', 0, 'normal', 3, 5, '2026-01-14 07:00:00', NULL, 'za', 5, '2025-12-30 15:52:59', '2025-12-28 13:17:12', '2025-12-30 13:52:59'),
+(20, 1, '4', '22222 \r\n22222 22222 \r\n22222 22222 22222 \r\n22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 22222 \r\n22222 \r\n22222 22222 \r\n22222 22222 22222 \r\n22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 22222', '[\"TikTok\",\"YouTube\",\"Snapchat\"]', 'PUBLISHED', 0, 'normal', 3, 2, '2026-01-14 07:00:00', '2026-01-18 11:20:41', NULL, NULL, NULL, '2025-12-28 13:17:52', '2026-01-18 09:20:41'),
+(21, 1, 'test new feat 1', 'test edit new feat 1', '[\"X\",\"TikTok\"]', 'APPROVED', 0, 'normal', 3, 4, '2026-01-25 15:00:00', NULL, 'test manager request 1', 5, '2025-12-28 16:48:27', '2025-12-28 14:43:34', '2026-01-25 12:51:24'),
+(23, 1, 'dqd', 'wdqwdwqdqwdw', '[\"TikTok\",\"YouTube\",\"Snapchat\"]', 'PENDING_REVIEW', 0, 'normal', 3, 5, NULL, NULL, NULL, NULL, NULL, '2025-12-30 13:38:29', '2025-12-30 13:52:12'),
+(24, 1, 'sara idea 1', 'يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر', '[]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:11:43', '2026-01-11 10:11:43'),
+(26, 1, 'sara idea 1', 'يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر', '[]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:34:49', '2026-01-11 10:34:49'),
+(27, 1, 'sara idea 1', 'يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر', '[]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:38:33', '2026-01-11 10:38:33'),
+(28, 1, 'nada idea 1', 'nada idea content 1\n\njrtrthththrt', '[]', 'DRAFT', 0, 'normal', 3, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:45:36', '2026-01-11 10:45:36'),
+(31, 1, 'zzz', 'zzzzzzzz', '[\"Facebook\"]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-30 23:57:41', '2026-03-30 23:57:55');
 
 -- --------------------------------------------------------
 
@@ -515,11 +602,7 @@ CREATE TABLE `rate_limits` (
 --
 
 INSERT INTO `rate_limits` (`id`, `identifier`, `action`, `attempts`, `first_attempt`, `last_attempt`) VALUES
-(1, 'login:::1', 'login', 3, '2025-12-28 14:41:34', '2025-12-28 14:42:16'),
-(2, 'login:192.168.1.10', 'login', 1, '2025-12-21 15:44:29', '2025-12-21 15:44:29'),
-(3, 'login:192.168.1.19', 'login', 1, '2025-12-22 14:13:03', '2025-12-22 14:13:03'),
-(4, 'login:192.168.1.18', 'login', 1, '2025-12-22 14:22:32', '2025-12-22 14:22:32'),
-(5, 'login:192.168.1.21', 'login', 2, '2025-12-28 13:20:31', '2025-12-28 13:20:54');
+(1, 'login:::1', 'login', 1, '2026-03-30 23:31:55', '2026-03-30 23:31:55');
 
 -- --------------------------------------------------------
 
@@ -534,6 +617,69 @@ CREATE TABLE `sessions` (
   `expires_at` datetime NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `staff_ideas`
+--
+
+CREATE TABLE `staff_ideas` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `company_id` int(11) NOT NULL DEFAULT 1,
+  `title` varchar(255) DEFAULT NULL,
+  `content` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `staff_ideas`
+--
+
+INSERT INTO `staff_ideas` (`id`, `user_id`, `company_id`, `title`, `content`, `created_at`, `updated_at`) VALUES
+(4, 4, 1, 'sara idea 1', 'يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر', '2026-01-11 10:10:59', '2026-01-11 10:11:12'),
+(6, 3, 1, 'nada idea 1', 'fsdfdsfd\nvnrnrev\nvrevrevniriv', '2026-01-18 16:20:38', '2026-01-18 16:20:38');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `system_logs`
+--
+
+CREATE TABLE `system_logs` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `action` varchar(100) NOT NULL,
+  `entity_type` varchar(50) NOT NULL DEFAULT 'system',
+  `entity_id` int(11) DEFAULT NULL,
+  `old_value` text DEFAULT NULL,
+  `new_value` text DEFAULT NULL,
+  `description` text NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `system_logs`
+--
+
+INSERT INTO `system_logs` (`id`, `user_id`, `action`, `entity_type`, `entity_id`, `old_value`, `new_value`, `description`, `ip_address`, `created_at`) VALUES
+(1, 5, 'login', 'user', 5, NULL, NULL, 'Alaa Almallah logged in', '::1', '2026-03-30 16:08:03'),
+(2, 1, 'login', 'user', 1, NULL, NULL, 'M. Yassin logged in', '::1', '2026-03-30 16:13:36'),
+(3, 1, 'post_created', 'post', 29, NULL, 'DRAFT', 'M. Yassin created post \'d\' as DRAFT', '::1', '2026-03-30 16:14:25'),
+(4, 1, 'status_changed', 'post', 29, 'DRAFT', 'PENDING_REVIEW', 'M. Yassin changed post \'d\' from DRAFT to PENDING_REVIEW', '::1', '2026-03-30 16:14:27'),
+(5, 1, 'status_changed', 'post', 29, 'PENDING_REVIEW', 'REVIEWED', 'M. Yassin changed post \'d\' from PENDING_REVIEW to REVIEWED', '::1', '2026-03-30 16:14:31'),
+(6, 5, 'permission_changed', 'permission', 1, '1', '0', 'Alaa Almallah changed permission \'حذف أي بوست\' for M. Yassin from ON to OFF', '::1', '2026-03-30 16:14:54'),
+(7, 1, 'post_deleted', 'post', 22, 'يصضي', NULL, 'M. Yassin deleted post \'يصضي\'', '::1', '2026-03-30 16:15:17'),
+(8, 5, 'permission_changed', 'permission', 1, '1', '0', 'Alaa Almallah changed permission \'حذف البوستات الخاصة\' for M. Yassin from ON to OFF', '::1', '2026-03-30 16:16:24'),
+(9, 5, 'permission_changed', 'permission', 1, '1', '0', 'Alaa Almallah changed permission \'تعديل أي بوست\' for M. Yassin from ON to OFF', '::1', '2026-03-30 16:16:27'),
+(10, 5, 'permission_changed', 'permission', 1, '1', '0', 'Alaa Almallah changed permission \'تعديل البوستات الخاصة\' for M. Yassin from ON to OFF', '::1', '2026-03-30 16:16:28'),
+(11, 5, 'permission_changed', 'permission', 1, '1', '0', 'Alaa Almallah changed permission \'إنشاء بوست جديد\' for M. Yassin from ON to OFF', '::1', '2026-03-30 16:16:40'),
+(12, 1, 'post_deleted', 'post', 29, 'd', NULL, 'M. Yassin deleted post \'d\'', '::1', '2026-03-30 16:16:53'),
+(13, 1, 'post_deleted', 'post', 12, 'ؤصضؤ', NULL, 'M. Yassin deleted post \'ؤصضؤ\'', '::1', '2026-03-30 16:17:04'),
+(14, 1, 'post_deleted', 'post', 25, 'sara idea 1', NULL, 'M. Yassin deleted post \'sara idea 1\'', '::1', '2026-03-30 16:17:12');
 
 -- --------------------------------------------------------
 
@@ -559,11 +705,54 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password_hash`, `full_name`, `avatar_url`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
-(1, 'yassin', '$2y$10$cp2rKBKbcM3gyoO6hOObvuNakH8NRR7nKMlbyewuZW6ePiDbLly3O', 'M. Yassin', NULL, 'admin', 1, '2025-12-22 16:22:33', '2025-12-21 11:46:09', '2025-12-22 14:22:33'),
-(2, 'john', '$2y$10$ngSlt6no7Ya./YjFejS/vOQVPceJT6CF3WufUlGQkyz2eZejU4HtW', 'John', NULL, 'admin', 1, '2025-12-28 16:41:35', '2025-12-21 12:01:09', '2025-12-28 14:41:35'),
-(3, 'nada', '$2y$10$brpri16CtrP.ZoIXUCNUju3KWF2iVQ2XjnHVhpUehtFZeoV.c8sU2', 'Nada Mohammed', NULL, 'staff', 1, '2025-12-28 16:42:16', '2025-12-18 16:29:57', '2025-12-28 14:42:16'),
-(4, 'sara', '$2y$10$uoknCOM.WvqMS6mZQF4GrehVWnljk6IIIydqbx00PqRNg1qOMjnT.', 'Sara Alaa', NULL, 'staff', 1, '2025-12-22 15:30:49', '2025-12-18 14:08:00', '2025-12-22 13:30:49'),
-(5, 'alaa', '$2y$10$rMzTqCLTcguZRak/s4glkOkojOTP.RmgD/r6gppU0pntsXDSR7LG.', 'Alaa Almallah', NULL, 'manager', 1, '2025-12-28 16:41:52', '2025-12-21 15:43:48', '2025-12-28 14:41:52');
+(1, 'yassin', '$2y$10$cp2rKBKbcM3gyoO6hOObvuNakH8NRR7nKMlbyewuZW6ePiDbLly3O', 'M. Yassin', NULL, 'admin', 1, '2026-03-30 18:13:36', '2025-12-21 11:46:09', '2026-03-30 16:13:36'),
+(2, 'john', '$2y$10$ngSlt6no7Ya./YjFejS/vOQVPceJT6CF3WufUlGQkyz2eZejU4HtW', 'John', NULL, 'admin', 1, '2026-01-18 11:31:37', '2025-12-21 12:01:09', '2026-01-18 09:31:37'),
+(3, 'nada', '$2y$10$brpri16CtrP.ZoIXUCNUju3KWF2iVQ2XjnHVhpUehtFZeoV.c8sU2', 'Nada Mohammed', NULL, 'staff', 1, '2026-01-18 18:20:20', '2025-12-18 16:29:57', '2026-01-18 16:20:20'),
+(4, 'sara', '$2y$10$ZSXzHtIQUfTEiNJEOLxev.oTKljxYWPMRJlhyNzBqfFVS/hyWN17q', 'Sara Alaa', NULL, 'staff', 1, '2026-03-31 01:31:55', '2025-12-18 14:08:00', '2026-03-30 23:31:55'),
+(5, 'alaa', '$2y$10$c8kRzcsD7wjlyVA/XJelFumCBPYa9VTkAulhV7hT3Iz7Av1LnPSqq', 'Alaa Almallah', NULL, 'manager', 1, '2026-03-31 01:10:06', '2025-12-21 15:43:48', '2026-03-30 23:10:06'),
+(6, 'testmanager', '$2y$10$rnhOp0pzQa9xlYOy2C17R.ttRwmWw3NMd7Ur5EbeqExR0TBjwgl9K', 'test manager', NULL, 'admin', 0, NULL, '2025-12-28 16:10:51', '2026-01-18 09:32:57'),
+(7, 'mobile', '$2y$10$7cJjqWslghkzMGMEP1tJqO8XygbMHGYhXzBk7VtF4/bURFv5Yy5W.', 'Test Mobile User', NULL, 'staff', 0, NULL, '2025-12-29 11:15:47', '2025-12-29 11:15:57');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_permissions`
+--
+
+CREATE TABLE `user_permissions` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `can_create_post` tinyint(1) NOT NULL DEFAULT 1,
+  `can_edit_own_post` tinyint(1) NOT NULL DEFAULT 1,
+  `can_edit_any_post` tinyint(1) NOT NULL DEFAULT 0,
+  `can_delete_own_post` tinyint(1) NOT NULL DEFAULT 1,
+  `can_delete_any_post` tinyint(1) NOT NULL DEFAULT 0,
+  `can_submit_for_review` tinyint(1) NOT NULL DEFAULT 1,
+  `can_review_posts` tinyint(1) NOT NULL DEFAULT 0,
+  `can_manage_users` tinyint(1) NOT NULL DEFAULT 0,
+  `can_view_dashboard` tinyint(1) NOT NULL DEFAULT 1,
+  `can_view_calendar` tinyint(1) NOT NULL DEFAULT 1,
+  `can_manage_ideas` tinyint(1) NOT NULL DEFAULT 1,
+  `can_schedule_posts` tinyint(1) NOT NULL DEFAULT 0,
+  `can_publish_posts` tinyint(1) NOT NULL DEFAULT 0,
+  `can_comment` tinyint(1) NOT NULL DEFAULT 1,
+  `can_upload_media` tinyint(1) NOT NULL DEFAULT 1,
+  `can_view_logs` tinyint(1) NOT NULL DEFAULT 0,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `user_permissions`
+--
+
+INSERT INTO `user_permissions` (`id`, `user_id`, `can_create_post`, `can_edit_own_post`, `can_edit_any_post`, `can_delete_own_post`, `can_delete_any_post`, `can_submit_for_review`, `can_review_posts`, `can_manage_users`, `can_view_dashboard`, `can_view_calendar`, `can_manage_ideas`, `can_schedule_posts`, `can_publish_posts`, `can_comment`, `can_upload_media`, `can_view_logs`, `updated_at`) VALUES
+(1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, '2026-03-30 16:16:40'),
+(2, 2, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, '2026-03-30 16:04:48'),
+(3, 6, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, '2026-03-30 16:04:48'),
+(4, 3, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, '2026-03-30 16:04:48'),
+(5, 4, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, '2026-03-30 16:04:48'),
+(6, 7, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, '2026-03-30 16:04:48'),
+(7, 5, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, '2026-03-30 16:04:48');
 
 --
 -- Indexes for dumped tables
@@ -576,6 +765,14 @@ ALTER TABLE `activity_log`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `idx_post` (`post_id`);
+
+--
+-- Indexes for table `admin_approvals`
+--
+ALTER TABLE `admin_approvals`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_post_admin` (`post_id`,`admin_id`),
+  ADD KEY `admin_id` (`admin_id`);
 
 --
 -- Indexes for table `comments`
@@ -591,6 +788,13 @@ ALTER TABLE `comments`
 ALTER TABLE `companies`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `slug` (`slug`);
+
+--
+-- Indexes for table `idea_media`
+--
+ALTER TABLE `idea_media`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_idea` (`idea_id`);
 
 --
 -- Indexes for table `media_files`
@@ -639,6 +843,24 @@ ALTER TABLE `sessions`
   ADD KEY `idx_token` (`session_token`);
 
 --
+-- Indexes for table `staff_ideas`
+--
+ALTER TABLE `staff_ideas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_user` (`user_id`),
+  ADD KEY `idx_company` (`company_id`);
+
+--
+-- Indexes for table `system_logs`
+--
+ALTER TABLE `system_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_syslog_user` (`user_id`),
+  ADD KEY `idx_syslog_action` (`action`),
+  ADD KEY `idx_syslog_entity` (`entity_type`,`entity_id`),
+  ADD KEY `idx_syslog_date` (`created_at`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -648,6 +870,13 @@ ALTER TABLE `users`
   ADD KEY `idx_role` (`role`);
 
 --
+-- Indexes for table `user_permissions`
+--
+ALTER TABLE `user_permissions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_user` (`user_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -655,7 +884,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `activity_log`
 --
 ALTER TABLE `activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=149;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=188;
+
+--
+-- AUTO_INCREMENT for table `admin_approvals`
+--
+ALTER TABLE `admin_approvals`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `comments`
@@ -670,22 +905,28 @@ ALTER TABLE `companies`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `idea_media`
+--
+ALTER TABLE `idea_media`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT for table `media_files`
 --
 ALTER TABLE `media_files`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=146;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=197;
 
 --
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `rate_limits`
@@ -700,10 +941,28 @@ ALTER TABLE `sessions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `staff_ideas`
+--
+ALTER TABLE `staff_ideas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `system_logs`
+--
+ALTER TABLE `system_logs`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `user_permissions`
+--
+ALTER TABLE `user_permissions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Constraints for dumped tables
@@ -713,8 +972,15 @@ ALTER TABLE `users`
 -- Constraints for table `activity_log`
 --
 ALTER TABLE `activity_log`
-  ADD CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `activity_log_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `activity_log_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `admin_approvals`
+--
+ALTER TABLE `admin_approvals`
+  ADD CONSTRAINT `admin_approvals_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `admin_approvals_ibfk_2` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `comments`
@@ -722,6 +988,12 @@ ALTER TABLE `activity_log`
 ALTER TABLE `comments`
   ADD CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `idea_media`
+--
+ALTER TABLE `idea_media`
+  ADD CONSTRAINT `fk_idea_media_idea` FOREIGN KEY (`idea_id`) REFERENCES `staff_ideas` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `media_files`
@@ -752,6 +1024,25 @@ ALTER TABLE `posts`
 --
 ALTER TABLE `sessions`
   ADD CONSTRAINT `sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `staff_ideas`
+--
+ALTER TABLE `staff_ideas`
+  ADD CONSTRAINT `fk_staff_ideas_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
+  ADD CONSTRAINT `fk_staff_ideas_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `system_logs`
+--
+ALTER TABLE `system_logs`
+  ADD CONSTRAINT `fk_syslog_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `user_permissions`
+--
+ALTER TABLE `user_permissions`
+  ADD CONSTRAINT `fk_perms_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

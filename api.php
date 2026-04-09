@@ -7,6 +7,7 @@
 require_once 'config.php';
 require_once 'db.php';
 require_once 'includes/security.php';
+require_once 'includes/WorkflowManager.php';
 
 session_name(SESSION_NAME);
 session_start();
@@ -989,60 +990,14 @@ try {
             if (!$post) sendResponse(false, null, 'Post not found', 404);
             
             $oldStatus = $post['status'];
-            $isAdmin = $user['role'] === 'admin';
-            $isManager = $user['role'] === 'manager';
-            $isAdminOrManager = in_array($user['role'], ['admin', 'manager']);
-            $isOwner = $post['author_id'] == $user['id'];
             
-            // Validate transitions
-            $allowed = false;
-            
-            // DRAFT -> PENDING_REVIEW (Owner submits)
-            if ($oldStatus === 'DRAFT' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdminOrManager)) $allowed = true;
-            
-            // CHANGES_REQUESTED -> PENDING_REVIEW (Owner resubmits)
-            if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'PENDING_REVIEW' && ($isOwner || $isAdminOrManager)) $allowed = true;
-            
-            // PENDING_REVIEW -> REVIEWED (Any admin reviews and passes to manager)
-            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'REVIEWED' && $isAdmin) $allowed = true;
-            
-            // PENDING_REVIEW -> DRAFT (Owner recalls from review)
-            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'DRAFT' && $isOwner) $allowed = true;
-            
-            // PENDING_REVIEW -> CHANGES_REQUESTED (Admin requests changes)
-            if ($oldStatus === 'PENDING_REVIEW' && $newStatus === 'CHANGES_REQUESTED' && $isAdmin) $allowed = true;
-            
-            // REVIEWED -> APPROVED (Manager final approval)
-            if ($oldStatus === 'REVIEWED' && $newStatus === 'APPROVED' && $isManager) $allowed = true;
-            
-            // REVIEWED -> PENDING_REVIEW (Admin recalls from manager)
-            if ($oldStatus === 'REVIEWED' && $newStatus === 'PENDING_REVIEW' && $isAdmin) $allowed = true;
-            
-            // REVIEWED -> CHANGES_REQUESTED (Manager requests changes)
-            if ($oldStatus === 'REVIEWED' && $newStatus === 'CHANGES_REQUESTED' && $isManager) $allowed = true;
-            
-            // CHANGES_REQUESTED -> DRAFT (internal, same as just editing)
-            if ($oldStatus === 'CHANGES_REQUESTED' && $newStatus === 'DRAFT' && ($isOwner || $isAdminOrManager)) $allowed = true;
-            
-            // APPROVED -> SCHEDULED (Admin/Manager/Staff schedules for publishing)
-            if ($oldStatus === 'APPROVED' && $newStatus === 'SCHEDULED' && ($isAdminOrManager || $user['role'] === 'staff')) {
-                if (!$scheduledDate) {
-                    sendResponse(false, null, 'Scheduled date is required', 400);
-                }
-                $allowed = true;
+            // Validate transitions with Centralized WorkflowManager
+            if (!WorkflowManager::canTransition($user['role'], $oldStatus, $newStatus)) {
+                sendResponse(false, null, 'You do not have permission to perform this transition.', 403);
             }
-
-            // APPROVED -> REVIEWED (Manager reverts approval)
-            if ($oldStatus === 'APPROVED' && $newStatus === 'REVIEWED' && $isManager) $allowed = true;
             
-            // SCHEDULED -> PUBLISHED (Admin/Manager or system publishes)
-            if ($oldStatus === 'SCHEDULED' && $newStatus === 'PUBLISHED' && $isAdminOrManager) $allowed = true;
-            
-            // SCHEDULED -> APPROVED (Admin/Manager/Staff unschedules)
-            if ($oldStatus === 'SCHEDULED' && $newStatus === 'APPROVED' && ($isAdminOrManager || $user['role'] === 'staff')) $allowed = true;
-            
-            if (!$allowed) {
-                sendResponse(false, null, "Cannot change from $oldStatus to $newStatus", 403);
+            if ($newStatus === 'SCHEDULED' && empty($scheduledDate)) {
+                sendResponse(false, null, 'Scheduled date is required', 400);
             }
             
             $updateSql = "UPDATE posts SET status = ?, reviewer_id = ?";
