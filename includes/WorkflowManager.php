@@ -16,40 +16,35 @@ class WorkflowManager {
     public static function canTransition($userRole, $currentStatus, $newStatus) {
         $matrix = [
             'IDEA' => [
-                'DRAFT' => ['staff', 'manager', 'admin']
+                'DRAFT' => ['staff', 'admin', 'manager']
             ],
             'DRAFT' => [
-                'PENDING_REVIEW' => ['staff', 'manager', 'admin']
+                'PENDING_REVIEW' => ['staff', 'admin', 'manager']
             ],
             'PENDING_REVIEW' => [
                 'REVIEWED' => ['admin', 'manager'],
                 'CHANGES_REQUESTED' => ['admin', 'manager'],
-                'DRAFT' => ['staff']
+                'DRAFT' => ['staff', 'admin', 'manager']
             ],
             'REVIEWED' => [
-                'APPROVED' => ['manager', 'admin'],
-                'CHANGES_REQUESTED' => ['manager', 'admin']
+                'APPROVED' => ['manager'],
+                'CHANGES_REQUESTED' => ['manager'],
+                'PENDING_REVIEW' => ['admin', 'manager']
             ],
             'CHANGES_REQUESTED' => [
-                'PENDING_REVIEW' => ['staff', 'manager', 'admin']
+                'PENDING_REVIEW' => ['staff', 'admin', 'manager']
             ],
             'APPROVED' => [
-                'SCHEDULED' => ['manager', 'admin'],
-                'DRAFT' => ['manager', 'admin']
+                'SCHEDULED' => ['admin', 'manager'],
+                'DRAFT' => ['manager']
             ],
             'SCHEDULED' => [
                 'PUBLISHED' => ['system'],
-                'DRAFT' => ['manager', 'admin']
+                'DRAFT' => ['admin', 'manager']
             ]
         ];
 
-        // If admin, option to allow all logically valid transitions defined in matrix
-        if ($userRole === 'admin') {
-            if (isset($matrix[$currentStatus][$newStatus])) {
-                return true;
-            }
-        }
-
+        // Enforce strictly via mapping matrix
         if (isset($matrix[$currentStatus][$newStatus])) {
             return in_array($userRole, $matrix[$currentStatus][$newStatus], true);
         }

@@ -856,8 +856,9 @@ try {
                     sendResponse(false, null, 'Cannot edit post after manager approval', 403);
                 }
                 
-                // Staff can only edit own posts in DRAFT/CHANGES_REQUESTED
-                if ($user['role'] === 'staff') {
+                // Staff & Admin restriction: ONLY edit their own DRAFT or CHANGES_REQUESTED
+                // Manager restriction: Managers can edit any post (passing above approval check)
+                if (in_array($user['role'], ['staff', 'admin'])) {
                     if ($existing['author_id'] != $user['id']) {
                         sendResponse(false, null, 'Cannot edit others posts', 403);
                     }
@@ -996,6 +997,12 @@ try {
                 sendResponse(false, null, 'You do not have permission to perform this transition.', 403);
             }
             
+            if ($newStatus === 'DRAFT' && $user['role'] !== 'manager') {
+                if ($post['author_id'] != $user['id']) {
+                    sendResponse(false, null, 'You can only recall your own posts to DRAFT.', 403);
+                }
+            }
+            
             if ($newStatus === 'SCHEDULED' && empty($scheduledDate)) {
                 sendResponse(false, null, 'Scheduled date is required', 400);
             }
@@ -1090,9 +1097,10 @@ try {
                 sendResponse(false, null, 'Cannot delete post after manager approval', 403);
             }
             
-            // Staff can only delete own drafts
-            if ($user['role'] === 'staff') {
-                if ($post['author_id'] != $user['id']) sendResponse(false, null, 'Cannot delete', 403);
+            // Staff & Admin restriction: ONLY delete if author_id == user_id AND status == 'DRAFT'
+            // Manager restriction: Managers can delete any post (passing above approval check)
+            if (in_array($user['role'], ['staff', 'admin'])) {
+                if ($post['author_id'] != $user['id']) sendResponse(false, null, 'Cannot delete others posts', 403);
                 if ($post['status'] !== 'DRAFT') sendResponse(false, null, 'Cannot delete submitted post', 403);
             }
             

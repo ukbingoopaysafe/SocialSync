@@ -1054,7 +1054,7 @@ $csrfToken = generateCSRFToken();
     </div>
 
     <!-- Toast Container -->
-    <div id="toasts" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    <div id="toasts" class="fixed bottom-4 right-4 z-[9999] space-y-2"></div>
 
     <!-- Edit User Modal -->
     <div id="editUserModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -2644,20 +2644,27 @@ async function openViewModal(id) {
         if (typeof renderViewActivity === 'function') renderViewActivity(p.activity || []);
         
         // Buttons visibility
-        const isAdmin = app.user.role === 'admin';
+        // Buttons visibility
         const isManager = app.user.role === 'manager';
-        const isAdminOrManager = ['admin', 'manager'].includes(app.user.role);
         const isOwner = p.author_id == app.user.id;
-        const canEditStatus = ['DRAFT', 'CHANGES_REQUESTED'].includes(p.status);
         const isApprovedOrLater = ['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(p.status);
         
-        // Hide edit button for posts after manager approval
-        const editBtn = document.getElementById('viewEditBtn');
-        if (editBtn) editBtn.classList.toggle('hidden', isApprovedOrLater || !(isAdminOrManager || (isOwner && canEditStatus)));
+        let showActionButtons = false;
+        if (isApprovedOrLater) {
+            showActionButtons = false;
+        } else {
+            if (isManager) {
+                showActionButtons = true;
+            } else if (['admin', 'staff'].includes(app.user.role)) {
+                showActionButtons = isOwner;
+            }
+        }
         
-        // Hide delete button for posts after manager approval
+        const editBtn = document.getElementById('viewEditBtn');
+        if (editBtn) editBtn.classList.toggle('hidden', !showActionButtons);
+        
         const deleteBtn = document.getElementById('viewDeleteBtn');
-        if (deleteBtn) deleteBtn.classList.toggle('hidden', isApprovedOrLater || !(isAdminOrManager || (isOwner && p.status === 'DRAFT')));
+        if (deleteBtn) deleteBtn.classList.toggle('hidden', !showActionButtons);
         
         const modal = document.getElementById('viewModal');
         if (modal) modal.classList.remove('hidden');

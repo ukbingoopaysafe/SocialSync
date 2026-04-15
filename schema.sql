@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 09, 2026 at 04:56 PM
+-- Generation Time: Apr 15, 2026 at 06:31 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,8 +62,8 @@ INSERT INTO `activity_log` (`id`, `post_id`, `user_id`, `action`, `old_value`, `
 (18, 4, 3, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-21 15:08:33'),
 (20, 4, 2, 'status_changed', 'PENDING_REVIEW', 'CHANGES_REQUESTED', 'تعديل جودة الصورة على برنامج ريميني', '2025-12-22 13:27:56'),
 (21, 1, 2, 'status_changed', 'PENDING_REVIEW', 'CHANGES_REQUESTED', 'داتا غير كاملة', '2025-12-22 13:28:34'),
-(22, 6, 4, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-22 13:33:20'),
-(23, 6, 4, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-22 13:33:20'),
+(22, NULL, 4, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-22 13:33:20'),
+(23, NULL, 4, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-22 13:33:20'),
 (24, 7, 4, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-22 13:41:37'),
 (25, 7, 4, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-22 13:41:37'),
 (26, 4, 3, 'updated', NULL, NULL, 'Content updated', '2025-12-22 13:46:05'),
@@ -72,14 +72,14 @@ INSERT INTO `activity_log` (`id`, `post_id`, `user_id`, `action`, `old_value`, `
 (29, 4, 3, 'updated', NULL, NULL, 'Content updated', '2025-12-22 13:58:43'),
 (30, 4, 3, 'status_changed', 'CHANGES_REQUESTED', 'PENDING_REVIEW', NULL, '2025-12-22 13:58:47'),
 (31, 4, 2, 'status_changed', 'PENDING_REVIEW', 'APPROVED', NULL, '2025-12-22 14:02:51'),
-(32, 6, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-22 14:03:32'),
+(32, NULL, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-22 14:03:32'),
 (33, 7, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-22 14:03:35'),
 (34, 8, 1, 'created', NULL, NULL, 'Created as DRAFT', '2025-12-22 14:23:36'),
 (35, 8, 1, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-22 14:23:36'),
 (36, 8, 1, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-22 14:23:36'),
 (37, 8, 1, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-22 14:24:00'),
 (38, 7, 2, 'status_changed', 'PENDING_REVIEW', 'CHANGES_REQUESTED', 'محتاج البوست ذي ما هبنزل بالظبط', '2025-12-22 14:33:15'),
-(39, 6, 2, 'status_changed', 'PENDING_REVIEW', 'CHANGES_REQUESTED', 'محتاج البوست ذى ما هينزل بالظبط', '2025-12-22 14:33:49'),
+(39, NULL, 2, 'status_changed', 'PENDING_REVIEW', 'CHANGES_REQUESTED', 'محتاج البوست ذى ما هينزل بالظبط', '2025-12-22 14:33:49'),
 (40, 1, 3, 'status_changed', 'CHANGES_REQUESTED', 'PENDING_REVIEW', NULL, '2025-12-25 09:55:56'),
 (41, 1, 3, 'comment_added', NULL, NULL, NULL, '2025-12-25 09:58:01'),
 (42, 1, 3, 'comment_added', NULL, NULL, NULL, '2025-12-25 09:59:14'),
@@ -112,7 +112,7 @@ INSERT INTO `activity_log` (`id`, `post_id`, `user_id`, `action`, `old_value`, `
 (72, 16, 3, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-28 10:54:30'),
 (73, 16, 3, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-28 10:54:30'),
 (74, 16, 3, 'media_uploaded', NULL, NULL, 'Media uploaded', '2025-12-28 10:54:31'),
-(75, 6, 2, 'updated', NULL, NULL, 'Content updated', '2025-12-28 10:55:46'),
+(75, NULL, 2, 'updated', NULL, NULL, 'Content updated', '2025-12-28 10:55:46'),
 (76, 7, 2, 'status_changed', 'CHANGES_REQUESTED', 'PENDING_REVIEW', NULL, '2025-12-28 11:09:53'),
 (78, 11, 2, 'status_changed', 'DRAFT', 'PENDING_REVIEW', NULL, '2025-12-28 11:10:01'),
 (79, 14, 2, 'status_changed', 'PENDING_REVIEW', 'APPROVED', NULL, '2025-12-28 11:10:14'),
@@ -195,8 +195,34 @@ INSERT INTO `activity_log` (`id`, `post_id`, `user_id`, `action`, `old_value`, `
 (183, NULL, 1, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'M. Yassin changed status: PENDING_REVIEW', '2026-03-30 23:56:51'),
 (184, NULL, 1, 'status_changed', 'PENDING_REVIEW', 'REVIEWED', 'M. Yassin changed status: Admin approved - forwarded to manager', '2026-03-30 23:56:56'),
 (185, NULL, 1, 'post_deleted', '{\"title\":\"ef\",\"status\":\"REVIEWED\",\"platforms\":\"[\\\"Instagram\\\"]\",\"content\":\"fe\"}', NULL, 'تم حذف بوست: \"ef\" (الكاتب: Sara Alaa)', '2026-03-30 23:57:05'),
-(186, 31, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-03-30 23:57:41'),
-(187, 31, 4, 'updated', '{\"title\":\"dfvdff\",\"content\":\"dfddf\",\"platforms\":\"[\\\"LinkedIn\\\"]\"}', '{\"title\":\"zzz\",\"content\":\"zzzzzzzz\",\"platforms\":\"[\\\"Facebook\\\"]\"}', 'تم تعديل: العنوان، المحتوى، المنصات', '2026-03-30 23:57:55');
+(186, NULL, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-03-30 23:57:41'),
+(187, NULL, 4, 'updated', '{\"title\":\"dfvdff\",\"content\":\"dfddf\",\"platforms\":\"[\\\"LinkedIn\\\"]\"}', '{\"title\":\"zzz\",\"content\":\"zzzzzzzz\",\"platforms\":\"[\\\"Facebook\\\"]\"}', 'تم تعديل: العنوان، المحتوى، المنصات', '2026-03-30 23:57:55'),
+(188, NULL, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'Sara Alaa changed status: PENDING_REVIEW', '2026-04-09 15:00:44'),
+(189, NULL, 2, 'post_deleted', '{\"title\":\"مش سنة تجربة… دي سنة قرارات عقارية محسوبة 2026\",\"status\":\"CHANGES_REQUESTED\",\"platforms\":\"[\\\"Facebook\\\",\\\"Instagram\\\"]\",\"content\":\"لو هتدخل 2026 بخطوة عقارية\\nخليها مبنية على: موقع + توقيت + مطور + مسوق عقاري فاهم \\n\\nاللي هيفهم السوق في 2026\\nهو اللي هيصنع قيمة حقيقية بعد كده.\\n\\n#عقار # |استثمار_عقاري | #RealEstate  | #شراء_شقة # |20\"}', NULL, 'تم حذف بوست: \"مش سنة تجربة… دي سنة قرارات عقارية محسوبة 2026\" (الكاتب: Sara Alaa)', '2026-04-09 16:38:12'),
+(190, NULL, 5, 'post_deleted', '{\"title\":\"sara idea 1\",\"status\":\"PENDING_REVIEW\",\"platforms\":\"[]\",\"content\":\"يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر\"}', NULL, 'تم حذف بوست: \"sara idea 1\" (الكاتب: Sara Alaa)', '2026-04-15 15:42:23'),
+(191, 32, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 15:42:40'),
+(192, 32, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'Sara Alaa changed status: PENDING_REVIEW', '2026-04-15 15:42:48'),
+(193, NULL, 4, 'post_deleted', '{\"title\":\"zzz\",\"status\":\"DRAFT\",\"platforms\":\"[\\\"Facebook\\\"]\",\"content\":\"zzzzzzzz\"}', NULL, 'تم حذف بوست: \"zzz\" (الكاتب: Sara Alaa)', '2026-04-15 15:43:21'),
+(194, 33, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 15:43:32'),
+(195, 34, 2, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 16:10:37'),
+(196, 34, 2, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'John changed status: PENDING_REVIEW', '2026-04-15 16:10:42'),
+(197, 32, 4, 'status_changed', 'PENDING_REVIEW', 'DRAFT', 'Sara Alaa changed status: Recalled from review - returned to draft', '2026-04-15 16:11:27'),
+(198, 34, 2, 'status_changed', 'PENDING_REVIEW', 'REVIEWED', 'John changed status: Admin approved - forwarded to manager', '2026-04-15 16:15:51'),
+(199, 35, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 16:25:25'),
+(200, 36, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 16:25:42'),
+(201, 37, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 16:25:50'),
+(202, 38, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 16:25:56'),
+(203, 39, 4, 'created', NULL, NULL, 'Created as DRAFT', '2026-04-15 16:26:02'),
+(204, 39, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'Sara Alaa changed status: PENDING_REVIEW', '2026-04-15 16:26:05'),
+(205, 38, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'Sara Alaa changed status: PENDING_REVIEW', '2026-04-15 16:26:07'),
+(206, 37, 4, 'status_changed', 'DRAFT', 'PENDING_REVIEW', 'Sara Alaa changed status: PENDING_REVIEW', '2026-04-15 16:26:11'),
+(207, 37, 2, 'status_changed', 'PENDING_REVIEW', 'REVIEWED', 'John changed status: Admin approved - forwarded to manager', '2026-04-15 16:26:35'),
+(208, 38, 2, 'status_changed', 'PENDING_REVIEW', 'REVIEWED', 'John changed status: Admin approved - forwarded to manager', '2026-04-15 16:26:37'),
+(209, 37, 5, 'status_changed', 'REVIEWED', 'APPROVED', 'Alaa Almallah changed status: Manager final approval', '2026-04-15 16:27:14'),
+(210, 34, 2, 'status_changed', 'REVIEWED', 'PENDING_REVIEW', 'John changed status: Recalled from manager - returned to admin review', '2026-04-15 16:27:59'),
+(211, 23, 2, 'status_changed', 'PENDING_REVIEW', 'REVIEWED', 'John changed status: Admin approved - forwarded to manager', '2026-04-15 16:28:06'),
+(212, 23, 2, 'status_changed', 'REVIEWED', 'PENDING_REVIEW', 'John changed status: Recalled from manager - returned to admin review', '2026-04-15 16:28:10'),
+(213, 34, 2, 'status_changed', 'PENDING_REVIEW', 'DRAFT', 'John changed status: Recalled from review - returned to draft', '2026-04-15 16:28:21');
 
 -- --------------------------------------------------------
 
@@ -318,7 +344,6 @@ INSERT INTO `media_files` (`id`, `post_id`, `original_name`, `file_name`, `file_
 (5, 3, 'البرج الايقوني كاروسيلArtboard 1.jpg', '69480ac13a977_85e1a4a9.jpg', 'uploads/2025/12/69480ac13a977_85e1a4a9.jpg', 'image', 'image/jpeg', 1042231, 1, 4, '2025-12-21 14:57:05'),
 (6, 3, 'البرج الايقوني كاروسيلArtboard 2.jpg', '69480ac13b2fd_671aedce.jpg', 'uploads/2025/12/69480ac13b2fd_671aedce.jpg', 'image', 'image/jpeg', 932875, 0, 4, '2025-12-21 14:57:05'),
 (7, 3, 'البرج الايقوني كاروسيلArtboard 3.jpg', '69480ac13ba40_50ad33f9.jpg', 'uploads/2025/12/69480ac13ba40_50ad33f9.jpg', 'image', 'image/jpeg', 939567, 0, 4, '2025-12-21 14:57:05'),
-(9, 6, 'نصيحة عقارية.jpg', '694948a0cd9c9_8940e8cc.jpg', 'uploads/2025/12/694948a0cd9c9_8940e8cc.jpg', 'image', 'image/jpeg', 256368, 1, 4, '2025-12-22 13:33:20'),
 (13, 7, 'قالب برومان تصميم.jpg', '69494a91281f8_88c3c6de.jpg', 'uploads/2025/12/69494a91281f8_88c3c6de.jpg', 'image', 'image/jpeg', 742616, 1, 4, '2025-12-22 13:41:37'),
 (14, 4, 'Untitled design (4).jpg', '69494b9b981c5_a0355805.jpg', 'uploads/2025/12/69494b9b981c5_a0355805.jpg', 'image', 'image/jpeg', 10756, 1, 3, '2025-12-22 13:46:03'),
 (15, 8, 'طراز معمارية ايطاليا والعاصمةArtboard 1.jpg', '6949546825bce_46f978da.jpg', 'uploads/2025/12/6949546825bce_46f978da.jpg', 'image', 'image/jpeg', 488177, 1, 1, '2025-12-22 14:23:36'),
@@ -389,9 +414,6 @@ INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `post_
 (15, 2, 'review_needed', 'Review Needed', 'Post \'لما تروح تعمل معاينه علي مكان غالي وتحاول تهرب منهم..👇🏽\' needs review', 4, 3, 1, '2025-12-22 13:58:47'),
 (16, 5, 'review_needed', 'Review Needed', 'Post \'لما تروح تعمل معاينه علي مكان غالي وتحاول تهرب منهم..👇🏽\' needs review', 4, 3, 1, '2025-12-22 13:58:47'),
 (17, 3, 'approved', 'Post Approved', 'Your post \'لما تروح تعمل معاينه علي مكان غالي وتحاول تهرب منهم..👇🏽\' was approved!', 4, 2, 1, '2025-12-22 14:02:51'),
-(18, 1, 'review_needed', 'Review Needed', 'Post \'مش سنة تجربة… دي سنة قرارات عقارية محسوبة2026\' needs review', 6, 4, 0, '2025-12-22 14:03:32'),
-(19, 2, 'review_needed', 'Review Needed', 'Post \'مش سنة تجربة… دي سنة قرارات عقارية محسوبة2026\' needs review', 6, 4, 1, '2025-12-22 14:03:32'),
-(20, 5, 'review_needed', 'Review Needed', 'Post \'مش سنة تجربة… دي سنة قرارات عقارية محسوبة2026\' needs review', 6, 4, 1, '2025-12-22 14:03:32'),
 (21, 1, 'review_needed', 'Review Needed', 'Post \'تقول ايه لبرومان فى أخر السنة ؟\' needs review', 7, 4, 0, '2025-12-22 14:03:35'),
 (22, 2, 'review_needed', 'Review Needed', 'Post \'تقول ايه لبرومان فى أخر السنة ؟\' needs review', 7, 4, 1, '2025-12-22 14:03:35'),
 (23, 5, 'review_needed', 'Review Needed', 'Post \'تقول ايه لبرومان فى أخر السنة ؟\' needs review', 7, 4, 1, '2025-12-22 14:03:35'),
@@ -399,7 +421,6 @@ INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `post_
 (25, 2, 'review_needed', 'Review Needed', 'Post \'مقارنة بين ايطاليا والعاصمة الجديدة\' needs review', 8, 1, 1, '2025-12-22 14:24:00'),
 (26, 5, 'review_needed', 'Review Needed', 'Post \'مقارنة بين ايطاليا والعاصمة الجديدة\' needs review', 8, 1, 1, '2025-12-22 14:24:00'),
 (27, 4, 'changes_requested', 'Changes Requested', 'Changes requested on \'تقول ايه لبرومان فى أخر السنة ؟\': محتاج البوست ذي ما هبنزل بالظبط', 7, 2, 0, '2025-12-22 14:33:15'),
-(28, 4, 'changes_requested', 'Changes Requested', 'Changes requested on \'مش سنة تجربة… دي سنة قرارات عقارية محسوبة2026\': محتاج البوست ذى ما هينزل بالظبط', 6, 2, 0, '2025-12-22 14:33:49'),
 (29, 1, 'review_needed', 'Review Needed', 'Post \'نظام غير شكل الحياه في ميلانو ايطاليا  وبرؤية مستقبليه حضارية لتجميع العالم داخل مصر 👉🏼\' needs review', 1, 3, 0, '2025-12-25 09:55:56'),
 (30, 2, 'review_needed', 'Review Needed', 'Post \'نظام غير شكل الحياه في ميلانو ايطاليا  وبرؤية مستقبليه حضارية لتجميع العالم داخل مصر 👉🏼\' needs review', 1, 3, 1, '2025-12-25 09:55:56'),
 (31, 5, 'review_needed', 'Review Needed', 'Post \'نظام غير شكل الحياه في ميلانو ايطاليا  وبرؤية مستقبليه حضارية لتجميع العالم داخل مصر 👉🏼\' needs review', 1, 3, 1, '2025-12-25 09:55:56'),
@@ -527,7 +548,40 @@ INSERT INTO `notifications` (`id`, `user_id`, `type`, `title`, `message`, `post_
 (183, 3, 'approved', 'Post Approved', 'Your post \'test new feat 1\' was approved!', 21, 4, 0, '2026-01-25 12:51:24'),
 (184, 1, 'post_approved', 'Post Ready for Scheduling', 'Post \'test new feat 1\' was approved and is ready for scheduling', 21, 4, 0, '2026-01-25 12:51:24'),
 (185, 2, 'post_approved', 'Post Ready for Scheduling', 'Post \'test new feat 1\' was approved and is ready for scheduling', 21, 4, 0, '2026-01-25 12:51:24'),
-(186, 6, 'post_approved', 'Post Ready for Scheduling', 'Post \'test new feat 1\' was approved and is ready for scheduling', 21, 4, 0, '2026-01-25 12:51:24');
+(186, 6, 'post_approved', 'Post Ready for Scheduling', 'Post \'test new feat 1\' was approved and is ready for scheduling', 21, 4, 0, '2026-01-25 12:51:24'),
+(200, 1, 'review_needed', 'Review Needed', 'Post \'sscs\' needs review', 32, 4, 0, '2026-04-15 15:42:48'),
+(201, 2, 'review_needed', 'Review Needed', 'Post \'sscs\' needs review', 32, 4, 0, '2026-04-15 15:42:48'),
+(202, 6, 'review_needed', 'Review Needed', 'Post \'sscs\' needs review', 32, 4, 0, '2026-04-15 15:42:48'),
+(203, 1, 'review_needed', 'Review Needed', 'Post \'saasa\' needs review', 34, 2, 0, '2026-04-15 16:10:42'),
+(204, 2, 'review_needed', 'Review Needed', 'Post \'saasa\' needs review', 34, 2, 0, '2026-04-15 16:10:42'),
+(205, 6, 'review_needed', 'Review Needed', 'Post \'saasa\' needs review', 34, 2, 0, '2026-04-15 16:10:42'),
+(206, 5, 'manager_approval_needed', 'Manager Approval Needed', 'Post \'saasa\' needs your final approval', 34, 2, 1, '2026-04-15 16:15:51'),
+(207, 2, 'reviewed', 'Post Under Manager Review', 'Your post \'saasa\' is now under manager review', 34, 2, 0, '2026-04-15 16:15:51'),
+(208, 1, 'review_needed', 'Review Needed', 'Post \'fefeff\' needs review', 39, 4, 0, '2026-04-15 16:26:05'),
+(209, 2, 'review_needed', 'Review Needed', 'Post \'fefeff\' needs review', 39, 4, 0, '2026-04-15 16:26:05'),
+(210, 6, 'review_needed', 'Review Needed', 'Post \'fefeff\' needs review', 39, 4, 0, '2026-04-15 16:26:05'),
+(211, 1, 'review_needed', 'Review Needed', 'Post \'ffwf\' needs review', 38, 4, 0, '2026-04-15 16:26:07'),
+(212, 2, 'review_needed', 'Review Needed', 'Post \'ffwf\' needs review', 38, 4, 0, '2026-04-15 16:26:07'),
+(213, 6, 'review_needed', 'Review Needed', 'Post \'ffwf\' needs review', 38, 4, 0, '2026-04-15 16:26:07'),
+(214, 1, 'review_needed', 'Review Needed', 'Post \'efeffwefw\' needs review', 37, 4, 0, '2026-04-15 16:26:11'),
+(215, 2, 'review_needed', 'Review Needed', 'Post \'efeffwefw\' needs review', 37, 4, 0, '2026-04-15 16:26:11'),
+(216, 6, 'review_needed', 'Review Needed', 'Post \'efeffwefw\' needs review', 37, 4, 0, '2026-04-15 16:26:11'),
+(217, 5, 'manager_approval_needed', 'Manager Approval Needed', 'Post \'efeffwefw\' needs your final approval', 37, 2, 0, '2026-04-15 16:26:35'),
+(218, 4, 'reviewed', 'Post Under Manager Review', 'Your post \'efeffwefw\' is now under manager review', 37, 2, 0, '2026-04-15 16:26:35'),
+(219, 5, 'manager_approval_needed', 'Manager Approval Needed', 'Post \'ffwf\' needs your final approval', 38, 2, 0, '2026-04-15 16:26:37'),
+(220, 4, 'reviewed', 'Post Under Manager Review', 'Your post \'ffwf\' is now under manager review', 38, 2, 0, '2026-04-15 16:26:37'),
+(221, 4, 'approved', 'Post Approved', 'Your post \'efeffwefw\' was approved!', 37, 5, 0, '2026-04-15 16:27:14'),
+(222, 1, 'post_approved', 'Post Ready for Scheduling', 'Post \'efeffwefw\' was approved and is ready for scheduling', 37, 5, 0, '2026-04-15 16:27:14'),
+(223, 2, 'post_approved', 'Post Ready for Scheduling', 'Post \'efeffwefw\' was approved and is ready for scheduling', 37, 5, 0, '2026-04-15 16:27:14'),
+(224, 6, 'post_approved', 'Post Ready for Scheduling', 'Post \'efeffwefw\' was approved and is ready for scheduling', 37, 5, 0, '2026-04-15 16:27:14'),
+(225, 1, 'review_needed', 'Review Needed', 'Post \'saasa\' needs review', 34, 2, 0, '2026-04-15 16:27:59'),
+(226, 2, 'review_needed', 'Review Needed', 'Post \'saasa\' needs review', 34, 2, 0, '2026-04-15 16:27:59'),
+(227, 6, 'review_needed', 'Review Needed', 'Post \'saasa\' needs review', 34, 2, 0, '2026-04-15 16:27:59'),
+(228, 5, 'manager_approval_needed', 'Manager Approval Needed', 'Post \'dqd\' needs your final approval', 23, 2, 0, '2026-04-15 16:28:06'),
+(229, 3, 'reviewed', 'Post Under Manager Review', 'Your post \'dqd\' is now under manager review', 23, 2, 0, '2026-04-15 16:28:06'),
+(230, 1, 'review_needed', 'Review Needed', 'Post \'dqd\' needs review', 23, 2, 0, '2026-04-15 16:28:10'),
+(231, 2, 'review_needed', 'Review Needed', 'Post \'dqd\' needs review', 23, 2, 0, '2026-04-15 16:28:10'),
+(232, 6, 'review_needed', 'Review Needed', 'Post \'dqd\' needs review', 23, 2, 0, '2026-04-15 16:28:10');
 
 -- --------------------------------------------------------
 
@@ -563,7 +617,6 @@ INSERT INTO `posts` (`id`, `company_id`, `title`, `content`, `platforms`, `statu
 (1, 1, 'نظام غير شكل الحياه في ميلانو ايطاليا  وبرؤية مستقبليه حضارية لتجميع العالم داخل مصر 👉🏼', 'تعرف ان العاصمة الادراية بقت جزء من الطبيعه بعد مشروع بوسكو\nتصميم علي طراز معماري راقي مدمج بحياة استوائية وغابات وحدائق خضراء \nبجانب بحيرات صناعية تضيف تجديد مستمر للحياة في المنطقة\nده مش مجرد سكن ده توازن وحياة انقي 🏡🌳', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 1, 'normal', 3, 2, '2025-12-28 13:15:00', '2025-12-28 13:15:05', 'داتا غير كاملة', 2, '2025-12-22 15:28:34', '2025-12-21 14:44:43', '2025-12-28 11:15:05'),
 (3, 1, '⭕مش كل برج بيبقى أيقونة…ومش كل مشروع بيغيّر خريطة الاستثمار.', 'تخيل تبقي ساكن أو مستثمر بجوار  أعلى مبنى في أفريقيا\r\n وواحدًا من أطول الأبراج في العالم.\r\n\r\n☑️البرج على ارتفاع :394 متر \r\n☑️موجود بداخل منطقة الأعمال المركزية (CBD) بالعاصمة الإدارية الجديدة \r\n☑️ يتكون البرج من 80 طابقًا متعدد الاستخدامات :\r\n     مكاتب، فنادق، وحدات سكنية، ومساحات تجارية.\r\n\r\nأهمية البرج مش في ارتفاعه بس،لكن في تأثيره المباشر على القيمة العقارية للمنطقة المحيطة:\r\n✔️رفع الطلب على السكن والاستثمار\r\n✔️جذب استثمارات أجنبية\r\n✔️تعزيز مكانة العاصمة كمركز إقليمي للأعمال\r\n\r\nلو بتدور على فرصة سكن أو استثمار مدروسة بالقرب من أهم معلم عقاري في مصر،\r\n كلمنا وناخد القرار الصح سوا.🤝\r\n\r\nكلمنا على رقم 01115790111 📞\r\nالاستثمار الحقيقي مش في مبنى…الاستثمار في موقع بيقود المستقبل.\r\n\r\n#البرج_الايقوني | #العاصمة _الجديدة | #Cbd  | #استثمار_عقارى | #معلم_عقاري |#برومان | #برومان_العقارية', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 1, 'normal', 4, 2, '2025-12-25 16:11:00', '2025-12-25 16:11:01', NULL, NULL, NULL, '2025-12-21 14:57:05', '2025-12-25 14:11:01'),
 (4, 1, 'لما تروح تعمل معاينه علي مكان غالي وتحاول تهرب منهم..👇🏽', '--', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 0, 'normal', 3, 2, '2025-12-26 07:00:00', '2025-12-28 11:07:36', 'اماكن غاليه \nأو مكان غالي \nالمكس ده مينفعش', 2, '2025-12-22 15:57:16', '2025-12-21 15:00:30', '2025-12-28 09:07:36'),
-(6, 1, 'مش سنة تجربة… دي سنة قرارات عقارية محسوبة 2026', 'لو هتدخل 2026 بخطوة عقارية\nخليها مبنية على: موقع + توقيت + مطور + مسوق عقاري فاهم \n\nاللي هيفهم السوق في 2026\nهو اللي هيصنع قيمة حقيقية بعد كده.\n\n#عقار # |استثمار_عقاري | #RealEstate  | #شراء_شقة # |2026 |  # |موقع_توقيت_مطور', '[\"Facebook\",\"Instagram\"]', 'CHANGES_REQUESTED', 1, 'normal', 4, 2, NULL, NULL, 'محتاج البوست ذى ما هينزل بالظبط', 2, '2025-12-22 16:33:49', '2025-12-22 13:33:20', '2025-12-28 10:55:46'),
 (7, 1, 'تقول ايه لبرومان فى أخر السنة ؟', 'احنا اتكلمنا كتير لكن جه الوقت اللى نسمعك فيه\r\n \r\n منتظرين كومينتتكم \r\n\r\n#برومان | #برومان_العقارية  | #مستشار_عقاري  | #2026', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 1, 'normal', 4, 2, '2025-12-28 14:00:00', '2025-12-28 14:00:47', 'محتاج البوست ذي ما هبنزل بالظبط', 2, '2025-12-22 16:33:15', '2025-12-22 13:41:37', '2025-12-28 12:00:47'),
 (8, 1, 'مقارنة بين ايطاليا والعاصمة الجديدة', 'طراز معمارية ايطاليا والعاصمة الجديدة', '[\"Facebook\",\"Instagram\"]', 'PUBLISHED', 1, 'normal', 1, 2, '2025-12-28 13:20:00', '2025-12-28 13:20:47', NULL, NULL, NULL, '2025-12-22 14:23:36', '2025-12-28 11:20:47'),
 (11, 1, 'ؤضص', 'ضؤصؤصببب', '[\"YouTube\"]', 'APPROVED', 0, 'normal', 3, 5, NULL, NULL, NULL, NULL, NULL, '2025-12-25 15:03:08', '2025-12-29 09:37:31'),
@@ -575,12 +628,18 @@ INSERT INTO `posts` (`id`, `company_id`, `title`, `content`, `platforms`, `statu
 (19, 1, '3', '22222 \n22222 22222 \n22222 22222 22222 \n22222 22222 22222 22222 \n22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 22222 \n22222 \n22222 22222 \n22222 22222 22222 \n22222 22222 22222 22222 \n22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 \n22222 22222 22222 22222 22222 22222 22222', '[\"X\",\"Snapchat\"]', 'CHANGES_REQUESTED', 0, 'normal', 3, 5, '2026-01-14 07:00:00', NULL, 'za', 5, '2025-12-30 15:52:59', '2025-12-28 13:17:12', '2025-12-30 13:52:59'),
 (20, 1, '4', '22222 \r\n22222 22222 \r\n22222 22222 22222 \r\n22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 22222 \r\n22222 \r\n22222 22222 \r\n22222 22222 22222 \r\n22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 \r\n22222 22222 22222 22222 22222 22222 22222', '[\"TikTok\",\"YouTube\",\"Snapchat\"]', 'PUBLISHED', 0, 'normal', 3, 2, '2026-01-14 07:00:00', '2026-01-18 11:20:41', NULL, NULL, NULL, '2025-12-28 13:17:52', '2026-01-18 09:20:41'),
 (21, 1, 'test new feat 1', 'test edit new feat 1', '[\"X\",\"TikTok\"]', 'APPROVED', 0, 'normal', 3, 4, '2026-01-25 15:00:00', NULL, 'test manager request 1', 5, '2025-12-28 16:48:27', '2025-12-28 14:43:34', '2026-01-25 12:51:24'),
-(23, 1, 'dqd', 'wdqwdwqdqwdw', '[\"TikTok\",\"YouTube\",\"Snapchat\"]', 'PENDING_REVIEW', 0, 'normal', 3, 5, NULL, NULL, NULL, NULL, NULL, '2025-12-30 13:38:29', '2025-12-30 13:52:12'),
+(23, 1, 'dqd', 'wdqwdwqdqwdw', '[\"TikTok\",\"YouTube\",\"Snapchat\"]', 'PENDING_REVIEW', 0, 'normal', 3, 2, NULL, NULL, NULL, NULL, NULL, '2025-12-30 13:38:29', '2026-04-15 16:28:10'),
 (24, 1, 'sara idea 1', 'يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر', '[]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:11:43', '2026-01-11 10:11:43'),
-(26, 1, 'sara idea 1', 'يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر', '[]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:34:49', '2026-01-11 10:34:49'),
 (27, 1, 'sara idea 1', 'يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر  يرقثقررر', '[]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:38:33', '2026-01-11 10:38:33'),
 (28, 1, 'nada idea 1', 'nada idea content 1\n\njrtrthththrt', '[]', 'DRAFT', 0, 'normal', 3, NULL, NULL, NULL, NULL, NULL, NULL, '2026-01-11 10:45:36', '2026-01-11 10:45:36'),
-(31, 1, 'zzz', 'zzzzzzzz', '[\"Facebook\"]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-03-30 23:57:41', '2026-03-30 23:57:55');
+(32, 1, 'sscs', 'sdsdsdsd', '[\"Facebook\"]', 'DRAFT', 0, 'normal', 4, 4, NULL, NULL, NULL, NULL, NULL, '2026-04-15 15:42:40', '2026-04-15 16:11:27'),
+(33, 1, 'dddddddd', 'ddddddddddsdds', '[\"Facebook\",\"Instagram\"]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-15 15:43:32', '2026-04-15 15:43:32'),
+(34, 1, 'saasa', 'saassa', '[\"Facebook\",\"X\"]', 'DRAFT', 0, 'normal', 2, 2, NULL, NULL, NULL, NULL, NULL, '2026-04-15 16:10:37', '2026-04-15 16:28:21'),
+(35, 2, 'بوست 1 سيبل', 'كبمقتقهرىقؤحثصطىبثرىخطح', '[\"Facebook\",\"Instagram\"]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-15 16:25:25', '2026-04-15 16:25:25'),
+(36, 2, 'cible post 2', 'rjv[orvjorvrvmr\'vpk[kv[pv', '[\"LinkedIn\",\"X\"]', 'DRAFT', 0, 'normal', 4, NULL, NULL, NULL, NULL, NULL, NULL, '2026-04-15 16:25:42', '2026-04-15 16:25:42'),
+(37, 2, 'efeffwefw', 'efefee', '[\"YouTube\",\"Snapchat\"]', 'APPROVED', 0, 'normal', 4, 5, NULL, NULL, NULL, NULL, NULL, '2026-04-15 16:25:50', '2026-04-15 16:27:14'),
+(38, 2, 'ffwf', 'efeffefe', '[\"YouTube\"]', 'REVIEWED', 0, 'normal', 4, 2, NULL, NULL, NULL, NULL, NULL, '2026-04-15 16:25:56', '2026-04-15 16:26:37'),
+(39, 2, 'fefeff', 'efefefefe', '[\"Website\"]', 'PENDING_REVIEW', 0, 'normal', 4, 4, NULL, NULL, NULL, NULL, NULL, '2026-04-15 16:26:02', '2026-04-15 16:26:05');
 
 -- --------------------------------------------------------
 
@@ -602,7 +661,7 @@ CREATE TABLE `rate_limits` (
 --
 
 INSERT INTO `rate_limits` (`id`, `identifier`, `action`, `attempts`, `first_attempt`, `last_attempt`) VALUES
-(1, 'login:::1', 'login', 1, '2026-03-30 23:31:55', '2026-03-30 23:31:55');
+(1, 'login:::1', 'login', 1, '2026-04-15 16:27:42', '2026-04-15 16:27:42');
 
 -- --------------------------------------------------------
 
@@ -706,10 +765,10 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `password_hash`, `full_name`, `avatar_url`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 'yassin', '$2y$10$cp2rKBKbcM3gyoO6hOObvuNakH8NRR7nKMlbyewuZW6ePiDbLly3O', 'M. Yassin', NULL, 'admin', 1, '2026-03-30 18:13:36', '2025-12-21 11:46:09', '2026-03-30 16:13:36'),
-(2, 'john', '$2y$10$ngSlt6no7Ya./YjFejS/vOQVPceJT6CF3WufUlGQkyz2eZejU4HtW', 'John', NULL, 'admin', 1, '2026-01-18 11:31:37', '2025-12-21 12:01:09', '2026-01-18 09:31:37'),
+(2, 'john', '$2y$10$ngSlt6no7Ya./YjFejS/vOQVPceJT6CF3WufUlGQkyz2eZejU4HtW', 'John', NULL, 'admin', 1, '2026-04-15 18:27:42', '2025-12-21 12:01:09', '2026-04-15 16:27:42'),
 (3, 'nada', '$2y$10$brpri16CtrP.ZoIXUCNUju3KWF2iVQ2XjnHVhpUehtFZeoV.c8sU2', 'Nada Mohammed', NULL, 'staff', 1, '2026-01-18 18:20:20', '2025-12-18 16:29:57', '2026-01-18 16:20:20'),
-(4, 'sara', '$2y$10$ZSXzHtIQUfTEiNJEOLxev.oTKljxYWPMRJlhyNzBqfFVS/hyWN17q', 'Sara Alaa', NULL, 'staff', 1, '2026-03-31 01:31:55', '2025-12-18 14:08:00', '2026-03-30 23:31:55'),
-(5, 'alaa', '$2y$10$c8kRzcsD7wjlyVA/XJelFumCBPYa9VTkAulhV7hT3Iz7Av1LnPSqq', 'Alaa Almallah', NULL, 'manager', 1, '2026-03-31 01:10:06', '2025-12-21 15:43:48', '2026-03-30 23:10:06'),
+(4, 'sara', '$2y$10$ZSXzHtIQUfTEiNJEOLxev.oTKljxYWPMRJlhyNzBqfFVS/hyWN17q', 'Sara Alaa', NULL, 'staff', 1, '2026-04-15 18:25:04', '2025-12-18 14:08:00', '2026-04-15 16:25:04'),
+(5, 'alaa', '$2y$10$c8kRzcsD7wjlyVA/XJelFumCBPYa9VTkAulhV7hT3Iz7Av1LnPSqq', 'Alaa Almallah', NULL, 'manager', 1, '2026-04-15 18:27:24', '2025-12-21 15:43:48', '2026-04-15 16:27:24'),
 (6, 'testmanager', '$2y$10$rnhOp0pzQa9xlYOy2C17R.ttRwmWw3NMd7Ur5EbeqExR0TBjwgl9K', 'test manager', NULL, 'admin', 0, NULL, '2025-12-28 16:10:51', '2026-01-18 09:32:57'),
 (7, 'mobile', '$2y$10$7cJjqWslghkzMGMEP1tJqO8XygbMHGYhXzBk7VtF4/bURFv5Yy5W.', 'Test Mobile User', NULL, 'staff', 0, NULL, '2025-12-29 11:15:47', '2025-12-29 11:15:57');
 
@@ -884,7 +943,7 @@ ALTER TABLE `user_permissions`
 -- AUTO_INCREMENT for table `activity_log`
 --
 ALTER TABLE `activity_log`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=188;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=214;
 
 --
 -- AUTO_INCREMENT for table `admin_approvals`
@@ -920,13 +979,13 @@ ALTER TABLE `media_files`
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=197;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=233;
 
 --
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `rate_limits`
