@@ -87,7 +87,28 @@ $csrfToken = generateCSRFToken();
             </nav>
             
             <!-- Bottom Actions -->
-            <div class="p-2 border-t border-slate-700/50">
+            <div class="p-2 border-t border-slate-700/50 flex flex-col gap-2">
+                <!-- Company Switcher -->
+                <div class="relative group/switcher w-full">
+                    <button type="button" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors text-left" id="companySwitcherBtn" onclick="toggleCompanySwitcher()">
+                        <div class="w-5 h-5 rounded flex-shrink-0 bg-white p-[2px] flex items-center justify-center">
+                            <img src="<?= htmlspecialchars($_SESSION['company_logo'] ?? 'images/Final_Logo White.png') ?>" alt="" class="w-full h-full object-contain">
+                        </div>
+                        <div class="flex-1 flex items-center justify-between min-w-0 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                            <span class="text-sm font-medium truncate whitespace-nowrap"><?= htmlspecialchars($_SESSION['company_name'] ?? 'BroMan') ?></span>
+                            <svg class="w-4 h-4 text-slate-400 flex-shrink-0 ml-2 lg:hidden lg:group-hover:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </div>
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="absolute bottom-full left-0 w-48 mb-2 bg-[#0f1f38] border border-slate-700/50 rounded-lg shadow-xl shadow-black/50 overflow-hidden hidden z-50" id="companySwitcherMenu">
+                        <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-800/50 border-b border-slate-700/50">Switch Workspace</div>
+                        <div class="py-1 flex flex-col max-h-[40vh] overflow-y-auto custom-scrollbar" id="companySwitcherList">
+                            <div class="px-4 py-2 text-sm text-slate-400 text-center">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <button onclick="logout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                     <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Logout</span>
@@ -1270,8 +1291,11 @@ async function loadUser() {
             // Convert to white logo version for dark sidebar background
             let sidebarLogo = data.data.company_logo;
             // For BroMan, use white logo in sidebar
+            // For BroMan, use white logo in sidebar
             if (sidebarLogo.includes('Final_Logo.png')) {
                 sidebarLogo = sidebarLogo.replace('Final_Logo.png', 'Final_Logo White.png');
+            } else if (sidebarLogo.includes('logo_BFM2.svg')) {
+                sidebarLogo = sidebarLogo.replace('logo_BFM2.svg', 'logo_BFM.svg');
             }
             document.getElementById('sidebarLogo').src = sidebarLogo;
             document.getElementById('sidebarLogoSmall').src = sidebarLogo;
@@ -3782,6 +3806,70 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+// Company Switcher Logic
+let companiesLoaded = false;
+async function toggleCompanySwitcher() {
+    const menu = document.getElementById('companySwitcherMenu');
+    menu.classList.toggle('hidden');
+    
+    if (!menu.classList.contains('hidden') && !companiesLoaded) {
+        try {
+            const res = await fetch('api.php?action=get_companies');
+            const json = await res.json();
+            if (json.success) {
+                const list = document.getElementById('companySwitcherList');
+                list.innerHTML = '';
+                const currentId = <?= isset($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1 ?>;
+                
+                json.data.forEach(c => {
+                    const btn = document.createElement('button');
+                    btn.className = `w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-white/10 transition-colors ${c.id == currentId ? 'bg-white/5' : ''}`;
+                    btn.onclick = () => switchCompany(c.id);
+                    btn.innerHTML = `
+                        <div class="w-6 h-6 rounded bg-white p-[2px] flex items-center justify-center flex-shrink-0">
+                            <img src="${c.logo_url}" alt="" class="max-w-full max-h-full object-contain">
+                        </div>
+                        <span class="text-sm font-medium text-slate-300 truncate ${c.id == currentId ? 'text-white' : ''}">${c.name}</span>
+                        ${c.id == currentId ? '<svg class="w-4 h-4 ml-auto text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'  : ''}
+                    `;
+                    list.appendChild(btn);
+                });
+                companiesLoaded = true;
+            }
+        } catch (e) {
+            console.error('Failed to load companies', e);
+        }
+    }
+}
+
+async function switchCompany(id) {
+    try {
+        const res = await fetch('api.php?action=switch_company', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ company_id: id })
+        });
+        const json = await res.json();
+        if (json.success) {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.reload();
+        } else {
+            alert(json.message || 'Failed to switch company');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('An error occurred');
+    }
+}
+
+document.addEventListener('click', (e) => {
+    const switcher = document.querySelector('.group\\\\/switcher');
+    const menu = document.getElementById('companySwitcherMenu');
+    if (switcher && !switcher.contains(e.target) && menu && !menu.classList.contains('hidden')) {
+        menu.classList.add('hidden');
+    }
+});
 </script>
             </main>
         </div>

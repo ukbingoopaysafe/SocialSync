@@ -140,7 +140,9 @@ try {
                 // Fallback if table doesn't exist yet - use colored logos for visibility
                 $companies = [
                     ['id' => 1, 'name' => 'BroMan', 'slug' => 'broman', 'logo_url' => 'images/Final_Logo.png', 'primary_color' => '#1e3a5f'],
-                    ['id' => 2, 'name' => 'Cible', 'slug' => 'cible', 'logo_url' => 'images/Logo_Cible.png', 'primary_color' => '#2563eb']
+                    ['id' => 2, 'name' => 'Cible', 'slug' => 'cible', 'logo_url' => 'images/Logo_Cible.png', 'primary_color' => '#2563eb'],
+                    ['id' => 3, 'name' => 'Cible Finishing', 'slug' => 'cible-finishing', 'logo_url' => 'images/Logo Cible Fininshing6.png', 'primary_color' => '#10b981'],
+                    ['id' => 4, 'name' => 'BFM', 'slug' => 'bfm', 'logo_url' => 'images/logo_BFM2.svg', 'primary_color' => '#f59e0b']
                 ];
             }
             sendResponse(true, $companies);
@@ -151,6 +153,38 @@ try {
             $companyId = $_SESSION['company_id'] ?? 1;
             $company = fetchOne("SELECT * FROM companies WHERE id = ?", [$companyId]);
             sendResponse(true, $company);
+            break;
+            
+        case 'switch_company':
+            requireAuth();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $companyId = (int)($input['company_id'] ?? 0);
+            
+            if (!$companyId) sendResponse(false, null, 'Company ID required', 400);
+            
+            $company = fetchOne("SELECT * FROM companies WHERE id = ?", [$companyId]);
+            if (!$company) {
+                // Fallback
+                $fallbackCompanies = [
+                    1 => ['id' => 1, 'name' => 'BroMan', 'slug' => 'broman', 'logo_url' => 'images/Final_Logo.png', 'primary_color' => '#1e3a5f'],
+                    2 => ['id' => 2, 'name' => 'Cible', 'slug' => 'cible', 'logo_url' => 'images/Logo_Cible.png', 'primary_color' => '#2563eb'],
+                    3 => ['id' => 3, 'name' => 'Cible Finishing', 'slug' => 'cible-finishing', 'logo_url' => 'images/Logo Cible Fininshing6.png', 'primary_color' => '#10b981'],
+                    4 => ['id' => 4, 'name' => 'BFM', 'slug' => 'bfm', 'logo_url' => 'images/logo_BFM2.svg', 'primary_color' => '#f59e0b']
+                ];
+                if (isset($fallbackCompanies[$companyId])) {
+                    $company = $fallbackCompanies[$companyId];
+                } else {
+                    sendResponse(false, null, 'Company not found', 404);
+                }
+            }
+            
+            $_SESSION['company_id'] = $company['id'];
+            $_SESSION['company_name'] = $company['name'];
+            $_SESSION['company_logo'] = $company['logo_url'] ?? 'images/Final_Logo White.png';
+            
+            session_write_close();
+            
+            sendResponse(true, ['company_id' => $company['id'], 'company_name' => $company['name']], 'Company switched successfully');
             break;
         
         // ===== DASHBOARD =====
