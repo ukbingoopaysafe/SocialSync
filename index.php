@@ -36,20 +36,30 @@ $csrfToken = generateCSRFToken();
     <?php if (isset($_SESSION['user_id'])): ?>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-        // OneSignal only works on secure origins (HTTPS or localhost)
         if (location.protocol === 'https:' || location.hostname === 'localhost') {
+            console.log('[OneSignal] Secure origin detected:', location.origin);
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function(OneSignal) {
                 try {
+                    console.log('[OneSignal] Starting init with appId: <?= ONESIGNAL_APP_ID ?>');
                     await OneSignal.init({
                         appId: "<?= ONESIGNAL_APP_ID ?>",
                         allowLocalhostAsSecureOrigin: true
                     });
+                    console.log('[OneSignal] Init successful');
+                    
+                    const permission = OneSignal.Notifications.permission;
+                    console.log('[OneSignal] Current permission:', permission);
+                    
+                    console.log('[OneSignal] Logging in user ID: <?= (int)$_SESSION['user_id'] ?>');
                     await OneSignal.login(String(<?= (int)$_SESSION['user_id'] ?>));
+                    console.log('[OneSignal] Login successful');
                 } catch(e) {
-                    console.warn('OneSignal init failed:', e);
+                    console.error('[OneSignal] ERROR:', e);
                 }
             });
+        } else {
+            console.log('[OneSignal] Skipped - not a secure origin:', location.protocol, location.hostname);
         }
     </script>
     <?php endif; ?>
