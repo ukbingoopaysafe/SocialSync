@@ -64,8 +64,39 @@ function logActivity($postId, $userId, $action, $oldValue = null, $newValue = nu
 }
 
 function notify($userId, $type, $title, $message, $postId = null, $triggeredBy = null) {
+    // 1. Store notification in database (existing logic)
     executeQuery("INSERT INTO notifications (user_id, type, title, message, post_id, triggered_by) VALUES (?, ?, ?, ?, ?, ?)",
         [$userId, $type, $title, $message, $postId, $triggeredBy]);
+
+    // 2. Send push notification via OneSignal
+    if (defined('ONESIGNAL_APP_ID') && defined('ONESIGNAL_REST_KEY') && ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY) {
+        try {
+            $payload = [
+                'app_id'          => ONESIGNAL_APP_ID,
+                'include_aliases' => ['external_id' => [strval($userId)]],
+                'target_channel'  => 'push',
+                'headings'        => ['en' => $title],
+                'contents'        => ['en' => $message],
+            ];
+
+            $ch = curl_init('https://api.onesignal.com/notifications');
+            curl_setopt_array($ch, [
+                CURLOPT_POST           => true,
+                CURLOPT_POSTFIELDS     => json_encode($payload),
+                CURLOPT_HTTPHEADER     => [
+                    'Content-Type: application/json; charset=utf-8',
+                    'Authorization: Key ' . ONESIGNAL_REST_KEY,
+                ],
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 3,        // Hard timeout – never block API
+                CURLOPT_CONNECTTIMEOUT => 2,
+            ]);
+            curl_exec($ch);
+            curl_close($ch);
+        } catch (Exception $e) {
+            // Silently fail – push is best-effort, DB notification already saved
+        }
+    }
 }
 
 // Upload config

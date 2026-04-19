@@ -32,6 +32,17 @@ $csrfToken = generateCSRFToken();
         * { box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
     </style>
+    <!-- OneSignal Web SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({ appId: "<?= ONESIGNAL_APP_ID ?>" });
+            <?php if (isset($_SESSION['user_id'])): ?>
+            await OneSignal.login(String(<?= (int)$_SESSION['user_id'] ?>));
+            <?php endif; ?>
+        });
+    </script>
 </head>
 <body class="bg-slate-100 text-slate-700">
     <!-- Initial Loading Spinner -->
