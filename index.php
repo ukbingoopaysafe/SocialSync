@@ -32,17 +32,27 @@ $csrfToken = generateCSRFToken();
         * { box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
     </style>
-    <!-- OneSignal Web SDK -->
+    <!-- OneSignal Web SDK (Push Notifications - requires HTTPS) -->
+    <?php if (isset($_SESSION['user_id'])): ?>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        OneSignalDeferred.push(async function(OneSignal) {
-            await OneSignal.init({ appId: "<?= ONESIGNAL_APP_ID ?>" });
-            <?php if (isset($_SESSION['user_id'])): ?>
-            await OneSignal.login(String(<?= (int)$_SESSION['user_id'] ?>));
-            <?php endif; ?>
-        });
+        // OneSignal only works on secure origins (HTTPS or localhost)
+        if (location.protocol === 'https:' || location.hostname === 'localhost') {
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            OneSignalDeferred.push(async function(OneSignal) {
+                try {
+                    await OneSignal.init({
+                        appId: "<?= ONESIGNAL_APP_ID ?>",
+                        allowLocalhostAsSecureOrigin: true
+                    });
+                    await OneSignal.login(String(<?= (int)$_SESSION['user_id'] ?>));
+                } catch(e) {
+                    console.warn('OneSignal init failed:', e);
+                }
+            });
+        }
     </script>
+    <?php endif; ?>
 </head>
 <body class="bg-slate-100 text-slate-700">
     <!-- Initial Loading Spinner -->
