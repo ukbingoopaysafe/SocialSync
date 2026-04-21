@@ -44,7 +44,9 @@ $csrfToken = generateCSRFToken();
                     console.log('[OneSignal] Starting init with appId: <?= ONESIGNAL_APP_ID ?>');
                     await OneSignal.init({
                         appId: "<?= ONESIGNAL_APP_ID ?>",
-                        allowLocalhostAsSecureOrigin: true
+                        allowLocalhostAsSecureOrigin: true,
+                        serviceWorkerParam: { scope: "/" },
+                        serviceWorkerPath: "OneSignalSDKWorker.js"
                     });
                     console.log('[OneSignal] Init successful');
                     

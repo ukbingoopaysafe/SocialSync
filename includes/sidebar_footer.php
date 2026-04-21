@@ -12,7 +12,9 @@
             try {
                 await OneSignal.init({
                     appId: "<?= ONESIGNAL_APP_ID ?>",
-                    allowLocalhostAsSecureOrigin: true
+                    allowLocalhostAsSecureOrigin: true,
+                    serviceWorkerParam: { scope: "/" },
+                    serviceWorkerPath: "OneSignalSDKWorker.js"
                 });
                 await OneSignal.login(String(<?= (int)$_SESSION['user_id'] ?>));
             } catch(e) {
