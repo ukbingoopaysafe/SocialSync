@@ -3895,9 +3895,9 @@ async function switchCompany(id) {
 }
 
 document.addEventListener('click', (e) => {
-    const switcher = document.querySelector('.group\\\\/switcher');
+    const btn = document.getElementById('companySwitcherBtn');
     const menu = document.getElementById('companySwitcherMenu');
-    if (switcher && !switcher.contains(e.target) && menu && !menu.classList.contains('hidden')) {
+    if (btn && menu && !btn.parentElement.contains(e.target) && !menu.classList.contains('hidden')) {
         menu.classList.add('hidden');
     }
 });
