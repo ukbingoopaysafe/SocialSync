@@ -39,6 +39,38 @@ $csrfToken = generateCSRFToken();
         if (location.protocol === 'https:' || location.hostname === 'localhost') {
             console.log('[OneSignal] Secure origin detected:', location.origin);
             window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.syncOneSignalWorkspace = async function(OneSignal) {
+                const userId = String(<?= (int)$_SESSION['user_id'] ?>);
+                const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
+
+                await OneSignal.login(userId);
+                await OneSignal.User.addAlias('workspace_user', `${userId}:${companyId}`);
+            };
+
+            window.detachOneSignalUser = async function() {
+                try {
+                    if (window.OneSignal && typeof window.OneSignal.logout === 'function') {
+                        await window.OneSignal.logout();
+                        return;
+                    }
+
+                    await new Promise((resolve) => {
+                        window.OneSignalDeferred.push(async function(OneSignal) {
+                            try {
+                                if (typeof OneSignal.logout === 'function') {
+                                    await OneSignal.logout();
+                                }
+                            } catch (logoutError) {
+                                console.warn('[OneSignal] Logout warning:', logoutError);
+                            }
+                            resolve();
+                        });
+                    });
+                } catch (e) {
+                    console.warn('[OneSignal] Logout warning:', e);
+                }
+            };
+
             OneSignalDeferred.push(async function(OneSignal) {
                 try {
                     console.log('[OneSignal] Starting init with appId: <?= ONESIGNAL_APP_ID ?>');
@@ -53,8 +85,8 @@ $csrfToken = generateCSRFToken();
                     const permission = OneSignal.Notifications.permission;
                     console.log('[OneSignal] Current permission:', permission);
                     
-                    console.log('[OneSignal] Logging in user ID: <?= (int)$_SESSION['user_id'] ?>');
-                    await OneSignal.login(String(<?= (int)$_SESSION['user_id'] ?>));
+                    console.log('[OneSignal] Syncing user/workspace context');
+                    await window.syncOneSignalWorkspace(OneSignal);
                     console.log('[OneSignal] Login successful');
                 } catch(e) {
                     console.error('[OneSignal] ERROR:', e);
@@ -1341,7 +1373,13 @@ async function loadUser() {
     }
 }
 
-async function logout() { await api('logout', 'POST'); location.href = 'login.php'; }
+async function logout() {
+    if (typeof window.detachOneSignalUser === 'function') {
+        await window.detachOneSignalUser();
+    }
+    await api('logout', 'POST');
+    location.href = 'login.php';
+}
 
 function switchTab(tab) {
     const allTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];

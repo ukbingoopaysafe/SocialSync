@@ -8,6 +8,50 @@
     // OneSignal only works on secure origins (HTTPS or localhost)
     if (location.protocol === 'https:' || location.hostname === 'localhost') {
         window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.syncOneSignalWorkspace = async function(OneSignal) {
+            const userId = String(<?= (int)$_SESSION['user_id'] ?>);
+            const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
+
+            await OneSignal.login(userId);
+            await OneSignal.User.addAlias('workspace_user', `${userId}:${companyId}`);
+        };
+
+        window.performAppLogout = async function(event) {
+            if (event) {
+                event.preventDefault();
+            }
+
+            try {
+                if (window.OneSignal && typeof window.OneSignal.logout === 'function') {
+                    await window.OneSignal.logout();
+                } else {
+                    await new Promise((resolve) => {
+                        window.OneSignalDeferred.push(async function(OneSignal) {
+                            try {
+                                if (typeof OneSignal.logout === 'function') {
+                                    await OneSignal.logout();
+                                }
+                            } catch (logoutError) {
+                                console.warn('OneSignal logout warning:', logoutError);
+                            }
+                            resolve();
+                        });
+                    });
+                }
+            } catch (e) {
+                console.warn('OneSignal logout warning:', e);
+            }
+
+            try {
+                await fetch('api.php?action=logout', {
+                    method: 'POST',
+                    credentials: 'same-origin'
+                });
+            } finally {
+                location.href = 'login.php';
+            }
+        };
+
         OneSignalDeferred.push(async function(OneSignal) {
             try {
                 await OneSignal.init({
@@ -16,7 +60,7 @@
                     serviceWorkerParam: { scope: "/" },
                     serviceWorkerPath: "OneSignalSDKWorker.js"
                 });
-                await OneSignal.login(String(<?= (int)$_SESSION['user_id'] ?>));
+                await window.syncOneSignalWorkspace(OneSignal);
             } catch(e) {
                 console.warn('OneSignal init failed:', e);
             }

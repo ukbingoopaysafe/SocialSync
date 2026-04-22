@@ -12,18 +12,22 @@ require_once 'includes/WorkflowManager.php';
 session_name(SESSION_NAME);
 session_start();
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: ' . BASE_URL);
-header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-CSRF-TOKEN');
-header('Access-Control-Allow-Credentials: true');
+$isDirectApiRequest = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__;
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(200);
-    exit;
+if ($isDirectApiRequest) {
+    header('Content-Type: application/json');
+    header('Access-Control-Allow-Origin: ' . BASE_URL);
+    header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, X-CSRF-TOKEN');
+    header('Access-Control-Allow-Credentials: true');
+
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(200);
+        exit;
+    }
 }
 
-$action = $_GET['action'] ?? '';
+$action = $isDirectApiRequest ? ($_GET['action'] ?? '') : '';
 
 // ===== HELPERS =====
 
@@ -63,6 +67,25 @@ function logActivity($postId, $userId, $action, $oldValue = null, $newValue = nu
         [$postId, $userId, $action, $oldValue, $newValue, $desc]);
 }
 
+function getNotificationCompanyId($postId = null) {
+    if (!empty($postId)) {
+        $post = fetchOne("SELECT company_id FROM posts WHERE id = ?", [$postId]);
+        if (!empty($post['company_id'])) {
+            return (int)$post['company_id'];
+        }
+    }
+
+    if (!empty($_SESSION['company_id'])) {
+        return (int)$_SESSION['company_id'];
+    }
+
+    return null;
+}
+
+function getWorkspaceAliasValue($userId, $companyId) {
+    return (string)$userId . ':' . (string)$companyId;
+}
+
 function notify($userId, $type, $title, $message, $postId = null, $triggeredBy = null) {
     // 1. Store notification in database (existing logic)
     executeQuery("INSERT INTO notifications (user_id, type, title, message, post_id, triggered_by) VALUES (?, ?, ?, ?, ?, ?)",
@@ -71,13 +94,23 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
     // 2. Send push notification via OneSignal
     if (defined('ONESIGNAL_APP_ID') && defined('ONESIGNAL_REST_KEY') && ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY) {
         try {
+            $companyId = getNotificationCompanyId($postId);
             $payload = [
                 'app_id'          => ONESIGNAL_APP_ID,
-                'include_aliases' => ['external_id' => [strval($userId)]],
                 'target_channel'  => 'push',
                 'headings'        => ['en' => $title],
                 'contents'        => ['en' => $message],
             ];
+
+            if ($companyId) {
+                $payload['include_aliases'] = [
+                    'workspace_user' => [getWorkspaceAliasValue($userId, $companyId)]
+                ];
+            } else {
+                $payload['include_aliases'] = [
+                    'external_id' => [strval($userId)]
+                ];
+            }
 
             $ch = curl_init('https://api.onesignal.com/notifications');
             curl_setopt_array($ch, [
@@ -106,6 +139,7 @@ define('MAX_FILE_SIZE', 100 * 1024 * 1024);
 
 // ===== API ENDPOINTS =====
 
+if ($isDirectApiRequest) {
 try {
     switch ($action) {
         
@@ -1328,11 +1362,24 @@ try {
             requireAuth();
             $user = getCurrentUser();
             $input = json_decode(file_get_contents('php://input'), true);
+            $companyId = $_SESSION['company_id'] ?? 1;
             
             if (!empty($input['mark_all'])) {
-                executeQuery("UPDATE notifications SET is_read = 1 WHERE user_id = ?", [$user['id']]);
+                executeQuery(
+                    "UPDATE notifications n
+                     LEFT JOIN posts p ON n.post_id = p.id
+                     SET n.is_read = 1
+                     WHERE n.user_id = ? AND (p.company_id = ? OR p.id IS NULL)",
+                    [$user['id'], $companyId]
+                );
             } elseif (!empty($input['id'])) {
-                executeQuery("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", [$input['id'], $user['id']]);
+                executeQuery(
+                    "UPDATE notifications n
+                     LEFT JOIN posts p ON n.post_id = p.id
+                     SET n.is_read = 1
+                     WHERE n.id = ? AND n.user_id = ? AND (p.company_id = ? OR p.id IS NULL)",
+                    [$input['id'], $user['id'], $companyId]
+                );
             }
             sendResponse(true, null, 'Marked as read');
             break;
@@ -1750,4 +1797,5 @@ try {
     error_log("API Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
+}
 }
