@@ -12,22 +12,18 @@ require_once 'includes/WorkflowManager.php';
 session_name(SESSION_NAME);
 session_start();
 
-$isDirectApiRequest = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__;
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: ' . BASE_URL);
+header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-TOKEN');
+header('Access-Control-Allow-Credentials: true');
 
-if ($isDirectApiRequest) {
-    header('Content-Type: application/json');
-    header('Access-Control-Allow-Origin: ' . BASE_URL);
-    header('Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, X-CSRF-TOKEN');
-    header('Access-Control-Allow-Credentials: true');
-
-    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-        http_response_code(200);
-        exit;
-    }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
 }
 
-$action = $isDirectApiRequest ? ($_GET['action'] ?? '') : '';
+$action = $_GET['action'] ?? '';
 
 // ===== HELPERS =====
 
@@ -91,15 +87,6 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
     executeQuery("INSERT INTO notifications (user_id, type, title, message, post_id, triggered_by) VALUES (?, ?, ?, ?, ?, ?)",
         [$userId, $type, $title, $message, $postId, $triggeredBy]);
 
-    $pushResult = [
-        'success' => false,
-        'skipped' => true,
-        'http_code' => null,
-        'error' => null,
-        'response' => null,
-        'target' => null,
-    ];
-
     // 2. Send push notification via OneSignal
     if (defined('ONESIGNAL_APP_ID') && defined('ONESIGNAL_REST_KEY') && ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY) {
         try {
@@ -115,12 +102,10 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                 $payload['include_aliases'] = [
                     'workspace_user' => [getWorkspaceAliasValue($userId, $companyId)]
                 ];
-                $pushResult['target'] = 'workspace_user:' . getWorkspaceAliasValue($userId, $companyId);
             } else {
                 $payload['include_aliases'] = [
                     'external_id' => [strval($userId)]
                 ];
-                $pushResult['target'] = 'external_id:' . strval($userId);
             }
 
             $ch = curl_init('https://api.onesignal.com/notifications');
@@ -140,33 +125,22 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            $decodedResponse = json_decode($rawResponse, true);
-            $pushResult['skipped'] = false;
-            $pushResult['http_code'] = $httpCode;
-            $pushResult['error'] = $curlError ?: null;
-            $pushResult['response'] = $decodedResponse ?? $rawResponse;
-            $pushResult['success'] = empty($curlError) && $httpCode >= 200 && $httpCode < 300;
-
-            if (!$pushResult['success']) {
+            if (!empty($curlError) || $httpCode < 200 || $httpCode >= 300) {
                 error_log('OneSignal push failed: ' . json_encode([
                     'user_id' => $userId,
                     'type' => $type,
                     'post_id' => $postId,
-                    'target' => $pushResult['target'],
+                    'target' => $companyId ? 'workspace_user:' . getWorkspaceAliasValue($userId, $companyId) : 'external_id:' . strval($userId),
                     'http_code' => $httpCode,
                     'error' => $curlError,
-                    'response' => $pushResult['response'],
+                    'response' => json_decode($rawResponse, true) ?? $rawResponse,
                 ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             }
         } catch (Exception $e) {
             // Silently fail – push is best-effort, DB notification already saved
-            $pushResult['skipped'] = false;
-            $pushResult['error'] = $e->getMessage();
             error_log('OneSignal push exception: ' . $e->getMessage());
         }
     }
-
-    return $pushResult;
 }
 
 // Upload config
@@ -176,7 +150,6 @@ define('MAX_FILE_SIZE', 100 * 1024 * 1024);
 
 // ===== API ENDPOINTS =====
 
-if ($isDirectApiRequest) {
 try {
     switch ($action) {
         
@@ -1834,5 +1807,4 @@ try {
     error_log("API Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Server error: ' . $e->getMessage()]);
-}
 }
