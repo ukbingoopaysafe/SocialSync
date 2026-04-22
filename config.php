@@ -65,4 +65,4 @@ if (ENVIRONMENT === 'development') {
 date_default_timezone_set(TIMEZONE);
 
 define('ONESIGNAL_APP_ID', '9748ea3b-8a42-4279-b664-e6ab00d9756e');
-define('ONESIGNAL_REST_KEY', 'os_v2_app_s5eouo4kijbhtnte42vqbwlvnzp7tqov2kduvivg54r5ou2kp36uuiepeaev6txurgj3p6snwfwvzy5jma7c7kw6ehy5dyjmbuklb3i');
+define('ONESIGNAL_REST_KEY', 'os_v2_app_s5eouo4kijbhtnte42vqbwlvn3uyaujabtru5544wqovvkgyjfs7h5lufbu3jhmic4ozgrfpoh7aofou7p2vief6wglz7xyypeymecq');
