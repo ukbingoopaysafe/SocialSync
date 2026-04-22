@@ -78,8 +78,138 @@ function getNotificationCompanyId($postId = null) {
     return null;
 }
 
-function getWorkspaceAliasValue($userId, $companyId) {
-    return (string)$userId . ':' . (string)$companyId;
+function getNotificationCompany($postId = null) {
+    $companyId = getNotificationCompanyId($postId);
+    if (!$companyId) {
+        return null;
+    }
+
+    $company = fetchOne("SELECT id, name, slug, logo_url, primary_color FROM companies WHERE id = ?", [$companyId]);
+    if ($company) {
+        return $company;
+    }
+
+    $fallbackCompanies = [
+        1 => ['id' => 1, 'name' => 'BroMan', 'slug' => 'broman', 'logo_url' => 'images/Final_Logo.png', 'primary_color' => '#1e3a5f'],
+        2 => ['id' => 2, 'name' => 'Cible', 'slug' => 'cible', 'logo_url' => 'images/Logo_Cible.png', 'primary_color' => '#2563eb'],
+        3 => ['id' => 3, 'name' => 'Cible Finishing', 'slug' => 'cible-finishing', 'logo_url' => 'images/Logo Cible Fininshing6.png', 'primary_color' => '#10b981'],
+        4 => ['id' => 4, 'name' => 'BFM', 'slug' => 'bfm', 'logo_url' => 'images/logo_BFM2.svg', 'primary_color' => '#f59e0b']
+    ];
+
+    return $fallbackCompanies[$companyId] ?? null;
+}
+
+function getUserDisplayNameById($userId) {
+    if (!$userId) {
+        return null;
+    }
+
+    $user = fetchOne("SELECT full_name, username FROM users WHERE id = ?", [$userId]);
+    if (!$user) {
+        return null;
+    }
+
+    return trim($user['full_name'] ?: $user['username']);
+}
+
+function getNotificationPost($postId = null) {
+    if (!$postId) {
+        return null;
+    }
+
+    return fetchOne("SELECT id, title, company_id, author_id FROM posts WHERE id = ?", [$postId]);
+}
+
+function shortenNotificationText($text, $maxLength = 80) {
+    $text = trim((string)$text);
+    if ($text === '') {
+        return '';
+    }
+
+    return mb_strlen($text) > $maxLength ? mb_substr($text, 0, $maxLength - 3) . '...' : $text;
+}
+
+function buildPushPayloadText($type, $title, $message, $postId = null, $triggeredBy = null) {
+    $company = getNotificationCompany($postId);
+    $companyName = $company['name'] ?? null;
+    $post = getNotificationPost($postId);
+    $postTitle = shortenNotificationText($post['title'] ?? '', 70);
+    $actorName = getUserDisplayNameById($triggeredBy);
+
+    $pushTitle = $companyName ? ($companyName . ' - ' . $title) : $title;
+    $pushMessage = $message;
+
+    switch ($type) {
+        case 'review_needed':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' submitted "' . $postTitle . '" for review.';
+            }
+            break;
+
+        case 'manager_approval_needed':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' forwarded "' . $postTitle . '" for final approval.';
+            }
+            break;
+
+        case 'reviewed':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' moved "' . $postTitle . '" to manager review.';
+            }
+            break;
+
+        case 'approved':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' approved "' . $postTitle . '".';
+            } elseif ($postTitle) {
+                $pushMessage = '"' . $postTitle . '" was approved.';
+            }
+            break;
+
+        case 'post_approved':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' approved "' . $postTitle . '" and it is ready for scheduling.';
+            }
+            break;
+
+        case 'changes_requested':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' requested changes on "' . $postTitle . '".';
+            }
+            break;
+
+        case 'scheduled':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' scheduled "' . $postTitle . '" for publishing.';
+            } elseif ($postTitle) {
+                $pushMessage = '"' . $postTitle . '" was scheduled for publishing.';
+            }
+            break;
+
+        case 'published':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' published "' . $postTitle . '".';
+            } elseif ($postTitle) {
+                $pushMessage = '"' . $postTitle . '" was published.';
+            }
+            break;
+
+        case 'comment':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' commented on "' . $postTitle . '".';
+            }
+            break;
+    }
+
+    if ($companyName) {
+        $pushMessage = '[' . $companyName . '] ' . $pushMessage;
+    }
+
+    return [
+        'title' => $pushTitle,
+        'message' => $pushMessage,
+        'company' => $company,
+    ];
 }
 
 function notify($userId, $type, $title, $message, $postId = null, $triggeredBy = null) {
@@ -90,21 +220,26 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
     // 2. Send push notification via OneSignal
     if (defined('ONESIGNAL_APP_ID') && defined('ONESIGNAL_REST_KEY') && ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY) {
         try {
-            $companyId = getNotificationCompanyId($postId);
+            $pushText = buildPushPayloadText($type, $title, $message, $postId, $triggeredBy);
+            $company = $pushText['company'];
+            $companyId = $company['id'] ?? null;
+
             $payload = [
                 'app_id'          => ONESIGNAL_APP_ID,
                 'target_channel'  => 'push',
-                'headings'        => ['en' => $title],
-                'contents'        => ['en' => $message],
+                'headings'        => ['en' => $pushText['title']],
+                'contents'        => ['en' => $pushText['message']],
+                'include_aliases' => [
+                    'external_id' => [strval($userId)]
+                ],
             ];
 
             if ($companyId) {
-                $payload['include_aliases'] = [
-                    'workspace_user' => [getWorkspaceAliasValue($userId, $companyId)]
-                ];
-            } else {
-                $payload['include_aliases'] = [
-                    'external_id' => [strval($userId)]
+                $payload['data'] = [
+                    'company_id' => $companyId,
+                    'company_name' => $company['name'] ?? null,
+                    'post_id' => $postId,
+                    'notification_type' => $type,
                 ];
             }
 
@@ -130,7 +265,7 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                     'user_id' => $userId,
                     'type' => $type,
                     'post_id' => $postId,
-                    'target' => $companyId ? 'workspace_user:' . getWorkspaceAliasValue($userId, $companyId) : 'external_id:' . strval($userId),
+                    'target' => 'external_id:' . strval($userId),
                     'http_code' => $httpCode,
                     'error' => $curlError,
                     'response' => json_decode($rawResponse, true) ?? $rawResponse,
