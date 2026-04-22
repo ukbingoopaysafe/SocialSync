@@ -91,6 +91,15 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
     executeQuery("INSERT INTO notifications (user_id, type, title, message, post_id, triggered_by) VALUES (?, ?, ?, ?, ?, ?)",
         [$userId, $type, $title, $message, $postId, $triggeredBy]);
 
+    $pushResult = [
+        'success' => false,
+        'skipped' => true,
+        'http_code' => null,
+        'error' => null,
+        'response' => null,
+        'target' => null,
+    ];
+
     // 2. Send push notification via OneSignal
     if (defined('ONESIGNAL_APP_ID') && defined('ONESIGNAL_REST_KEY') && ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY) {
         try {
@@ -106,10 +115,12 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                 $payload['include_aliases'] = [
                     'workspace_user' => [getWorkspaceAliasValue($userId, $companyId)]
                 ];
+                $pushResult['target'] = 'workspace_user:' . getWorkspaceAliasValue($userId, $companyId);
             } else {
                 $payload['include_aliases'] = [
                     'external_id' => [strval($userId)]
                 ];
+                $pushResult['target'] = 'external_id:' . strval($userId);
             }
 
             $ch = curl_init('https://api.onesignal.com/notifications');
@@ -124,12 +135,38 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                 CURLOPT_TIMEOUT        => 3,        // Hard timeout – never block API
                 CURLOPT_CONNECTTIMEOUT => 2,
             ]);
-            curl_exec($ch);
+            $rawResponse = curl_exec($ch);
+            $curlError = curl_error($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
+
+            $decodedResponse = json_decode($rawResponse, true);
+            $pushResult['skipped'] = false;
+            $pushResult['http_code'] = $httpCode;
+            $pushResult['error'] = $curlError ?: null;
+            $pushResult['response'] = $decodedResponse ?? $rawResponse;
+            $pushResult['success'] = empty($curlError) && $httpCode >= 200 && $httpCode < 300;
+
+            if (!$pushResult['success']) {
+                error_log('OneSignal push failed: ' . json_encode([
+                    'user_id' => $userId,
+                    'type' => $type,
+                    'post_id' => $postId,
+                    'target' => $pushResult['target'],
+                    'http_code' => $httpCode,
+                    'error' => $curlError,
+                    'response' => $pushResult['response'],
+                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            }
         } catch (Exception $e) {
             // Silently fail – push is best-effort, DB notification already saved
+            $pushResult['skipped'] = false;
+            $pushResult['error'] = $e->getMessage();
+            error_log('OneSignal push exception: ' . $e->getMessage());
         }
     }
+
+    return $pushResult;
 }
 
 // Upload config

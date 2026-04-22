@@ -12,7 +12,15 @@ $message = "If you see this, OneSignal is working perfectly on brman.online!";
 echo "Sending push notification to User ID: " . $testUserId . " ...<br>";
 
 // We call your updated notify function
-notify($testUserId, 'test', $title, $message, null, null);
+$result = notify($testUserId, 'test', $title, $message, null, null);
 
-echo "Notification sent! Check your screen.";
+echo "<pre style=\"white-space:pre-wrap;font-family:monospace;background:#f8fafc;border:1px solid #cbd5e1;padding:12px;border-radius:8px;max-width:900px;\">";
+echo htmlspecialchars(json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+echo "</pre>";
+
+if (!empty($result['success'])) {
+    echo "Push request accepted by OneSignal. Check your device.";
+} else {
+    echo "Push request failed before delivery. Review the debug block above.";
+}
 ?>
