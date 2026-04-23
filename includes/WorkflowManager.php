@@ -22,24 +22,26 @@ class WorkflowManager {
                 'PENDING_REVIEW' => ['staff', 'admin', 'manager']
             ],
             'PENDING_REVIEW' => [
-                'REVIEWED' => ['admin', 'manager'],
-                'CHANGES_REQUESTED' => ['admin', 'manager'],
+                'REVIEWED' => ['admin'],
+                'CHANGES_REQUESTED' => ['admin'],
                 'DRAFT' => ['staff', 'admin', 'manager']
             ],
             'REVIEWED' => [
                 'APPROVED' => ['manager'],
                 'CHANGES_REQUESTED' => ['manager'],
-                'PENDING_REVIEW' => ['admin', 'manager']
+                'PENDING_REVIEW' => ['admin']
             ],
             'CHANGES_REQUESTED' => [
                 'PENDING_REVIEW' => ['staff', 'admin', 'manager']
             ],
             'APPROVED' => [
                 'SCHEDULED' => ['admin', 'manager'],
+                'REVIEWED' => ['manager'],
                 'DRAFT' => ['manager']
             ],
             'SCHEDULED' => [
-                'PUBLISHED' => ['system'],
+                'PUBLISHED' => ['system', 'admin', 'manager'],
+                'APPROVED' => ['admin', 'manager'],
                 'DRAFT' => ['admin', 'manager']
             ]
         ];
