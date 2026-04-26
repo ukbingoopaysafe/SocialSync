@@ -14,9 +14,9 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Admin check
+// Manager check
 $currentUser = fetchOne("SELECT * FROM users WHERE id = ?", [$_SESSION['user_id']]);
-if (!$currentUser || $currentUser['role'] !== 'admin') {
+if (!$currentUser || ($currentUser['role'] ?? '') !== 'manager') {
     header('Location: index.php');
     exit;
 }

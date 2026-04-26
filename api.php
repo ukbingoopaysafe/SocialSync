@@ -904,7 +904,7 @@ try {
         
         case 'get_users':
         case 'fetch_users':
-            requireAdmin();
+            requireManager();
             $users = fetchAll(
                 "SELECT id, username, full_name, role, is_active, created_at, 
                         (SELECT COUNT(*) FROM posts WHERE author_id = users.id) as post_count
@@ -933,7 +933,7 @@ try {
             break;
         
         case 'update_user':
-            requireAdmin();
+            requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $userId = $input['id'] ?? 0;
             $fullName = trim($input['full_name'] ?? '');
@@ -973,7 +973,7 @@ try {
             break;
         
         case 'create_user':
-            requireAdmin();
+            requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $username = trim($input['username'] ?? '');
             $fullName = trim($input['full_name'] ?? '');
@@ -1000,7 +1000,7 @@ try {
             break;
         
         case 'get_user_by_id':
-            requireAdmin();
+            requireManager();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'User ID required', 400);
             
@@ -1013,7 +1013,7 @@ try {
             break;
         
         case 'save_user':
-            requireAdmin();
+            requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $id = $input['id'] ?? null;
             $username = trim($input['username'] ?? '');
@@ -1787,7 +1787,7 @@ try {
             break;
         
         case 'delete_user':
-            requireAdmin();
+            requireManager();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'ID required', 400);
             

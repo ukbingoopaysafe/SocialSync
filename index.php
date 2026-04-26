@@ -1393,7 +1393,7 @@ async function init() {
         if (!validTabs.includes(initialTab)) initialTab = 'board';
         
         // Check if unauthorized role trying to access users tab
-        if (initialTab === 'users' && !['admin', 'manager'].includes(canonicalRole(app.user?.role?.toLowerCase()))) initialTab = 'board';
+        if (initialTab === 'users' && canonicalRole(app.user?.role?.toLowerCase()) !== 'manager') initialTab = 'board';
         if (initialTab === 'ideas' && isDesignerRole(app.user?.role)) initialTab = 'board';
         
         switchTab(initialTab);
@@ -1430,7 +1430,7 @@ window.addEventListener('hashchange', function() {
     const validTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
     let tab = window.location.hash.replace('#', '');
     if (!validTabs.includes(tab)) tab = 'board';
-    if (tab === 'users' && !['admin', 'manager'].includes(canonicalRole(app.user?.role?.toLowerCase()))) tab = 'board';
+    if (tab === 'users' && canonicalRole(app.user?.role?.toLowerCase()) !== 'manager') tab = 'board';
     if (tab === 'ideas' && isDesignerRole(app.user?.role)) tab = 'board';
     switchTab(tab);
 });
@@ -1461,7 +1461,7 @@ async function loadUser() {
         document.getElementById('userName').textContent = data.data.full_name || data.data.username;
         document.getElementById('userRole').textContent = getRoleLabel(data.data.role);
         document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
-        if (['admin', 'manager'].includes(canonicalRole(data.data.role))) document.getElementById('adminLink').classList.remove('hidden');
+        if (canonicalRole(data.data.role) === 'manager') document.getElementById('adminLink').classList.remove('hidden');
         if (canonicalRole(data.data.role) === 'manager') document.getElementById('managerLogsLink').classList.remove('hidden');
         document.getElementById('tabIdeas')?.classList.toggle('hidden', isDesignerRole(data.data.role));
         document.getElementById('newPostButton')?.classList.toggle('hidden', isDesignerRole(data.data.role));
