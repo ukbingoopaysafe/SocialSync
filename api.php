@@ -933,7 +933,7 @@ try {
             break;
         
         case 'update_user':
-            requireManager();
+            requireAdmin();
             $input = json_decode(file_get_contents('php://input'), true);
             $userId = $input['id'] ?? 0;
             $fullName = trim($input['full_name'] ?? '');
@@ -973,7 +973,7 @@ try {
             break;
         
         case 'create_user':
-            requireManager();
+            requireAdmin();
             $input = json_decode(file_get_contents('php://input'), true);
             $username = trim($input['username'] ?? '');
             $fullName = trim($input['full_name'] ?? '');
@@ -1000,7 +1000,7 @@ try {
             break;
         
         case 'get_user_by_id':
-            requireManager();
+            requireAdmin();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'User ID required', 400);
             
@@ -1013,7 +1013,7 @@ try {
             break;
         
         case 'save_user':
-            requireManager();
+            requireAdmin();
             $input = json_decode(file_get_contents('php://input'), true);
             $id = $input['id'] ?? null;
             $username = trim($input['username'] ?? '');
@@ -1784,72 +1784,6 @@ try {
                 );
             }
             sendResponse(true, null, 'Marked as read');
-            break;
-        
-        // ===== USER MANAGEMENT (Admin Only) =====
-        
-        case 'get_users':
-            requireAdmin();
-            $users = fetchAll("SELECT id, username, email, full_name, role, is_active, last_login, created_at FROM users ORDER BY created_at DESC");
-            sendResponse(true, array_map('normalizeUserRecord', $users));
-            break;
-        
-        case 'get_user_by_id':
-            requireAdmin();
-            $id = $_GET['id'] ?? 0;
-            if (!$id) sendResponse(false, null, 'ID required', 400);
-            
-            $u = fetchOne("SELECT id, username, email, full_name, role, is_active, avatar_url FROM users WHERE id = ?", [$id]);
-            if (!$u) sendResponse(false, null, 'User not found', 404);
-            sendResponse(true, normalizeUserRecord($u));
-            break;
-        
-        case 'save_user':
-            requireAdmin();
-            $input = json_decode(file_get_contents('php://input'), true);
-            
-            $id = $input['id'] ?? null;
-            $username = trim($input['username'] ?? '');
-            $email = trim($input['email'] ?? '');
-            $fullName = trim($input['full_name'] ?? '');
-            $role = canonicalRole($input['role'] ?? 'designer');
-            $password = $input['password'] ?? '';
-            $isActive = isset($input['is_active']) ? (bool)$input['is_active'] : true;
-            
-            if (empty($username)) sendResponse(false, null, 'Username required', 400);
-            if (empty($email)) sendResponse(false, null, 'Email required', 400);
-            if (!in_array($role, ['admin', 'designer', 'manager'], true)) $role = 'designer';
-            
-            if ($id) {
-                // Update
-                $existing = fetchOne("SELECT * FROM users WHERE id = ?", [$id]);
-                if (!$existing) sendResponse(false, null, 'User not found', 404);
-                
-                // Check unique
-                $dup = fetchOne("SELECT id FROM users WHERE (username = ? OR email = ?) AND id != ?", [$username, $email, $id]);
-                if ($dup) sendResponse(false, null, 'Username or email already exists', 400);
-                
-                if (!empty($password)) {
-                    $hash = password_hash($password, PASSWORD_DEFAULT);
-                    executeQuery("UPDATE users SET username=?, email=?, full_name=?, role=?, password_hash=?, is_active=? WHERE id=?",
-                        [$username, $email, $fullName, roleForStorage($role), $hash, $isActive, $id]);
-                } else {
-                    executeQuery("UPDATE users SET username=?, email=?, full_name=?, role=?, is_active=? WHERE id=?",
-                        [$username, $email, $fullName, roleForStorage($role), $isActive, $id]);
-                }
-                sendResponse(true, ['id' => $id], 'User updated');
-            } else {
-                // Create
-                if (empty($password)) sendResponse(false, null, 'Password required for new user', 400);
-                
-                $dup = fetchOne("SELECT id FROM users WHERE username = ? OR email = ?", [$username, $email]);
-                if ($dup) sendResponse(false, null, 'Username or email already exists', 400);
-                
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                executeQuery("INSERT INTO users (username, email, full_name, role, password_hash, is_active) VALUES (?, ?, ?, ?, ?, ?)",
-                    [$username, $email, $fullName, roleForStorage($role), $hash, $isActive]);
-                sendResponse(true, ['id' => lastInsertId()], 'User created', 201);
-            }
             break;
         
         case 'delete_user':
