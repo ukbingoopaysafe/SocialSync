@@ -37,9 +37,62 @@ function isAuthenticated() {
     return isset($_SESSION['user_id']) && isset($_SESSION['username']);
 }
 
+function canonicalRole($role) {
+    return $role === 'staff' ? 'designer' : $role;
+}
+
+function isDesignerRole($role) {
+    return canonicalRole($role) === 'designer';
+}
+
+function normalizeUserRecord($user) {
+    if ($user) {
+        $user['role'] = canonicalRole($user['role'] ?? null);
+    }
+
+    return $user;
+}
+
+function storageSupportsDesignerRole() {
+    static $supportsDesigner = null;
+
+    if ($supportsDesigner !== null) {
+        return $supportsDesigner;
+    }
+
+    try {
+        $column = fetchOne(
+            "SELECT COLUMN_TYPE
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'users'
+               AND COLUMN_NAME = 'role'"
+        );
+        $supportsDesigner = !empty($column['COLUMN_TYPE']) && strpos($column['COLUMN_TYPE'], "'designer'") !== false;
+    } catch (Exception $e) {
+        $supportsDesigner = false;
+    }
+
+    return $supportsDesigner;
+}
+
+function roleForStorage($role) {
+    $role = canonicalRole($role);
+
+    if ($role === 'designer' && !storageSupportsDesignerRole()) {
+        return 'staff';
+    }
+
+    return $role;
+}
+
+function getCurrentCompanyId() {
+    return (int)($_SESSION['company_id'] ?? 1);
+}
+
 function getCurrentUser() {
     if (!isAuthenticated()) return null;
-    return fetchOne("SELECT id, username, full_name, role, avatar_url FROM users WHERE id = ?", [$_SESSION['user_id']]);
+    return normalizeUserRecord(fetchOne("SELECT id, username, full_name, role, avatar_url FROM users WHERE id = ?", [$_SESSION['user_id']]));
 }
 
 function requireAuth() {
@@ -58,6 +111,76 @@ function requireManager() {
     if ($user['role'] !== 'manager') sendResponse(false, null, 'Manager access required', 403);
 }
 
+function canViewPost($user, $post) {
+    if (!$user || !$post) {
+        return false;
+    }
+
+    if ((int)$post['company_id'] !== getCurrentCompanyId()) {
+        return false;
+    }
+
+    return true;
+}
+
+function requirePostAccess($user, $post) {
+    if (!canViewPost($user, $post)) {
+        sendResponse(false, null, 'You do not have access to this post.', 403);
+    }
+}
+
+function fetchDesignerUsers($excludeUserId = null) {
+    $sql = "SELECT id FROM users WHERE is_active = 1 AND (role = 'designer' OR role = 'staff')";
+    $params = [];
+
+    if ($excludeUserId) {
+        $sql .= " AND id != ?";
+        $params[] = $excludeUserId;
+    }
+
+    return fetchAll($sql, $params);
+}
+
+function getCurrentDesignCycleStartedAt($postId) {
+    $latestPending = fetchOne(
+        "SELECT created_at
+         FROM activity_log
+         WHERE post_id = ?
+           AND action = 'status_changed'
+           AND new_value = 'PENDING_REVIEW'
+         ORDER BY created_at DESC
+         LIMIT 1",
+        [$postId]
+    );
+
+    if (!empty($latestPending['created_at'])) {
+        return $latestPending['created_at'];
+    }
+
+    $post = fetchOne("SELECT created_at FROM posts WHERE id = ?", [$postId]);
+    return $post['created_at'] ?? null;
+}
+
+function getDesignerParticipantIds($postId) {
+    $designCycleStartedAt = getCurrentDesignCycleStartedAt($postId);
+
+    $participants = fetchAll(
+        "SELECT DISTINCT user_id
+         FROM (
+             SELECT al.user_id
+             FROM activity_log al
+             JOIN users u ON u.id = al.user_id
+             WHERE al.post_id = ?
+               AND (u.role = 'designer' OR u.role = 'staff')
+               AND al.action IN ('comment_added', 'media_uploaded', 'media_deleted')
+               AND (? IS NULL OR al.created_at >= ?)
+         ) AS designer_participants",
+        [$postId, $designCycleStartedAt, $designCycleStartedAt]
+    );
+
+    return array_map(static fn($row) => (int)$row['user_id'], $participants);
+}
+
 function logActivity($postId, $userId, $action, $oldValue = null, $newValue = null, $desc = null) {
     executeQuery("INSERT INTO activity_log (post_id, user_id, action, old_value, new_value, description) VALUES (?, ?, ?, ?, ?, ?)",
         [$postId, $userId, $action, $oldValue, $newValue, $desc]);
@@ -71,11 +194,7 @@ function getNotificationCompanyId($postId = null) {
         }
     }
 
-    if (!empty($_SESSION['company_id'])) {
-        return (int)$_SESSION['company_id'];
-    }
-
-    return null;
+    return getCurrentCompanyId();
 }
 
 function getNotificationCompany($postId = null) {
@@ -143,6 +262,42 @@ function buildPushPayloadText($type, $title, $message, $postId = null, $triggere
         case 'review_needed':
             if ($actorName && $postTitle) {
                 $pushMessage = $actorName . ' submitted "' . $postTitle . '" for review.';
+            }
+            break;
+
+        case 'design_needed':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' sent "' . $postTitle . '" for design work.';
+            }
+            break;
+
+        case 'design_submitted':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' uploaded a design for "' . $postTitle . '".';
+            }
+            break;
+
+        case 'design_updated':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' updated the design files for "' . $postTitle . '".';
+            }
+            break;
+
+        case 'design_update':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' added a design update on "' . $postTitle . '".';
+            }
+            break;
+
+        case 'design_feedback':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' left design feedback on "' . $postTitle . '".';
+            }
+            break;
+
+        case 'design_approved':
+            if ($actorName && $postTitle) {
+                $pushMessage = $actorName . ' approved the design for "' . $postTitle . '" and sent it to manager review.';
             }
             break;
 
@@ -756,6 +911,7 @@ try {
                  FROM users 
                  ORDER BY created_at DESC"
             );
+            $users = array_map('normalizeUserRecord', $users);
             sendResponse(true, $users);
             break;
         
@@ -781,12 +937,12 @@ try {
             $input = json_decode(file_get_contents('php://input'), true);
             $userId = $input['id'] ?? 0;
             $fullName = trim($input['full_name'] ?? '');
-            $role = $input['role'] ?? '';
+            $role = canonicalRole($input['role'] ?? '');
             $password = $input['password'] ?? '';
             
             if (!$userId) sendResponse(false, null, 'User ID required', 400);
             if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
-            if (!in_array($role, ['admin', 'staff', 'manager'])) sendResponse(false, null, 'Invalid role', 400);
+            if (!in_array($role, ['admin', 'designer', 'manager'], true)) sendResponse(false, null, 'Invalid role', 400);
             
             // Check if user exists and get current role
             $existingUser = fetchOne("SELECT id, role FROM users WHERE id = ?", [$userId]);
@@ -803,13 +959,13 @@ try {
                 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
                 executeQuery(
                     "UPDATE users SET full_name = ?, role = ?, password_hash = ? WHERE id = ?",
-                    [$fullName, $role, $passwordHash, $userId]
+                    [$fullName, roleForStorage($role), $passwordHash, $userId]
                 );
             } else {
                 // Update without changing password
                 executeQuery(
                     "UPDATE users SET full_name = ?, role = ? WHERE id = ?",
-                    [$fullName, $role, $userId]
+                    [$fullName, roleForStorage($role), $userId]
                 );
             }
             
@@ -821,13 +977,13 @@ try {
             $input = json_decode(file_get_contents('php://input'), true);
             $username = trim($input['username'] ?? '');
             $fullName = trim($input['full_name'] ?? '');
-            $role = $input['role'] ?? 'staff';
+            $role = canonicalRole($input['role'] ?? 'designer');
             $password = $input['password'] ?? '';
             
             if (empty($username)) sendResponse(false, null, 'Username is required', 400);
             if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
             if (empty($password)) sendResponse(false, null, 'Password is required', 400);
-            if (!in_array($role, ['admin', 'staff', 'manager'])) sendResponse(false, null, 'Invalid role', 400);
+            if (!in_array($role, ['admin', 'designer', 'manager'], true)) sendResponse(false, null, 'Invalid role', 400);
             
             // Check if username already exists
             $existingUser = fetchOne("SELECT id FROM users WHERE username = ?", [$username]);
@@ -837,7 +993,7 @@ try {
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             executeQuery(
                 "INSERT INTO users (username, full_name, role, password_hash, is_active, created_at) VALUES (?, ?, ?, ?, 1, NOW())",
-                [$username, $fullName, $role, $passwordHash]
+                [$username, $fullName, roleForStorage($role), $passwordHash]
             );
             
             sendResponse(true, ['id' => lastInsertId()], 'User created successfully');
@@ -853,7 +1009,7 @@ try {
                  FROM users WHERE id = ?", [$id]
             );
             if (!$user) sendResponse(false, null, 'User not found', 404);
-            sendResponse(true, $user);
+            sendResponse(true, normalizeUserRecord($user));
             break;
         
         case 'save_user':
@@ -862,12 +1018,12 @@ try {
             $id = $input['id'] ?? null;
             $username = trim($input['username'] ?? '');
             $fullName = trim($input['full_name'] ?? '');
-            $role = $input['role'] ?? 'staff';
+            $role = canonicalRole($input['role'] ?? 'designer');
             $password = $input['password'] ?? '';
             $isActive = isset($input['is_active']) ? (bool)$input['is_active'] : true;
             
             if (empty($username)) sendResponse(false, null, 'Username is required', 400);
-            if (!in_array($role, ['admin', 'staff', 'manager'])) $role = 'staff';
+            if (!in_array($role, ['admin', 'designer', 'manager'], true)) $role = 'designer';
             
             if ($id) {
                 // Update existing user
@@ -881,10 +1037,10 @@ try {
                 if (!empty($password)) {
                     $hash = password_hash($password, PASSWORD_DEFAULT);
                     executeQuery("UPDATE users SET username=?, full_name=?, role=?, password_hash=?, is_active=? WHERE id=?",
-                        [$username, $fullName, $role, $hash, $isActive, $id]);
+                        [$username, $fullName, roleForStorage($role), $hash, $isActive, $id]);
                 } else {
                     executeQuery("UPDATE users SET username=?, full_name=?, role=?, is_active=? WHERE id=?",
-                        [$username, $fullName, $role, $isActive, $id]);
+                        [$username, $fullName, roleForStorage($role), $isActive, $id]);
                 }
                 sendResponse(true, ['id' => $id], 'User updated successfully');
             } else {
@@ -896,7 +1052,7 @@ try {
                 
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 executeQuery("INSERT INTO users (username, full_name, role, password_hash, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, NOW())",
-                    [$username, $fullName, $role, $hash, $isActive]);
+                    [$username, $fullName, roleForStorage($role), $hash, $isActive]);
                 sendResponse(true, ['id' => lastInsertId()], 'User created successfully', 201);
             }
             break;
@@ -925,10 +1081,10 @@ try {
             $params = [];
             
             // CRITICAL: Filter by current company for data isolation
-            $companyId = $_SESSION['company_id'] ?? 1;
+            $companyId = getCurrentCompanyId();
             $where[] = "p.company_id = ?";
             $params[] = $companyId;
-            
+
             if (!empty($_GET['status'])) {
                 $where[] = "p.status = ?";
                 $params[] = $_GET['status'];
@@ -1014,6 +1170,7 @@ try {
         
         case 'get_post':
             requireAuth();
+            $user = getCurrentUser();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'Post ID required', 400);
             
@@ -1027,8 +1184,16 @@ try {
             );
             
             if (!$post) sendResponse(false, null, 'Post not found', 404);
+            requirePostAccess($user, $post);
             
-            $post['media'] = fetchAll("SELECT * FROM media_files WHERE post_id = ?", [$id]);
+            $post['media'] = fetchAll(
+                "SELECT m.*, u.username, u.full_name
+                 FROM media_files m
+                 LEFT JOIN users u ON u.id = m.uploaded_by
+                 WHERE m.post_id = ?
+                 ORDER BY m.created_at DESC, m.id DESC",
+                [$id]
+            );
             $post['comments'] = fetchAll(
                 "SELECT c.*, u.username, u.full_name FROM comments c 
                  JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at", [$id]
@@ -1047,6 +1212,10 @@ try {
         case 'save_post':
             requireAuth();
             $user = getCurrentUser();
+
+            if (isDesignerRole($user['role'])) {
+                sendResponse(false, null, 'Designers cannot create or edit post content.', 403);
+            }
             
             // Handle both multipart/form-data (with files) and JSON
             $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
@@ -1084,11 +1253,6 @@ try {
             if (empty($content)) sendResponse(false, null, 'Content required', 400);
             if (empty($platforms)) sendResponse(false, null, 'At least one platform required', 400);
             
-            // Staff can only create DRAFT posts (Ideas are now separate)
-            if ($user['role'] === 'staff' && $status !== 'DRAFT') {
-                $status = 'DRAFT';
-            }
-            
             $postId = null;
             
             if ($id) {
@@ -1102,7 +1266,7 @@ try {
                 
                 // Staff & Admin restriction: ONLY edit their own DRAFT or CHANGES_REQUESTED
                 // Manager restriction: Managers can edit any post (passing above approval check)
-                if (in_array($user['role'], ['staff', 'admin'])) {
+                if ($user['role'] === 'admin') {
                     if ($existing['author_id'] != $user['id']) {
                         sendResponse(false, null, 'Cannot edit others posts', 403);
                     }
@@ -1155,7 +1319,7 @@ try {
                 $postId = $id;
             } else {
                 // Get current company from session
-                $companyId = $_SESSION['company_id'] ?? 1;
+                $companyId = getCurrentCompanyId();
                 
                 executeQuery(
                     "INSERT INTO posts (company_id, title, content, platforms, status, urgency, priority, author_id, scheduled_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -1233,8 +1397,13 @@ try {
             
             $post = fetchOne("SELECT * FROM posts WHERE id = ?", [$id]);
             if (!$post) sendResponse(false, null, 'Post not found', 404);
+            requirePostAccess($user, $post);
             
             $oldStatus = $post['status'];
+
+            if ($user['role'] === 'admin' && (int)$post['author_id'] !== (int)$user['id']) {
+                sendResponse(false, null, 'You can only change the status of your own posts.', 403);
+            }
             
             // Validate transitions with Centralized WorkflowManager
             if (!WorkflowManager::canTransition($user['role'], $oldStatus, $newStatus)) {
@@ -1296,9 +1465,9 @@ try {
             
             // Notifications
             if ($newStatus === 'PENDING_REVIEW') {
-                $admins = fetchAll("SELECT id FROM users WHERE role = 'admin'");
-                foreach ($admins as $admin) {
-                    notify($admin['id'], 'review_needed', 'Review Needed', "Post '{$post['title']}' needs review", $id, $user['id']);
+                $designers = fetchDesignerUsers($user['id']);
+                foreach ($designers as $designer) {
+                    notify($designer['id'], 'design_needed', 'Design Needed', "Post '{$post['title']}' is ready for design work", $id, $user['id']);
                 }
             } elseif ($newStatus === 'REVIEWED') {
                 // Notify all managers when a post is ready for final approval
@@ -1307,7 +1476,14 @@ try {
                     notify($manager['id'], 'manager_approval_needed', 'Manager Approval Needed', "Post '{$post['title']}' needs your final approval", $id, $user['id']);
                 }
                 // Also notify the author that their post is under manager review
-                notify($post['author_id'], 'reviewed', 'Post Under Manager Review', "Your post '{$post['title']}' is now under manager review", $id, $user['id']);
+                if ((int)$post['author_id'] !== (int)$user['id']) {
+                    notify($post['author_id'], 'reviewed', 'Post Under Manager Review', "Your post '{$post['title']}' is now under manager review", $id, $user['id']);
+                }
+                foreach (getDesignerParticipantIds($id) as $designerId) {
+                    if ($designerId !== (int)$user['id']) {
+                        notify($designerId, 'design_approved', 'Design Approved', "Your design on '{$post['title']}' was approved and sent to manager review", $id, $user['id']);
+                    }
+                }
             } elseif ($newStatus === 'APPROVED') {
                 notify($post['author_id'], 'approved', 'Post Approved', "Your post '{$post['title']}' was approved!", $id, $user['id']);
                 // Notify admins that a post was approved by manager so they can schedule it
@@ -1335,6 +1511,11 @@ try {
             
             $post = fetchOne("SELECT * FROM posts WHERE id = ?", [$id]);
             if (!$post) sendResponse(false, null, 'Not found', 404);
+            requirePostAccess($user, $post);
+
+            if (isDesignerRole($user['role'])) {
+                sendResponse(false, null, 'Designers cannot delete posts.', 403);
+            }
             
             // No one can delete posts after manager approval
             if (in_array($post['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'])) {
@@ -1343,7 +1524,7 @@ try {
             
             // Staff & Admin restriction: ONLY delete if author_id == user_id AND status == 'DRAFT'
             // Manager restriction: Managers can delete any post (passing above approval check)
-            if (in_array($user['role'], ['staff', 'admin'])) {
+            if ($user['role'] === 'admin') {
                 if ($post['author_id'] != $user['id']) sendResponse(false, null, 'Cannot delete others posts', 403);
                 if ($post['status'] !== 'DRAFT') sendResponse(false, null, 'Cannot delete submitted post', 403);
             }
@@ -1386,6 +1567,26 @@ try {
                 sendResponse(false, null, 'Upload error', 400);
             }
             
+            $post = fetchOne("SELECT id, title, status, company_id, author_id FROM posts WHERE id = ?", [$postId]);
+            if (!$post) sendResponse(false, null, 'Post not found', 404);
+            requirePostAccess($user, $post);
+
+            $isDesigner = isDesignerRole($user['role']);
+            if ($isDesigner) {
+                if ($post['status'] !== 'PENDING_REVIEW') {
+                    sendResponse(false, null, 'Designers can only upload media while the post is pending.', 403);
+                }
+            } elseif ($user['role'] === 'admin') {
+                if ((int)$post['author_id'] !== (int)$user['id']) {
+                    sendResponse(false, null, 'You can only upload media to your own posts.', 403);
+                }
+                if (!in_array($post['status'], ['DRAFT', 'CHANGES_REQUESTED', 'PENDING_REVIEW'], true)) {
+                    sendResponse(false, null, 'Cannot upload media in the current post status.', 403);
+                }
+            } elseif ($user['role'] === 'manager' && in_array($post['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'], true)) {
+                sendResponse(false, null, 'Cannot upload media after manager approval.', 403);
+            }
+
             $file = $_FILES['file'];
             $mime = mime_content_type($file['tmp_name']);
             
@@ -1409,10 +1610,25 @@ try {
             $isImage = str_starts_with($mime, 'image/');
             $isPrimary = fetchOne("SELECT COUNT(*) as c FROM media_files WHERE post_id = ?", [$postId])['c'] == 0;
             
+            $existingDesignerMediaCount = $isDesigner
+                ? (int)fetchOne("SELECT COUNT(*) AS c FROM media_files WHERE post_id = ? AND uploaded_by = ?", [$postId, $user['id']])['c']
+                : 0;
+
             executeQuery(
                 "INSERT INTO media_files (post_id, original_name, file_name, file_path, file_type, mime_type, file_size, is_primary, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [$postId, $file['name'], $uniqueName, $relativePath, $isImage ? 'image' : 'video', $mime, $file['size'], $isPrimary, $user['id']]
             );
+
+            logActivity($postId, $user['id'], 'media_uploaded', null, null, 'Media uploaded');
+
+            if ($isDesigner && (int)$post['author_id'] !== (int)$user['id']) {
+                $type = $existingDesignerMediaCount > 0 ? 'design_updated' : 'design_submitted';
+                $title = $existingDesignerMediaCount > 0 ? 'Design Updated' : 'Design Submitted';
+                $message = $existingDesignerMediaCount > 0
+                    ? "A designer updated the files on '{$post['title']}'"
+                    : "A designer uploaded files for '{$post['title']}'";
+                notify($post['author_id'], $type, $title, $message, $postId, $user['id']);
+            }
             
             sendResponse(true, ['id' => lastInsertId(), 'file_path' => $relativePath], 'Uploaded');
             break;
@@ -1425,6 +1641,30 @@ try {
             
             $media = fetchOne("SELECT * FROM media_files WHERE id = ?", [$id]);
             if (!$media) sendResponse(false, null, 'Not found', 404);
+            $post = fetchOne("SELECT id, status, company_id, author_id FROM posts WHERE id = ?", [$media['post_id']]);
+            if (!$post) sendResponse(false, null, 'Post not found', 404);
+            requirePostAccess($user, $post);
+
+            if (isDesignerRole($user['role'])) {
+                if ($post['status'] !== 'PENDING_REVIEW') {
+                    sendResponse(false, null, 'Designers can only delete media while the post is pending.', 403);
+                }
+                if ((int)$media['uploaded_by'] !== (int)$user['id']) {
+                    sendResponse(false, null, 'You can only delete your own uploaded media.', 403);
+                }
+            } elseif ($user['role'] === 'admin') {
+                if ((int)$post['author_id'] !== (int)$user['id']) {
+                    sendResponse(false, null, 'You can only manage media on your own posts.', 403);
+                }
+                if (!in_array($post['status'], ['DRAFT', 'CHANGES_REQUESTED', 'PENDING_REVIEW'], true)) {
+                    sendResponse(false, null, 'Cannot delete media in the current post status.', 403);
+                }
+                if ($post['status'] === 'PENDING_REVIEW' && (int)$media['uploaded_by'] !== (int)$user['id']) {
+                    sendResponse(false, null, 'You cannot delete designer files while the post is pending. Ask for changes or recall the post first.', 403);
+                }
+            } elseif ($user['role'] === 'manager' && in_array($post['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'], true)) {
+                sendResponse(false, null, 'Cannot delete media after approval.', 403);
+            }
             
             // Log media deletion
             logActivity($media['post_id'], $user['id'], 'media_deleted', 
@@ -1453,26 +1693,43 @@ try {
             if (mb_strlen($content) > 5000) sendResponse(false, null, 'Comment too long (max 5000 chars)', 400);
             
             // Get post information to find the author
-            $post = fetchOne("SELECT id, title, author_id FROM posts WHERE id = ?", [$postId]);
+            $post = fetchOne("SELECT id, title, author_id, company_id, status FROM posts WHERE id = ?", [$postId]);
             if (!$post) sendResponse(false, null, 'Post not found', 404);
+            requirePostAccess($user, $post);
+
+            if (isDesignerRole($user['role']) && $post['status'] !== 'PENDING_REVIEW') {
+                sendResponse(false, null, 'Designers can only comment while the post is pending.', 403);
+            }
             
             executeQuery("INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)", [$postId, $user['id'], $content]);
             logActivity($postId, $user['id'], 'comment_added');
             
-            // Send notification to post author (if they're not the one commenting)
-            if ($post['author_id'] != $user['id']) {
-                $commenterName = $user['full_name'] ?: $user['username'];
-                $message = $commenterName . " commented on your post: " . mb_substr($content, 0, 100) . (mb_strlen($content) > 100 ? '...' : '');
-                notify($post['author_id'], 'comment', 'New Comment on Your Post', $message, $postId, $user['id']);
-            }
-            
-            // Send notification to all admins
-            $admins = fetchAll("SELECT id FROM users WHERE role = 'admin' AND id != ?", [$user['id']]);
             $commenterName = $user['full_name'] ?: $user['username'];
-            $postTitle = mb_substr($post['title'], 0, 50) . (mb_strlen($post['title']) > 50 ? '...' : '');
-            $message = $commenterName . " commented on post '" . $postTitle . "': " . mb_substr($content, 0, 80) . (mb_strlen($content) > 80 ? '...' : '');
-            foreach ($admins as $admin) {
-                notify($admin['id'], 'comment', 'New Comment', $message, $postId, $user['id']);
+            $messagePreview = mb_substr($content, 0, 100) . (mb_strlen($content) > 100 ? '...' : '');
+
+            if (isDesignerRole($user['role'])) {
+                if ((int)$post['author_id'] !== (int)$user['id']) {
+                    notify($post['author_id'], 'design_update', 'Designer Update', $commenterName . " left a design update: " . $messagePreview, $postId, $user['id']);
+                }
+            } else {
+                if ((int)$post['author_id'] !== (int)$user['id']) {
+                    notify($post['author_id'], 'comment', 'New Comment on Your Post', $commenterName . " commented on your post: " . $messagePreview, $postId, $user['id']);
+                }
+
+                $admins = fetchAll("SELECT id FROM users WHERE role = 'admin' AND id != ?", [$user['id']]);
+                $postTitle = mb_substr($post['title'], 0, 50) . (mb_strlen($post['title']) > 50 ? '...' : '');
+                $message = $commenterName . " commented on post '" . $postTitle . "': " . mb_substr($content, 0, 80) . (mb_strlen($content) > 80 ? '...' : '');
+                foreach ($admins as $admin) {
+                    notify($admin['id'], 'comment', 'New Comment', $message, $postId, $user['id']);
+                }
+
+                if ($post['status'] === 'PENDING_REVIEW') {
+                    foreach (getDesignerParticipantIds($postId) as $designerId) {
+                        if ($designerId !== (int)$user['id']) {
+                            notify($designerId, 'design_feedback', 'Design Feedback', $commenterName . " left feedback on '{$post['title']}': " . $messagePreview, $postId, $user['id']);
+                        }
+                    }
+                }
             }
             
             $comment = fetchOne(
@@ -1534,7 +1791,7 @@ try {
         case 'get_users':
             requireAdmin();
             $users = fetchAll("SELECT id, username, email, full_name, role, is_active, last_login, created_at FROM users ORDER BY created_at DESC");
-            sendResponse(true, $users);
+            sendResponse(true, array_map('normalizeUserRecord', $users));
             break;
         
         case 'get_user_by_id':
@@ -1544,7 +1801,7 @@ try {
             
             $u = fetchOne("SELECT id, username, email, full_name, role, is_active, avatar_url FROM users WHERE id = ?", [$id]);
             if (!$u) sendResponse(false, null, 'User not found', 404);
-            sendResponse(true, $u);
+            sendResponse(true, normalizeUserRecord($u));
             break;
         
         case 'save_user':
@@ -1555,13 +1812,13 @@ try {
             $username = trim($input['username'] ?? '');
             $email = trim($input['email'] ?? '');
             $fullName = trim($input['full_name'] ?? '');
-            $role = $input['role'] ?? 'staff';
+            $role = canonicalRole($input['role'] ?? 'designer');
             $password = $input['password'] ?? '';
             $isActive = isset($input['is_active']) ? (bool)$input['is_active'] : true;
             
             if (empty($username)) sendResponse(false, null, 'Username required', 400);
             if (empty($email)) sendResponse(false, null, 'Email required', 400);
-            if (!in_array($role, ['admin', 'staff', 'manager'])) $role = 'staff';
+            if (!in_array($role, ['admin', 'designer', 'manager'], true)) $role = 'designer';
             
             if ($id) {
                 // Update
@@ -1575,10 +1832,10 @@ try {
                 if (!empty($password)) {
                     $hash = password_hash($password, PASSWORD_DEFAULT);
                     executeQuery("UPDATE users SET username=?, email=?, full_name=?, role=?, password_hash=?, is_active=? WHERE id=?",
-                        [$username, $email, $fullName, $role, $hash, $isActive, $id]);
+                        [$username, $email, $fullName, roleForStorage($role), $hash, $isActive, $id]);
                 } else {
                     executeQuery("UPDATE users SET username=?, email=?, full_name=?, role=?, is_active=? WHERE id=?",
-                        [$username, $email, $fullName, $role, $isActive, $id]);
+                        [$username, $email, $fullName, roleForStorage($role), $isActive, $id]);
                 }
                 sendResponse(true, ['id' => $id], 'User updated');
             } else {
@@ -1590,7 +1847,7 @@ try {
                 
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 executeQuery("INSERT INTO users (username, email, full_name, role, password_hash, is_active) VALUES (?, ?, ?, ?, ?, ?)",
-                    [$username, $email, $fullName, $role, $hash, $isActive]);
+                    [$username, $email, $fullName, roleForStorage($role), $hash, $isActive]);
                 sendResponse(true, ['id' => lastInsertId()], 'User created', 201);
             }
             break;
@@ -1612,7 +1869,8 @@ try {
         case 'get_user_ideas':
             requireAuth();
             $user = getCurrentUser();
-            $companyId = $_SESSION['company_id'] ?? 1;
+            if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers do not have access to personal ideas.', 403);
+            $companyId = getCurrentCompanyId();
             
             // Only fetch ideas owned by the current user
             $ideas = fetchAll(
@@ -1636,7 +1894,8 @@ try {
         case 'create_idea':
             requireAuth();
             $user = getCurrentUser();
-            $companyId = $_SESSION['company_id'] ?? 1;
+            if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot create personal ideas.', 403);
+            $companyId = getCurrentCompanyId();
             
             $input = json_decode(file_get_contents('php://input'), true);
             $title = sanitizeString(trim($input['title'] ?? ''), 255);
@@ -1658,6 +1917,7 @@ try {
         case 'update_idea':
             requireAuth();
             $user = getCurrentUser();
+            if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot edit personal ideas.', 403);
             
             $input = json_decode(file_get_contents('php://input'), true);
             $id = $input['id'] ?? 0;
@@ -1683,6 +1943,7 @@ try {
         case 'delete_idea':
             requireAuth();
             $user = getCurrentUser();
+            if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot delete personal ideas.', 403);
             
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'Idea ID required', 400);
@@ -1705,7 +1966,8 @@ try {
         case 'convert_idea_to_draft':
             requireAuth();
             $user = getCurrentUser();
-            $companyId = $_SESSION['company_id'] ?? 1;
+            if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot convert ideas to drafts.', 403);
+            $companyId = getCurrentCompanyId();
             
             $input = json_decode(file_get_contents('php://input'), true);
             $ideaId = $input['idea_id'] ?? 0;
@@ -1763,6 +2025,7 @@ try {
         case 'upload_idea_media':
             requireAuth();
             $user = getCurrentUser();
+            if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot upload idea media.', 403);
             
             $ideaId = $_POST['idea_id'] ?? 0;
             if (!$ideaId) sendResponse(false, null, 'Idea ID required', 400);
@@ -1814,6 +2077,7 @@ try {
         case 'delete_idea_media':
             requireAuth();
             $user = getCurrentUser();
+            if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot delete idea media.', 403);
             
             $mediaId = $_GET['id'] ?? 0;
             if (!$mediaId) sendResponse(false, null, 'Media ID required', 400);

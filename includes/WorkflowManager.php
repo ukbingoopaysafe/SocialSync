@@ -14,17 +14,20 @@ class WorkflowManager {
      * @return bool True if transition is allowed, false otherwise.
      */
     public static function canTransition($userRole, $currentStatus, $newStatus) {
+        if ($userRole === 'staff') {
+            $userRole = 'designer';
+        }
+
         $matrix = [
             'IDEA' => [
-                'DRAFT' => ['staff', 'admin', 'manager']
+                'DRAFT' => ['admin', 'manager']
             ],
             'DRAFT' => [
-                'PENDING_REVIEW' => ['staff', 'admin', 'manager']
+                'PENDING_REVIEW' => ['admin', 'manager']
             ],
             'PENDING_REVIEW' => [
                 'REVIEWED' => ['admin'],
-                'CHANGES_REQUESTED' => ['admin'],
-                'DRAFT' => ['staff', 'admin', 'manager']
+                'DRAFT' => ['admin', 'manager']
             ],
             'REVIEWED' => [
                 'APPROVED' => ['manager'],
@@ -32,7 +35,7 @@ class WorkflowManager {
                 'PENDING_REVIEW' => ['admin']
             ],
             'CHANGES_REQUESTED' => [
-                'PENDING_REVIEW' => ['staff', 'admin', 'manager']
+                'PENDING_REVIEW' => ['admin', 'manager']
             ],
             'APPROVED' => [
                 'SCHEDULED' => ['admin', 'manager'],

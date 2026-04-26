@@ -752,7 +752,7 @@ CREATE TABLE `users` (
   `password_hash` varchar(255) NOT NULL,
   `full_name` varchar(100) DEFAULT NULL,
   `avatar_url` varchar(255) DEFAULT NULL,
-  `role` enum('admin','staff','manager') NOT NULL DEFAULT 'staff',
+  `role` enum('admin','designer','staff','manager') NOT NULL DEFAULT 'designer',
   `is_active` tinyint(1) DEFAULT 1,
   `last_login` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -766,11 +766,11 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `username`, `password_hash`, `full_name`, `avatar_url`, `role`, `is_active`, `last_login`, `created_at`, `updated_at`) VALUES
 (1, 'yassin', '$2y$10$cp2rKBKbcM3gyoO6hOObvuNakH8NRR7nKMlbyewuZW6ePiDbLly3O', 'M. Yassin', NULL, 'admin', 1, '2026-03-30 18:13:36', '2025-12-21 11:46:09', '2026-03-30 16:13:36'),
 (2, 'john', '$2y$10$ngSlt6no7Ya./YjFejS/vOQVPceJT6CF3WufUlGQkyz2eZejU4HtW', 'John', NULL, 'admin', 1, '2026-04-15 18:27:42', '2025-12-21 12:01:09', '2026-04-15 16:27:42'),
-(3, 'nada', '$2y$10$brpri16CtrP.ZoIXUCNUju3KWF2iVQ2XjnHVhpUehtFZeoV.c8sU2', 'Nada Mohammed', NULL, 'staff', 1, '2026-01-18 18:20:20', '2025-12-18 16:29:57', '2026-01-18 16:20:20'),
-(4, 'sara', '$2y$10$ZSXzHtIQUfTEiNJEOLxev.oTKljxYWPMRJlhyNzBqfFVS/hyWN17q', 'Sara Alaa', NULL, 'staff', 1, '2026-04-15 18:25:04', '2025-12-18 14:08:00', '2026-04-15 16:25:04'),
+(3, 'nada', '$2y$10$brpri16CtrP.ZoIXUCNUju3KWF2iVQ2XjnHVhpUehtFZeoV.c8sU2', 'Nada Mohammed', NULL, 'designer', 1, '2026-01-18 18:20:20', '2025-12-18 16:29:57', '2026-01-18 16:20:20'),
+(4, 'sara', '$2y$10$ZSXzHtIQUfTEiNJEOLxev.oTKljxYWPMRJlhyNzBqfFVS/hyWN17q', 'Sara Alaa', NULL, 'designer', 1, '2026-04-15 18:25:04', '2025-12-18 14:08:00', '2026-04-15 16:25:04'),
 (5, 'alaa', '$2y$10$c8kRzcsD7wjlyVA/XJelFumCBPYa9VTkAulhV7hT3Iz7Av1LnPSqq', 'Alaa Almallah', NULL, 'manager', 1, '2026-04-15 18:27:24', '2025-12-21 15:43:48', '2026-04-15 16:27:24'),
 (6, 'testmanager', '$2y$10$rnhOp0pzQa9xlYOy2C17R.ttRwmWw3NMd7Ur5EbeqExR0TBjwgl9K', 'test manager', NULL, 'admin', 0, NULL, '2025-12-28 16:10:51', '2026-01-18 09:32:57'),
-(7, 'mobile', '$2y$10$7cJjqWslghkzMGMEP1tJqO8XygbMHGYhXzBk7VtF4/bURFv5Yy5W.', 'Test Mobile User', NULL, 'staff', 0, NULL, '2025-12-29 11:15:47', '2025-12-29 11:15:57');
+(7, 'mobile', '$2y$10$7cJjqWslghkzMGMEP1tJqO8XygbMHGYhXzBk7VtF4/bURFv5Yy5W.', 'Test Mobile User', NULL, 'designer', 0, NULL, '2025-12-29 11:15:47', '2025-12-29 11:15:57');
 
 -- --------------------------------------------------------
 

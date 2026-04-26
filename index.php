@@ -202,7 +202,7 @@ $csrfToken = generateCSRFToken();
                         <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
                     <!-- New Post Button -->
-                    <button onclick="openCreateModal()" class="bg-brand-500 hover:bg-brand-600 text-white p-2 lg:px-4 lg:py-2 rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">
+                    <button id="newPostButton" onclick="openCreateModal()" class="bg-brand-500 hover:bg-brand-600 text-white p-2 lg:px-4 lg:py-2 rounded-lg font-medium text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">
                         <svg class="w-5 h-5 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                         <span class="hidden lg:inline text-right">New Post</span>
                     </button>
@@ -937,6 +937,25 @@ $csrfToken = generateCSRFToken();
                         <div class="prose prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-600 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-600">
                             <p id="viewContent" class="whitespace-pre-wrap"></p>
                         </div>
+
+                        <div id="viewDesignSection" class="space-y-4">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                        <i class="fa-solid fa-paperclip text-slate-400"></i>
+                                        <span id="viewDesignSectionTitle">Media Files</span>
+                                    </h3>
+                                    <p id="viewDesignSectionNote" class="text-xs text-slate-400 mt-1"></p>
+                                </div>
+                                <div id="viewDesignUploadControls" class="hidden">
+                                    <input type="file" id="viewDesignFileInput" class="hidden" accept="image/*,video/*" multiple onchange="uploadDesignFiles(event)">
+                                    <button type="button" onclick="document.getElementById('viewDesignFileInput').click()" class="px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition-colors">
+                                        <i class="fa-solid fa-cloud-arrow-up mr-1"></i> Upload Design
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="viewDesignFiles" class="space-y-3"></div>
+                        </div>
                         
 
                         <!-- Action Area -->
@@ -957,7 +976,7 @@ $csrfToken = generateCSRFToken();
                                 
                                 <div id="viewComments" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar"></div>
                                 
-                                <div class="sticky bottom-0 bg-white pt-2">
+                                <div id="viewCommentComposer" class="sticky bottom-0 bg-white pt-2">
                                     <div class="relative">
                                         <input type="text" id="viewNewComment" placeholder="Write a comment..." class="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-sm" onkeypress="if(event.key==='Enter')addViewComment()">
                                         <button onclick="addViewComment()" class="absolute right-1.5 top-1.5 p-1.5 text-brand-600 hover:bg-brand-50 rounded-md transition-colors">
@@ -1165,7 +1184,7 @@ $csrfToken = generateCSRFToken();
                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Role</label>
                     <div class="relative">
                         <select id="editUserRole" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
-                            <option value="staff">Staff</option>
+                            <option value="designer">Designer</option>
                             <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
                         </select>
@@ -1208,7 +1227,7 @@ $csrfToken = generateCSRFToken();
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Role</label>
                     <div class="relative">
                         <select id="addUserRole" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 appearance-none font-medium text-slate-700">
-                            <option value="staff">Staff</option>
+                            <option value="designer">Designer</option>
                             <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
                         </select>
@@ -1250,6 +1269,98 @@ const STATUS_LABELS = {
     'SCHEDULED': 'Scheduled',
     'PUBLISHED': 'Published'
 };
+
+function canonicalRole(role) {
+    return role === 'staff' ? 'designer' : (role || '');
+}
+
+function isDesignerRole(role) {
+    return canonicalRole(role) === 'designer';
+}
+
+function getRoleLabel(role) {
+    const normalized = canonicalRole(role);
+    if (normalized === 'designer') return 'Designer';
+    if (normalized === 'manager') return 'Manager';
+    if (normalized === 'admin') return 'Admin';
+    return normalized || '';
+}
+
+function getRoleBadgeClasses(role) {
+    const normalized = canonicalRole(role);
+    if (normalized === 'admin') return 'bg-purple-100 text-purple-700';
+    if (normalized === 'manager') return 'bg-blue-100 text-blue-700';
+    return 'bg-slate-100 text-slate-700';
+}
+
+function canCurrentUserUploadDesign(post) {
+    return !!post && isDesignerRole(app.user?.role) && post.status === 'PENDING_REVIEW';
+}
+
+function canCurrentUserDeleteDesign(media, post) {
+    if (!media || !post || !app.user) return false;
+    const role = canonicalRole(app.user.role);
+
+    if (role === 'designer') {
+        return post.status === 'PENDING_REVIEW' && Number(media.uploaded_by) === Number(app.user.id);
+    }
+
+    if (role === 'admin') {
+        if (Number(post.author_id) !== Number(app.user.id)) return false;
+        if (['DRAFT', 'CHANGES_REQUESTED'].includes(post.status)) return true;
+        if (post.status === 'PENDING_REVIEW') {
+            return Number(media.uploaded_by) === Number(app.user.id);
+        }
+        return false;
+    }
+
+    if (role === 'manager') {
+        return !['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(post.status);
+    }
+
+    return false;
+}
+
+function canCurrentUserEditPost(post) {
+    if (!post || !app.user) return false;
+    const role = canonicalRole(app.user.role);
+
+    if (role === 'manager') {
+        return !['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(post.status);
+    }
+
+    if (role === 'admin') {
+        return Number(post.author_id) === Number(app.user.id) && ['DRAFT', 'CHANGES_REQUESTED'].includes(post.status);
+    }
+
+    return false;
+}
+
+function canCurrentUserDeletePost(post) {
+    if (!post || !app.user) return false;
+    const role = canonicalRole(app.user.role);
+
+    if (role === 'manager') {
+        return !['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(post.status);
+    }
+
+    if (role === 'admin') {
+        return Number(post.author_id) === Number(app.user.id) && post.status === 'DRAFT';
+    }
+
+    return false;
+}
+
+function canCurrentUserCommentOnPost(post) {
+    if (!post || !app.user) return false;
+    const role = canonicalRole(app.user.role);
+
+    if (role === 'designer') {
+        return post.status === 'PENDING_REVIEW';
+    }
+
+    return true;
+}
 const PLATFORM_COLORS = {
     Facebook: 'bg-blue-600', Instagram: 'bg-gradient-to-r from-purple-500 to-pink-500', LinkedIn: 'bg-blue-700',
     X: 'bg-black', TikTok: 'bg-slate-800', YouTube: 'bg-red-600', Snapchat: 'bg-yellow-400', Website: 'bg-indigo-500'
@@ -1277,12 +1388,13 @@ async function init() {
         await Promise.all([loadPosts(), loadNotifications()]);
     
         // Get tab from URL hash or default to 'board'
-        const validTabs = ['dashboard', 'board', 'calendar', 'users'];
+        const validTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
         let initialTab = window.location.hash.replace('#', '');
         if (!validTabs.includes(initialTab)) initialTab = 'board';
         
         // Check if unauthorized role trying to access users tab
-        if (initialTab === 'users' && !['admin', 'manager'].includes(app.user?.role?.toLowerCase())) initialTab = 'board';
+        if (initialTab === 'users' && !['admin', 'manager'].includes(canonicalRole(app.user?.role?.toLowerCase()))) initialTab = 'board';
+        if (initialTab === 'ideas' && isDesignerRole(app.user?.role)) initialTab = 'board';
         
         switchTab(initialTab);
 
@@ -1315,10 +1427,11 @@ async function init() {
 
 // Handle browser back/forward buttons
 window.addEventListener('hashchange', function() {
-    const validTabs = ['dashboard', 'board', 'calendar', 'users'];
+    const validTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
     let tab = window.location.hash.replace('#', '');
     if (!validTabs.includes(tab)) tab = 'board';
-    if (tab === 'users' && !['admin', 'manager'].includes(app.user?.role?.toLowerCase())) tab = 'board';
+    if (tab === 'users' && !['admin', 'manager'].includes(canonicalRole(app.user?.role?.toLowerCase()))) tab = 'board';
+    if (tab === 'ideas' && isDesignerRole(app.user?.role)) tab = 'board';
     switchTab(tab);
 });
 
@@ -1346,10 +1459,12 @@ async function loadUser() {
     if (data.success) {
         app.user = data.data;
         document.getElementById('userName').textContent = data.data.full_name || data.data.username;
-        document.getElementById('userRole').textContent = data.data.role;
+        document.getElementById('userRole').textContent = getRoleLabel(data.data.role);
         document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
-        if (['admin', 'manager'].includes(data.data.role)) document.getElementById('adminLink').classList.remove('hidden');
-        if (data.data.role === 'manager') document.getElementById('managerLogsLink').classList.remove('hidden');
+        if (['admin', 'manager'].includes(canonicalRole(data.data.role))) document.getElementById('adminLink').classList.remove('hidden');
+        if (canonicalRole(data.data.role) === 'manager') document.getElementById('managerLogsLink').classList.remove('hidden');
+        document.getElementById('tabIdeas')?.classList.toggle('hidden', isDesignerRole(data.data.role));
+        document.getElementById('newPostButton')?.classList.toggle('hidden', isDesignerRole(data.data.role));
         
         // Update company branding (use white logo for dark sidebar)
         if (data.data.company_logo) {
@@ -1975,7 +2090,7 @@ async function loadDashboard() {
     document.getElementById('teamMemberCount').textContent = teamMembers.length > 0 ? `${teamMembers.length} ACTIVE` : 'NONE';
     
     document.getElementById('userPerformanceCards').innerHTML = teamMembers.map(u => {
-        const roleStr = String(u.role).toLowerCase();
+        const roleStr = canonicalRole(String(u.role).toLowerCase());
         const isReviewerMember = roleStr === 'admin' || roleStr === 'manager';
         const lastActivity = u.last_activity ? formatDate(u.last_activity) : 'Never';
         
@@ -2395,6 +2510,10 @@ function formatDate(dateStr) {
 let createMediaFiles = [];
 
 function openCreateModal() {
+    if (isDesignerRole(app.user?.role)) {
+        toast('Designers cannot create posts', 'error');
+        return;
+    }
     document.getElementById('createForm').reset();
     // Clear all platform checkboxes
     document.querySelectorAll('input[name="createPlatforms"]').forEach(cb => cb.checked = false);
@@ -2731,6 +2850,9 @@ async function openViewModal(id) {
         
         // Action buttons
         if (typeof renderActionButtons === 'function') renderActionButtons(p);
+
+        // Design/media collaboration
+        if (typeof renderDesignFiles === 'function') renderDesignFiles(p);
         
         // Comments
         if (typeof renderViewComments === 'function') renderViewComments(p.comments || []);
@@ -2738,28 +2860,14 @@ async function openViewModal(id) {
         // Activity
         if (typeof renderViewActivity === 'function') renderViewActivity(p.activity || []);
         
-        // Buttons visibility
-        // Buttons visibility
-        const isManager = app.user.role === 'manager';
-        const isOwner = p.author_id == app.user.id;
-        const isApprovedOrLater = ['APPROVED', 'SCHEDULED', 'PUBLISHED'].includes(p.status);
-        
-        let showActionButtons = false;
-        if (isApprovedOrLater) {
-            showActionButtons = false;
-        } else {
-            if (isManager) {
-                showActionButtons = true;
-            } else if (['admin', 'staff'].includes(app.user.role)) {
-                showActionButtons = isOwner;
-            }
-        }
-        
         const editBtn = document.getElementById('viewEditBtn');
-        if (editBtn) editBtn.classList.toggle('hidden', !showActionButtons);
+        if (editBtn) editBtn.classList.toggle('hidden', !canCurrentUserEditPost(p));
         
         const deleteBtn = document.getElementById('viewDeleteBtn');
-        if (deleteBtn) deleteBtn.classList.toggle('hidden', !showActionButtons);
+        if (deleteBtn) deleteBtn.classList.toggle('hidden', !canCurrentUserDeletePost(p));
+
+        const commentComposer = document.getElementById('viewCommentComposer');
+        if (commentComposer) commentComposer.classList.toggle('hidden', !canCurrentUserCommentOnPost(p));
         
         const modal = document.getElementById('viewModal');
         if (modal) modal.classList.remove('hidden');
@@ -2772,9 +2880,10 @@ async function openViewModal(id) {
 
 function renderActionButtons(p) {
     const container = document.getElementById('actionButtons');
-    const isAdmin = app.user.role === 'admin';
-    const isManager = app.user.role === 'manager';
-    const isAdminOrManager = ['admin', 'manager'].includes(app.user.role);
+    const currentRole = canonicalRole(app.user.role);
+    const isAdmin = currentRole === 'admin';
+    const isManager = currentRole === 'manager';
+    const isAdminOrManager = ['admin', 'manager'].includes(currentRole);
     const isOwner = p.author_id == app.user.id;
     let buttons = [];
     
@@ -2792,7 +2901,7 @@ function renderActionButtons(p) {
     } else if (p.status === 'PENDING_REVIEW') {
         if (isAdmin) {
             buttons.push(`<button onclick="sendToReviewed()" class="${btnSuccess}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Approve</button>`);
-            buttons.push(`<button onclick="openChangesModal()" class="${btnWarning}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Request Changes</button>`);
+            buttons.push(`<button onclick="focusDesignFeedback()" class="${btnWarning}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-8 8h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Request Design Changes</button>`);
         }
         if (isOwner) {
             buttons.push(`<button onclick="recallToDraft()" class="${btnSecondary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Recall to Draft</button>`);
@@ -2830,6 +2939,96 @@ function renderActionButtons(p) {
     }
     
     container.innerHTML = buttons.join('') || '<div class="text-slate-400 text-center py-2 text-sm">No actions available</div>';
+}
+
+function renderDesignFiles(post) {
+    const sectionTitle = document.getElementById('viewDesignSectionTitle');
+    const sectionNote = document.getElementById('viewDesignSectionNote');
+    const filesContainer = document.getElementById('viewDesignFiles');
+    const uploadControls = document.getElementById('viewDesignUploadControls');
+
+    if (!sectionTitle || !sectionNote || !filesContainer || !uploadControls) return;
+
+    sectionTitle.textContent = post.status === 'PENDING_REVIEW' ? 'Design Files' : 'Media Files';
+    sectionNote.textContent = post.status === 'PENDING_REVIEW'
+        ? 'Admins can download the original files. Designers can replace their pending uploads from here. To remove a designer file entirely, recall the post back to draft first.'
+        : 'Attached files are shown here in their original quality.';
+
+    uploadControls.classList.toggle('hidden', !canCurrentUserUploadDesign(post));
+
+    const files = post.media || [];
+    filesContainer.innerHTML = files.map(media => {
+        const uploaderName = media.full_name || media.username || 'Unknown';
+        const sizeLabel = media.file_size ? `${(media.file_size / (1024 * 1024)).toFixed(1)} MB` : '';
+        const deleteButton = canCurrentUserDeleteDesign(media, post)
+            ? `<button type="button" onclick="deleteDesignMedia(${media.id})" class="px-3 py-2 text-xs font-bold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition-colors">Delete</button>`
+            : '';
+        const preview = isVideoFile(media.file_path)
+            ? `<video src="${media.file_path}" class="w-16 h-16 rounded-lg object-cover bg-slate-900" muted></video>`
+            : `<img src="${media.file_path}" class="w-16 h-16 rounded-lg object-cover bg-slate-100">`;
+
+        return `
+            <div class="flex items-center gap-4 p-3 border border-slate-200 rounded-xl bg-slate-50">
+                <div class="flex-shrink-0">${preview}</div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-semibold text-sm text-slate-800 truncate">${escapeHtml(media.original_name || media.file_name)}</div>
+                    <div class="text-xs text-slate-500 mt-1">Uploaded by ${escapeHtml(uploaderName)}</div>
+                    <div class="text-xs text-slate-400 mt-1">${sizeLabel}${sizeLabel ? ' · ' : ''}${formatDate(media.created_at)}</div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="${media.file_path}" download class="px-3 py-2 text-xs font-bold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition-colors">
+                        Download
+                    </a>
+                    ${deleteButton}
+                </div>
+            </div>
+        `;
+    }).join('') || '<div class="text-sm text-slate-400 text-center py-6 border border-dashed border-slate-200 rounded-xl">No files uploaded yet</div>';
+}
+
+function focusDesignFeedback() {
+    const input = document.getElementById('viewNewComment');
+    if (!input) return;
+    input.focus();
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    input.placeholder = 'Write clear design feedback for the designer...';
+}
+
+async function uploadDesignFiles(e) {
+    if (!app.currentPost) return;
+
+    for (const file of Array.from(e.target.files || [])) {
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('post_id', app.currentPost.id);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+        const res = await fetch('api.php?action=upload_media', {
+            method: 'POST',
+            body: fd,
+            headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}
+        });
+        const data = await res.json();
+        if (!data.success) {
+            toast(data.message || 'Upload failed', 'error');
+            e.target.value = '';
+            return;
+        }
+    }
+
+    e.target.value = '';
+    toast('Design files uploaded', 'success');
+    openViewModal(app.currentPost.id);
+}
+
+async function deleteDesignMedia(id) {
+    if (!confirm('Delete this design file?')) return;
+    const data = await api(`delete_media&id=${id}`);
+    if (data.success) {
+        toast('File deleted', 'success');
+        openViewModal(app.currentPost.id);
+    } else {
+        toast(data.message || 'Failed to delete file', 'error');
+    }
 }
 
 function renderViewComments(comments) {
@@ -3523,19 +3722,19 @@ function showDayPosts(dateStr) {
 let allUsers = [];
 
 async function loadUsers() {
-    if (!['admin', 'manager'].includes(app.user?.role?.toLowerCase())) return;
+    if (!['admin', 'manager'].includes(canonicalRole(app.user?.role?.toLowerCase()))) return;
     
     const data = await api('fetch_users');
     if (data.success) {
         allUsers = data.data;
         document.getElementById('totalUsersCount').textContent = allUsers.length;
         document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.is_active).length;
-        document.getElementById('adminUsersCount').textContent = allUsers.filter(u => u.role?.toLowerCase() === 'admin').length;
+        document.getElementById('adminUsersCount').textContent = allUsers.filter(u => canonicalRole(u.role?.toLowerCase()) === 'admin').length;
         
         // Render Action Button
         const actionContainer = document.getElementById('userActionsContainer');
         if (actionContainer) {
-            actionContainer.innerHTML = app.user?.role?.toLowerCase() === 'manager' ? `
+            actionContainer.innerHTML = canonicalRole(app.user?.role?.toLowerCase()) === 'manager' ? `
                 <button onclick="openAddUserModal()" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg shadow-slate-900/10 transition-all">
                     <i class="fa-solid fa-plus"></i>
                     Add User
@@ -3566,8 +3765,8 @@ function renderUsersTable() {
                 </div>
             </td>
             <td class="px-6 py-4">
-                <span class="px-2 py-1 rounded-full text-xs font-medium ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : (u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')}">
-                    ${u.role}
+                <span class="px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeClasses(u.role)}">
+                    ${getRoleLabel(u.role)}
                 </span>
             </td>
             <td class="px-6 py-4">
@@ -3578,7 +3777,7 @@ function renderUsersTable() {
             <td class="px-6 py-4 text-sm text-slate-500">${formatDate(u.created_at)}</td>
             <td class="px-6 py-4 text-center">
                 <div class="flex items-center justify-center gap-2">
-                    ${app.user?.role?.toLowerCase() === 'manager' ? `
+                    ${canonicalRole(app.user?.role?.toLowerCase()) === 'manager' ? `
                     <button onclick="openEditUserModal(${u.id})" class="px-3 py-1 text-xs rounded-lg bg-brand-100 text-brand-600 hover:bg-brand-200">
                         Edit
                     </button>
@@ -3605,8 +3804,8 @@ function renderUsersTable() {
                     </div>
                 </div>
                 <div class="flex flex-col items-end gap-1">
-                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : (u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')}">
-                        ${u.role}
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getRoleBadgeClasses(u.role)}">
+                        ${getRoleLabel(u.role)}
                     </span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
                         ${u.is_active ? 'Active' : 'Inactive'}
@@ -3616,7 +3815,7 @@ function renderUsersTable() {
             <div class="pt-3 border-t border-slate-50 flex items-center justify-between">
                 <span class="text-[10px] font-bold text-slate-400 uppercase">Joined: ${formatDate(u.created_at)}</span>
                 <div class="flex gap-2">
-                    ${app.user?.role?.toLowerCase() === 'manager' ? `
+                    ${canonicalRole(app.user?.role?.toLowerCase()) === 'manager' ? `
                     <button onclick="openEditUserModal(${u.id})" class="p-2 text-brand-600 bg-brand-50 rounded-lg hover:bg-brand-100">
                         <i class="fa-solid fa-pen text-sm"></i>
                     </button>
@@ -3684,7 +3883,7 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
 function openAddUserModal() {
     document.getElementById('addUserUsername').value = '';
     document.getElementById('addUserFullName').value = '';
-    document.getElementById('addUserRole').value = 'staff';
+    document.getElementById('addUserRole').value = 'designer';
     document.getElementById('addUserPassword').value = '';
     document.getElementById('addUserModal').classList.remove('hidden');
 }

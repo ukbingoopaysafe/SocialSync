@@ -59,8 +59,8 @@ $pageTitle = 'User Management';
                     <div class="text-sm text-slate-500">Admins</div>
                 </div>
                 <div class="bg-white rounded-xl px-4 py-3 shadow-sm">
-                    <div id="staffCount" class="text-2xl font-bold text-blue-600">0</div>
-                    <div class="text-sm text-slate-500">Staff</div>
+                    <div id="designerCount" class="text-2xl font-bold text-blue-600">0</div>
+                    <div class="text-sm text-slate-500">Designers</div>
                 </div>
             </div>
             <button onclick="openModal()" class="bg-gold-500 hover:bg-gold-600 text-navy-900 px-5 py-2.5 rounded-lg font-semibold text-sm shadow-lg flex items-center gap-2">
@@ -140,7 +140,7 @@ $pageTitle = 'User Management';
                         <label class="block text-sm font-semibold mb-1">Role <span class="text-red-500">*</span></label>
                         <select id="role" required 
                                 class="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-gold-500">
-                            <option value="staff">Staff</option>
+                            <option value="designer">Designer</option>
                             <option value="manager">Manager</option>
                             <option value="admin">Admin</option>
                         </select>
@@ -197,6 +197,18 @@ let users = [];
 let deleteUserId = null;
 const currentUserId = <?= $_SESSION['user_id'] ?>;
 
+function canonicalRole(role) {
+    return role === 'staff' ? 'designer' : (role || '');
+}
+
+function getRoleLabel(role) {
+    const normalized = canonicalRole(role);
+    if (normalized === 'designer') return 'Designer';
+    if (normalized === 'manager') return 'Manager';
+    if (normalized === 'admin') return 'Admin';
+    return normalized;
+}
+
 async function api(action, method = 'GET', body = null) {
     const opts = { method, headers: {} };
     if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
@@ -216,11 +228,11 @@ async function loadUsers() {
 }
 
 function updateStats() {
-    const admins = users.filter(u => u.role === 'admin').length;
-    const staff = users.filter(u => u.role === 'staff').length;
+    const admins = users.filter(u => canonicalRole(u.role) === 'admin').length;
+    const designers = users.filter(u => canonicalRole(u.role) === 'designer').length;
     document.getElementById('totalUsers').textContent = users.length;
     document.getElementById('adminCount').textContent = admins;
-    document.getElementById('staffCount').textContent = staff;
+    document.getElementById('designerCount').textContent = designers;
 }
 
 function renderUsers() {
@@ -255,8 +267,8 @@ function renderUsers() {
             </td>
 
             <td class="px-6 py-4">
-                <span class="px-3 py-1 rounded-full text-xs font-semibold ${u.role === 'admin' ? 'bg-gold-100 text-gold-700' : 'bg-blue-100 text-blue-700'}">
-                    ${u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                <span class="px-3 py-1 rounded-full text-xs font-semibold ${canonicalRole(u.role) === 'admin' ? 'bg-gold-100 text-gold-700' : (canonicalRole(u.role) === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700')}">
+                    ${getRoleLabel(u.role)}
                 </span>
             </td>
             <td class="px-6 py-4">
