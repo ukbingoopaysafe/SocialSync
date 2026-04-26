@@ -9,8 +9,7 @@ require_once 'db.php';
 require_once 'includes/security.php';
 require_once 'includes/WorkflowManager.php';
 
-session_name(SESSION_NAME);
-session_start();
+startAppSession();
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: ' . BASE_URL);
@@ -469,6 +468,8 @@ try {
                 $company = fetchOne("SELECT * FROM companies WHERE id = 1");
             }
             
+            session_regenerate_id(true);
+
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
@@ -484,7 +485,7 @@ try {
             break;
         
         case 'logout':
-            session_destroy();
+            destroyAppSession();
             sendResponse(true, null, 'Logged out');
             break;
         

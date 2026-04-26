@@ -2,8 +2,7 @@
 require_once 'config.php';
 require_once 'db.php';
 require_once 'includes/security.php';
-session_name(SESSION_NAME);
-session_start();
+startAppSession();
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
 $csrfToken = generateCSRFToken();
 ?>

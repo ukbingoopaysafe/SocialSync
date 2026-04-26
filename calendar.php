@@ -5,8 +5,7 @@
  */
 require_once 'config.php';
 require_once 'db.php';
-session_name(SESSION_NAME);
-session_start();
+startAppSession();
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
 $pageTitle = 'Calendar';
 ?>

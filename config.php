@@ -6,6 +6,38 @@
  * Keep this file secure and never commit sensitive credentials to version control
  */
 
+if (!function_exists('isHttpsRequest')) {
+    function isHttpsRequest() {
+        if (PHP_SAPI === 'cli') {
+            return false;
+        }
+
+        if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+            return strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https';
+        }
+
+        if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
+            return true;
+        }
+
+        return (int)($_SERVER['SERVER_PORT'] ?? 80) === 443;
+    }
+}
+
+if (!function_exists('getAppBaseUrl')) {
+    function getAppBaseUrl() {
+        if (PHP_SAPI === 'cli') {
+            return 'http://social.local';
+        }
+
+        $scheme = isHttpsRequest() ? 'https' : 'http';
+        $host = $_SERVER['HTTP_X_FORWARDED_HOST'] ?? $_SERVER['HTTP_HOST'] ?? 'social.local';
+        $host = trim(explode(',', (string) $host)[0]);
+
+        return $scheme . '://' . $host;
+    }
+}
+
 // Database Configuration
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'socialsync_db');
@@ -14,14 +46,15 @@ define('DB_PASS', '1671');
 define('DB_CHARSET', 'utf8mb4');
 
 // Application URL (for CORS and redirects)
-define('BASE_URL', 'http://social.local');
+define('BASE_URL', getAppBaseUrl());
 
 // Session Configuration
 define('SESSION_NAME', 'SOCIALSYNC_SESSION');
-define('SESSION_LIFETIME', 3600 * 24);    // 24 hours in seconds
+define('SESSION_LIFETIME', 3600 * 24 * 7); // 7 days in seconds
 define('SESSION_COOKIE_PATH', '/');
-define('SESSION_COOKIE_SECURE', false);   // Set to TRUE if using HTTPS
+define('SESSION_COOKIE_SECURE', isHttpsRequest());
 define('SESSION_COOKIE_HTTPONLY', true);
+define('SESSION_COOKIE_SAMESITE', 'Lax');
 
 // Application Settings
 define('APP_NAME', 'BroMan Social');
@@ -63,6 +96,58 @@ if (ENVIRONMENT === 'development') {
 
 // Set timezone
 date_default_timezone_set(TIMEZONE);
+
+function startAppSession() {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    ini_set('session.gc_maxlifetime', (string) SESSION_LIFETIME);
+    ini_set('session.cookie_lifetime', (string) SESSION_LIFETIME);
+    ini_set('session.use_strict_mode', '1');
+
+    session_name(SESSION_NAME);
+    session_set_cookie_params([
+        'lifetime' => SESSION_LIFETIME,
+        'path' => SESSION_COOKIE_PATH,
+        'secure' => SESSION_COOKIE_SECURE,
+        'httponly' => SESSION_COOKIE_HTTPONLY,
+        'samesite' => SESSION_COOKIE_SAMESITE,
+    ]);
+
+    session_start();
+
+    // Sliding expiration: extend the cookie lifetime on active use.
+    if (!headers_sent() && session_id() !== '') {
+        setcookie(session_name(), session_id(), [
+            'expires' => time() + SESSION_LIFETIME,
+            'path' => SESSION_COOKIE_PATH,
+            'secure' => SESSION_COOKIE_SECURE,
+            'httponly' => SESSION_COOKIE_HTTPONLY,
+            'samesite' => SESSION_COOKIE_SAMESITE,
+        ]);
+    }
+}
+
+function destroyAppSession() {
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+        setcookie(session_name(), '', [
+            'expires' => time() - 3600,
+            'path' => SESSION_COOKIE_PATH,
+            'secure' => SESSION_COOKIE_SECURE,
+            'httponly' => SESSION_COOKIE_HTTPONLY,
+            'samesite' => SESSION_COOKIE_SAMESITE,
+        ]);
+    }
+
+    session_destroy();
+}
 
 define('ONESIGNAL_APP_ID', '9748ea3b-8a42-4279-b664-e6ab00d9756e');
 define('ONESIGNAL_REST_KEY', 'os_v2_app_s5eouo4kijbhtnte42vqbwlvnyf4nngzge4upmviquk57ehhdknq3fvg27zorw4wh6arczcfautanqkubbfgr5wtocb65gjlr7emw6y');
