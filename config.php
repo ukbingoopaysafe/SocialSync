@@ -38,6 +38,36 @@ if (!function_exists('getAppBaseUrl')) {
     }
 }
 
+if (!function_exists('loadLocalConfigOverrides')) {
+    function loadLocalConfigOverrides() {
+        $configLocalPath = __DIR__ . '/config.local.php';
+
+        if (!is_file($configLocalPath)) {
+            return [];
+        }
+
+        $overrides = require $configLocalPath;
+        return is_array($overrides) ? $overrides : [];
+    }
+}
+
+if (!function_exists('getConfigOverride')) {
+    function getConfigOverride(array $overrides, $key, $default = null) {
+        if (array_key_exists($key, $overrides) && $overrides[$key] !== null && $overrides[$key] !== '') {
+            return $overrides[$key];
+        }
+
+        $envValue = getenv(strtoupper($key));
+        if ($envValue !== false && $envValue !== '') {
+            return $envValue;
+        }
+
+        return $default;
+    }
+}
+
+$configOverrides = loadLocalConfigOverrides();
+
 // Database Configuration
 define('DB_HOST', 'localhost');
 define('DB_NAME', 'socialsync_db');
@@ -149,5 +179,5 @@ function destroyAppSession() {
     session_destroy();
 }
 
-define('ONESIGNAL_APP_ID', '9748ea3b-8a42-4279-b664-e6ab00d9756e');
-define('ONESIGNAL_REST_KEY', 'os_v2_app_s5eouo4kijbhtnte42vqbwlvnyf4nngzge4upmviquk57ehhdknq3fvg27zorw4wh6arczcfautanqkubbfgr5wtocb65gjlr7emw6y');
+define('ONESIGNAL_APP_ID', getConfigOverride($configOverrides, 'onesignal_app_id', '9748ea3b-8a42-4279-b664-e6ab00d9756e'));
+define('ONESIGNAL_REST_KEY', getConfigOverride($configOverrides, 'onesignal_rest_key', ''));

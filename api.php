@@ -397,7 +397,7 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                 ];
             }
 
-            $ch = curl_init('https://api.onesignal.com/notifications');
+            $ch = curl_init('https://api.onesignal.com/notifications?c=push');
             curl_setopt_array($ch, [
                 CURLOPT_POST           => true,
                 CURLOPT_POSTFIELDS     => json_encode($payload),
