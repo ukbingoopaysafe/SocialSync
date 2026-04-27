@@ -8,6 +8,18 @@
     // OneSignal only works on secure origins (HTTPS or localhost)
     if (location.protocol === 'https:' || location.hostname === 'localhost') {
         window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.reportOneSignalSubscriptionState = function(OneSignal, label = 'Push subscription state') {
+            try {
+                console.log(`[OneSignal] ${label}:`, {
+                    permission: OneSignal.Notifications.permission,
+                    optedIn: OneSignal.User?.PushSubscription?.optedIn,
+                    id: OneSignal.User?.PushSubscription?.id,
+                    token: OneSignal.User?.PushSubscription?.token
+                });
+            } catch (stateError) {
+                console.warn('OneSignal subscription state warning:', stateError);
+            }
+        };
         window.syncOneSignalWorkspace = async function(OneSignal) {
             const userId = String(<?= (int)$_SESSION['user_id'] ?>);
             const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
@@ -61,19 +73,30 @@
                     serviceWorkerPath: "OneSignalSDKWorker.js"
                 });
 
-                if (OneSignal.Notifications.permission === 'default') {
-                    await OneSignal.Notifications.requestPermission();
-                }
+                OneSignal.User.PushSubscription.addEventListener('change', async function(event) {
+                    console.log('[OneSignal] Push subscription changed:', event);
 
-                if (OneSignal.Notifications.permission === 'granted' || OneSignal.Notifications.permission === true) {
                     try {
-                        await OneSignal.User.PushSubscription.optIn();
-                    } catch (subscriptionError) {
-                        console.warn('OneSignal push opt-in warning:', subscriptionError);
+                        await window.syncOneSignalWorkspace(OneSignal);
+                        console.log('[OneSignal] Re-synced user/workspace after subscription change');
+                    } catch (syncError) {
+                        console.warn('OneSignal re-sync warning:', syncError);
                     }
-                }
+
+                    window.reportOneSignalSubscriptionState(OneSignal, 'Push subscription state after change');
+                });
 
                 await window.syncOneSignalWorkspace(OneSignal);
+
+                try {
+                    if (!OneSignal.User.PushSubscription.optedIn) {
+                        await OneSignal.User.PushSubscription.optIn();
+                    }
+                } catch (subscriptionError) {
+                    console.warn('OneSignal push opt-in warning:', subscriptionError);
+                }
+
+                window.reportOneSignalSubscriptionState(OneSignal);
             } catch(e) {
                 console.warn('OneSignal init failed:', e);
             }
