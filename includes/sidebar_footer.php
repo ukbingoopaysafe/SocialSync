@@ -60,6 +60,19 @@
                     serviceWorkerParam: { scope: "/" },
                     serviceWorkerPath: "OneSignalSDKWorker.js"
                 });
+
+                if (OneSignal.Notifications.permission === 'default') {
+                    await OneSignal.Notifications.requestPermission();
+                }
+
+                if (OneSignal.Notifications.permission === 'granted' || OneSignal.Notifications.permission === true) {
+                    try {
+                        await OneSignal.User.PushSubscription.optIn();
+                    } catch (subscriptionError) {
+                        console.warn('OneSignal push opt-in warning:', subscriptionError);
+                    }
+                }
+
                 await window.syncOneSignalWorkspace(OneSignal);
             } catch(e) {
                 console.warn('OneSignal init failed:', e);

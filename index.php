@@ -83,10 +83,34 @@ $csrfToken = generateCSRFToken();
                     
                     const permission = OneSignal.Notifications.permission;
                     console.log('[OneSignal] Current permission:', permission);
+
+                    if (permission === 'default') {
+                        console.log('[OneSignal] Requesting push permission prompt');
+                        await OneSignal.Notifications.requestPermission();
+                    }
+
+                    if (OneSignal.Notifications.permission === 'granted' || OneSignal.Notifications.permission === true) {
+                        try {
+                            console.log('[OneSignal] Ensuring push subscription is opted in');
+                            await OneSignal.User.PushSubscription.optIn();
+                        } catch (subscriptionError) {
+                            console.warn('[OneSignal] Push opt-in warning:', subscriptionError);
+                        }
+                    }
                     
                     console.log('[OneSignal] Syncing user/workspace context');
                     await window.syncOneSignalWorkspace(OneSignal);
                     console.log('[OneSignal] Login successful');
+
+                    try {
+                        console.log('[OneSignal] Push subscription state:', {
+                            optedIn: OneSignal.User?.PushSubscription?.optedIn,
+                            id: OneSignal.User?.PushSubscription?.id,
+                            token: OneSignal.User?.PushSubscription?.token
+                        });
+                    } catch (stateError) {
+                        console.warn('[OneSignal] Subscription state warning:', stateError);
+                    }
                 } catch(e) {
                     console.error('[OneSignal] ERROR:', e);
                 }
