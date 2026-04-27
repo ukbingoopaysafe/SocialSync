@@ -610,6 +610,36 @@ $csrfToken = generateCSRFToken();
                 </div>
             </div>
 
+            <div id="archiveAdvancedFilters" class="hidden mb-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+                    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4 xl:min-w-[760px]">
+                        <div>
+                            <label for="archiveAuthorFilter" class="mb-1 block text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">Author</label>
+                            <select id="archiveAuthorFilter" onchange="refreshBoardContent()" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500">
+                                <option value="">All Authors</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="archiveDateFrom" class="mb-1 block text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">From</label>
+                            <input id="archiveDateFrom" type="date" onchange="refreshBoardContent()" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div>
+                            <label for="archiveDateTo" class="mb-1 block text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">To</label>
+                            <input id="archiveDateTo" type="date" onchange="refreshBoardContent()" class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-brand-500 focus:ring-2 focus:ring-brand-500">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="clearArchiveFilters()" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-100">
+                                Clear Filters
+                            </button>
+                        </div>
+                    </div>
+                    <div class="xl:max-w-xs">
+                        <p id="archiveResultsLabel" class="text-sm font-bold text-slate-800">0 published posts</p>
+                        <p id="archiveActiveFilters" class="mt-1 text-xs text-slate-400">Browsing the full archive.</p>
+                    </div>
+                </div>
+            </div>
+
             <div id="archiveModeSummary" class="hidden mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
                     <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Published</p>
@@ -1519,6 +1549,7 @@ const app = {
     user: null,
     posts: [],
     archivePosts: [],
+    archiveAuthors: [],
     currentPost: null,
     currentTab: 'board',
     lastUnreadCount: 0,
@@ -1529,7 +1560,7 @@ const STATUS_COLORS = {
     'DRAFT': 'bg-sky-100 text-sky-700',
     'PENDING_REVIEW': 'bg-amber-100 text-amber-700',
     'REVIEWED': 'bg-orange-100 text-orange-700',
-    'CHANGES_REQUESTED': 'bg-red-100 text-red-700',
+    'CHANGES_REQUESTED': 'bg-rose-100 text-rose-700',
     'APPROVED': 'bg-emerald-100 text-emerald-700',
     'SCHEDULED': 'bg-indigo-100 text-indigo-700',
     'PUBLISHED': 'bg-slate-100 text-slate-600'
@@ -2940,7 +2971,7 @@ async function loadDashboard() {
 
     const activityStatusColors = {
         'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
-        'REVIEWED': 'bg-orange-500', 'CHANGES_REQUESTED': 'bg-orange-500', 'APPROVED': 'bg-emerald-500',
+        'REVIEWED': 'bg-orange-500', 'CHANGES_REQUESTED': 'bg-rose-500', 'APPROVED': 'bg-emerald-500',
         'SCHEDULED': 'bg-indigo-500', 'PUBLISHED': 'bg-slate-600'
     };
 
@@ -3005,6 +3036,7 @@ async function loadArchivePosts(checkChanges = false) {
     const data = await api(url);
     if (data.success) {
         app.archivePosts = data.data;
+        updateArchiveAuthors(data.data);
         if (currentBoardMode === 'archive') {
             renderArchiveBoard();
         }
@@ -3023,7 +3055,10 @@ function getBoardFilters() {
     return {
         platform: document.getElementById('platformFilter')?.value || '',
         myPosts: !!document.getElementById('myPostsFilter')?.checked,
-        search: document.getElementById('searchInput')?.value?.trim() || ''
+        search: document.getElementById('searchInput')?.value?.trim() || '',
+        authorId: document.getElementById('archiveAuthorFilter')?.value || '',
+        dateFrom: document.getElementById('archiveDateFrom')?.value || '',
+        dateTo: document.getElementById('archiveDateTo')?.value || ''
     };
 }
 
@@ -3036,6 +3071,9 @@ function buildPostsUrl(view = 'workflow') {
     if (filters.platform) params.push(`platform=${encodeURIComponent(filters.platform)}`);
     if (filters.myPosts) params.push('my_posts=true');
     if (filters.search) params.push(`search=${encodeURIComponent(filters.search)}`);
+    if (view === 'archive' && filters.authorId) params.push(`author_id=${encodeURIComponent(filters.authorId)}`);
+    if (view === 'archive' && filters.dateFrom) params.push(`date_from=${encodeURIComponent(filters.dateFrom)}`);
+    if (view === 'archive' && filters.dateTo) params.push(`date_to=${encodeURIComponent(filters.dateTo)}`);
     if (params.length) url += '&' + params.join('&');
 
     return url;
@@ -3059,11 +3097,23 @@ function activateBoardMode(mode) {
     closeSidebarOnMobile();
 }
 
+function clearArchiveFilters() {
+    const idsToReset = ['platformFilter', 'searchInput', 'archiveAuthorFilter', 'archiveDateFrom', 'archiveDateTo'];
+    idsToReset.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    const myPosts = document.getElementById('myPostsFilter');
+    if (myPosts) myPosts.checked = false;
+    refreshBoardContent();
+}
+
 function updateBoardModeUI() {
     const isArchive = currentBoardMode === 'archive';
     const workflowBtn = document.getElementById('boardModeWorkflow');
     const archiveBtn = document.getElementById('boardModeArchive');
     const sidebarModePanel = document.getElementById('boardModeSidebar');
+    const archiveAdvancedFilters = document.getElementById('archiveAdvancedFilters');
     const workflowTabs = document.getElementById('workflowStatusTabs');
     const workflowPanel = document.getElementById('workflowBoardPanel');
     const archivePanel = document.getElementById('archiveBoardPanel');
@@ -3083,6 +3133,7 @@ function updateBoardModeUI() {
     }
 
     sidebarModePanel?.classList.toggle('hidden', app.currentTab !== 'board');
+    archiveAdvancedFilters?.classList.toggle('hidden', !isArchive);
     workflowTabs?.classList.toggle('hidden', isArchive);
     workflowPanel?.classList.toggle('hidden', isArchive);
     archivePanel?.classList.toggle('hidden', !isArchive);
@@ -3090,6 +3141,10 @@ function updateBoardModeUI() {
 
     if (searchInput) {
         searchInput.placeholder = isArchive ? 'Search published posts...' : 'Search posts...';
+    }
+
+    if (app.currentTab === 'board') {
+        document.getElementById('pageTitle').textContent = isArchive ? 'Published Archive' : 'Content Board';
     }
 
     if (isArchive) {
@@ -3258,6 +3313,8 @@ function renderArchiveSummary(posts) {
     const latestPost = posts[0] || null;
     const authorIds = new Set();
     const platforms = new Set();
+    const filters = getBoardFilters();
+    const activeFilters = [];
 
     posts.forEach(post => {
         if (post.author_id) authorIds.add(String(post.author_id));
@@ -3268,6 +3325,57 @@ function renderArchiveSummary(posts) {
     document.getElementById('archiveSummaryLatest').textContent = latestPost ? formatAbsoluteDate(getArchiveDate(latestPost), { month: 'short', day: 'numeric' }) : 'No posts';
     document.getElementById('archiveSummaryAuthors').textContent = authorIds.size;
     document.getElementById('archiveSummaryPlatforms').textContent = platforms.size;
+
+    if (filters.platform) activeFilters.push(filters.platform);
+    if (filters.myPosts) activeFilters.push('My posts');
+    if (filters.authorId) {
+        const author = app.archiveAuthors.find(item => String(item.id) === String(filters.authorId));
+        if (author) activeFilters.push(author.name);
+    }
+    if (filters.dateFrom || filters.dateTo) {
+        const fromLabel = filters.dateFrom || 'start';
+        const toLabel = filters.dateTo || 'today';
+        activeFilters.push(`${fromLabel} to ${toLabel}`);
+    }
+    if (filters.search) activeFilters.push(`"${filters.search}"`);
+
+    const resultsLabel = document.getElementById('archiveResultsLabel');
+    const filtersLabel = document.getElementById('archiveActiveFilters');
+    if (resultsLabel) {
+        resultsLabel.textContent = `${posts.length} published post${posts.length === 1 ? '' : 's'}`;
+    }
+    if (filtersLabel) {
+        filtersLabel.textContent = activeFilters.length > 0 ? `Filtered by ${activeFilters.join(' • ')}` : 'Browsing the full archive.';
+    }
+}
+
+function updateArchiveAuthors(posts) {
+    const nextAuthors = [...app.archiveAuthors];
+    const seen = new Set(nextAuthors.map(author => String(author.id)));
+
+    posts.forEach(post => {
+        if (!post?.author_id || seen.has(String(post.author_id))) return;
+        seen.add(String(post.author_id));
+        nextAuthors.push({
+            id: post.author_id,
+            name: post.author_full_name || post.author_name || `User ${post.author_id}`
+        });
+    });
+
+    nextAuthors.sort((a, b) => a.name.localeCompare(b.name));
+    app.archiveAuthors = nextAuthors;
+    renderArchiveAuthorOptions();
+}
+
+function renderArchiveAuthorOptions() {
+    const select = document.getElementById('archiveAuthorFilter');
+    if (!select) return;
+
+    const selectedValue = select.value || '';
+    select.innerHTML = `<option value="">All Authors</option>${app.archiveAuthors.map(author => `
+        <option value="${author.id}">${escapeHtml(author.name)}</option>
+    `).join('')}`;
+    select.value = app.archiveAuthors.some(author => String(author.id) === String(selectedValue)) ? selectedValue : '';
 }
 
 function getPostPlatforms(post) {
@@ -3369,7 +3477,7 @@ function cardHTML(post) {
         'DRAFT': { color: 'bg-sky-50 text-sky-600', dot: 'bg-sky-400', label: 'Draft', border: 'border-sky-400' },
         'PENDING_REVIEW': { color: 'bg-amber-50 text-amber-600', dot: 'bg-amber-400', label: 'Pending', border: 'border-amber-400' },
         'REVIEWED': { color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400', label: 'Reviewed', border: 'border-orange-400' },
-        'CHANGES_REQUESTED': { color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400', label: 'Revise', border: 'border-orange-400' },
+        'CHANGES_REQUESTED': { color: 'bg-rose-50 text-rose-700', dot: 'bg-rose-500', label: 'Revise', border: 'border-rose-400' },
         'APPROVED': { color: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500', label: 'Approved', border: 'border-emerald-400' },
         'SCHEDULED': { color: 'bg-indigo-50 text-indigo-600', dot: 'bg-indigo-500', label: 'Scheduled', border: 'border-indigo-400' },
         'PUBLISHED': { color: 'bg-slate-50 text-slate-600', dot: 'bg-slate-500', label: 'Published', border: 'border-slate-400' }
@@ -3428,7 +3536,7 @@ function cardHTML(post) {
 
     // Changes Requested Indicator (Minimal)
     const changesIndicator = hasChanges ?
-        `<div class="flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded mb-2"><i class="fa-solid fa-circle-exclamation"></i> Revision Requested</div>` : '';
+        `<div class="flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-1 rounded mb-2"><i class="fa-solid fa-circle-exclamation"></i> Revision Requested</div>` : '';
 
     const dateMeta = getPostDisplayMeta(post);
 
@@ -3620,7 +3728,7 @@ async function openViewModal(id) {
             const statusColors = {
                 'DRAFT': 'bg-slate-100 text-slate-700 border-slate-200',
                 'PENDING_REVIEW': 'bg-amber-50 text-amber-700 border-amber-200',
-                'CHANGES_REQUESTED': 'bg-orange-50 text-orange-700 border-orange-200',
+                'CHANGES_REQUESTED': 'bg-rose-50 text-rose-700 border-rose-200',
                 'APPROVED': 'bg-emerald-50 text-emerald-700 border-emerald-200',
                 'SCHEDULED': 'bg-blue-50 text-blue-700 border-blue-200',
                 'PUBLISHED': 'bg-slate-900 text-white border-slate-900'
@@ -3833,7 +3941,7 @@ async function openViewModal(id) {
 
         // Changes notice
         const changesNotice = document.getElementById('viewChangesNotice');
-        if (changesNotice && p.change_request_reason) {
+        if (changesNotice && p.status === 'CHANGES_REQUESTED' && p.change_request_reason) {
             const reasonEl = document.getElementById('viewChangesReason');
             if (reasonEl) reasonEl.textContent = `${p.change_request_reason} — ${p.change_requested_by_name || 'Admin'}`;
             changesNotice.classList.remove('hidden');

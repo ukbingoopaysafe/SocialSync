@@ -1169,6 +1169,18 @@ try {
                 $where[] = "p.author_id = ?";
                 $params[] = $user['id'];
             }
+            if ($isArchiveView && !empty($_GET['author_id'])) {
+                $where[] = "p.author_id = ?";
+                $params[] = (int)$_GET['author_id'];
+            }
+            if ($isArchiveView && !empty($_GET['date_from'])) {
+                $where[] = "COALESCE(p.published_date, p.updated_at, p.created_at) >= ?";
+                $params[] = $_GET['date_from'] . ' 00:00:00';
+            }
+            if ($isArchiveView && !empty($_GET['date_to'])) {
+                $where[] = "COALESCE(p.published_date, p.updated_at, p.created_at) <= ?";
+                $params[] = $_GET['date_to'] . ' 23:59:59';
+            }
             if (!empty($_GET['search'])) {
                 $where[] = "(p.title LIKE ? OR p.content LIKE ?)";
                 $term = '%' . $_GET['search'] . '%';
@@ -1503,6 +1515,8 @@ try {
                 $updateSql .= ", change_request_reason = ?, change_requested_by = ?, change_requested_at = NOW()";
                 $updateParams[] = $reason;
                 $updateParams[] = $user['id'];
+            } else {
+                $updateSql .= ", change_request_reason = NULL, change_requested_by = NULL, change_requested_at = NULL";
             }
 
             if ($newStatus === 'SCHEDULED' && $scheduledDate) {
