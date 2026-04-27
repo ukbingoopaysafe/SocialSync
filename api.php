@@ -24,13 +24,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $action = $_GET['action'] ?? '';
 
+$deferredPushNotifications = [];
+
 // ===== HELPERS =====
 
+function dispatchDeferredPushNotifications() {
+    static $hasDispatched = false;
+    global $deferredPushNotifications;
+
+    if ($hasDispatched || empty($deferredPushNotifications)) {
+        return;
+    }
+
+    $hasDispatched = true;
+
+    if (!(defined('ONESIGNAL_APP_ID') && defined('ONESIGNAL_REST_KEY') && ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY)) {
+        return;
+    }
+
+    foreach ($deferredPushNotifications as $job) {
+        try {
+            $ch = curl_init('https://api.onesignal.com/notifications?c=push');
+            curl_setopt_array($ch, [
+                CURLOPT_POST              => true,
+                CURLOPT_POSTFIELDS        => json_encode($job['payload']),
+                CURLOPT_HTTPHEADER        => [
+                    'Content-Type: application/json; charset=utf-8',
+                    'Authorization: Key ' . ONESIGNAL_REST_KEY,
+                ],
+                CURLOPT_RETURNTRANSFER    => true,
+                CURLOPT_TIMEOUT_MS        => 2500,
+                CURLOPT_CONNECTTIMEOUT_MS => 700,
+                CURLOPT_NOSIGNAL          => 1,
+            ]);
+            $rawResponse = curl_exec($ch);
+            $curlError = curl_error($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if (!empty($curlError) || $httpCode < 200 || $httpCode >= 300) {
+                error_log('OneSignal push failed: ' . json_encode([
+                    'user_id' => $job['meta']['user_id'] ?? null,
+                    'type' => $job['meta']['type'] ?? null,
+                    'post_id' => $job['meta']['post_id'] ?? null,
+                    'target' => $job['meta']['target'] ?? null,
+                    'http_code' => $httpCode,
+                    'error' => $curlError,
+                    'response' => json_decode($rawResponse, true) ?? $rawResponse,
+                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            }
+        } catch (Exception $e) {
+            error_log('OneSignal push exception: ' . $e->getMessage());
+        }
+    }
+}
+
+function queueDeferredPushNotification($payload, $meta = []) {
+    global $deferredPushNotifications;
+    $deferredPushNotifications[] = [
+        'payload' => $payload,
+        'meta' => $meta,
+    ];
+}
+
 function sendResponse($success, $data = null, $message = '', $code = 200) {
+    $payload = json_encode(['success' => $success, 'data' => $data, 'message' => $message]);
+
     http_response_code($code);
-    echo json_encode(['success' => $success, 'data' => $data, 'message' => $message]);
+
+    if (!headers_sent()) {
+        header('Connection: close');
+        header('Content-Length: ' . strlen($payload));
+        header('X-Accel-Buffering: no');
+    }
+
+    echo $payload;
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    ignore_user_abort(true);
+
+    while (ob_get_level() > 0) {
+        @ob_end_flush();
+    }
+
+    flush();
+
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    }
+
+    dispatchDeferredPushNotifications();
     exit;
 }
+
+register_shutdown_function('dispatchDeferredPushNotifications');
 
 function isAuthenticated() {
     return isset($_SESSION['user_id']) && isset($_SESSION['username']);
@@ -396,36 +486,12 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                     'notification_type' => $type,
                 ];
             }
-
-            $ch = curl_init('https://api.onesignal.com/notifications?c=push');
-            curl_setopt_array($ch, [
-                CURLOPT_POST           => true,
-                CURLOPT_POSTFIELDS     => json_encode($payload),
-                CURLOPT_HTTPHEADER     => [
-                    'Content-Type: application/json; charset=utf-8',
-                    'Authorization: Key ' . ONESIGNAL_REST_KEY,
-                ],
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT_MS     => 1200,     // Push is best-effort; never let it slow app actions
-                CURLOPT_CONNECTTIMEOUT_MS => 400,
-                CURLOPT_NOSIGNAL       => 1,
+            queueDeferredPushNotification($payload, [
+                'user_id' => $userId,
+                'type' => $type,
+                'post_id' => $postId,
+                'target' => 'external_id:' . strval($userId),
             ]);
-            $rawResponse = curl_exec($ch);
-            $curlError = curl_error($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            if (!empty($curlError) || $httpCode < 200 || $httpCode >= 300) {
-                error_log('OneSignal push failed: ' . json_encode([
-                    'user_id' => $userId,
-                    'type' => $type,
-                    'post_id' => $postId,
-                    'target' => 'external_id:' . strval($userId),
-                    'http_code' => $httpCode,
-                    'error' => $curlError,
-                    'response' => json_decode($rawResponse, true) ?? $rawResponse,
-                ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-            }
         } catch (Exception $e) {
             // Silently fail – push is best-effort, DB notification already saved
             error_log('OneSignal push exception: ' . $e->getMessage());
