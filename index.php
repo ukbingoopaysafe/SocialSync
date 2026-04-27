@@ -30,6 +30,105 @@ $csrfToken = generateCSRFToken();
     <style>
         * { box-sizing: border-box; }
         body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f8fafc; }
+        .rich-text-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 1px solid rgb(226 232 240);
+            border-bottom: 0;
+            border-radius: 0.75rem 0.75rem 0 0;
+            background: rgb(248 250 252);
+        }
+        .rich-text-tool {
+            min-width: 2.25rem;
+            height: 2.25rem;
+            border: 1px solid rgb(203 213 225);
+            border-radius: 0.6rem;
+            background: white;
+            color: rgb(51 65 85);
+            font-size: 0.875rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .rich-text-tool:hover {
+            border-color: rgb(14 165 233);
+            color: rgb(2 132 199);
+            background: rgb(240 249 255);
+        }
+        .rich-text-editor {
+            min-height: 13rem;
+            padding: 1rem;
+            border: 1px solid rgb(226 232 240);
+            border-radius: 0 0 0.75rem 0.75rem;
+            background: rgb(248 250 252);
+            color: rgb(51 65 85);
+            line-height: 1.75;
+            overflow-y: auto;
+        }
+        .rich-text-editor:focus {
+            outline: none;
+            border-color: rgb(14 165 233);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+        }
+        .rich-text-editor[data-empty="true"]::before {
+            content: attr(data-placeholder);
+            color: rgb(148 163 184);
+            pointer-events: none;
+        }
+        .rich-text-editor p,
+        .rich-text-editor ul,
+        .rich-text-editor ol,
+        .rich-text-editor blockquote,
+        .rich-text-content p,
+        .rich-text-content ul,
+        .rich-text-content ol,
+        .rich-text-content blockquote {
+            margin: 0 0 0.9rem;
+        }
+        .rich-text-editor ul,
+        .rich-text-content ul {
+            list-style: disc;
+            padding-inline-start: 1.5rem;
+        }
+        .rich-text-editor ol,
+        .rich-text-content ol {
+            list-style: decimal;
+            padding-inline-start: 1.5rem;
+        }
+        .rich-text-editor blockquote,
+        .rich-text-content blockquote {
+            border-inline-start: 3px solid rgb(125 211 252);
+            background: rgba(14, 165, 233, 0.05);
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            color: rgb(71 85 105);
+        }
+        .rich-text-editor h2,
+        .rich-text-content h2 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            line-height: 1.4;
+            margin: 0 0 0.9rem;
+            color: rgb(15 23 42);
+        }
+        .rich-text-editor h3,
+        .rich-text-content h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.5;
+            margin: 0 0 0.8rem;
+            color: rgb(30 41 59);
+        }
+        .rich-text-editor a,
+        .rich-text-content a {
+            color: rgb(2 132 199);
+            text-decoration: underline;
+        }
     </style>
     <!-- OneSignal Web SDK (Push Notifications - requires HTTPS) -->
     <?php if (isset($_SESSION['user_id'])): ?>
@@ -798,15 +897,47 @@ $csrfToken = generateCSRFToken();
                     <div>
                         <div class="flex justify-between items-center mb-2">
                              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Content</label>
-                             <button type="button" onclick="toggleEmojiPicker('createContent', 'createEmojiBtn')" id="createEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors text-sm">
-                                <i class="fa-regular fa-face-smile"></i>
-                             </button>
+                             <div class="relative">
+                                 <button type="button" onclick="toggleEmojiPicker('createContent', 'createEmojiBtn')" id="createEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors text-sm">
+                                    <i class="fa-regular fa-face-smile"></i>
+                                 </button>
+                                 <div id="createEmojiPickerContainer" class="absolute z-50 hidden top-full mt-2 left-0 shadow-xl rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                      <emoji-picker class="light"></emoji-picker>
+                                 </div>
+                             </div>
                         </div>
                         <div class="relative">
-                            <textarea id="createContent" rows="4" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-slate-700 placeholder-slate-400" placeholder="What's on your mind?"></textarea>
-                            <div id="createEmojiPickerContainer" class="absolute z-50 hidden mt-1 right-0 shadow-xl rounded-lg overflow-hidden border border-slate-200">
-                                 <emoji-picker class="light"></emoji-picker>
+                            <div class="rich-text-toolbar">
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('createContent', 'bold')" class="rich-text-tool" title="Bold">
+                                    <i class="fa-solid fa-bold"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('createContent', 'italic')" class="rich-text-tool" title="Italic">
+                                    <i class="fa-solid fa-italic"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('createContent', 'underline')" class="rich-text-tool" title="Underline">
+                                    <i class="fa-solid fa-underline"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('createContent', 'formatBlock', 'h2')" class="rich-text-tool" title="Heading">
+                                    H2
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('createContent', 'insertUnorderedList')" class="rich-text-tool" title="Bulleted list">
+                                    <i class="fa-solid fa-list-ul"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('createContent', 'insertOrderedList')" class="rich-text-tool" title="Numbered list">
+                                    <i class="fa-solid fa-list-ol"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('createContent', 'formatBlock', 'blockquote')" class="rich-text-tool" title="Quote">
+                                    <i class="fa-solid fa-quote-right"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorLink('createContent')" class="rich-text-tool" title="Insert link">
+                                    <i class="fa-solid fa-link"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="clearEditorFormatting('createContent')" class="rich-text-tool" title="Clear formatting">
+                                    <i class="fa-solid fa-eraser"></i>
+                                </button>
                             </div>
+                            <div id="createContentEditor" contenteditable="true" dir="auto" class="rich-text-editor" data-placeholder="What's on your mind?" data-empty="true"></div>
+                            <input type="hidden" id="createContent" required>
                         </div>
                     </div>
                 </div>
@@ -1000,7 +1131,7 @@ $csrfToken = generateCSRFToken();
                         
                         <!-- Main Content -->
                         <div class="prose prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-600 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-600">
-                            <p id="viewContent" class="whitespace-pre-wrap"></p>
+                            <div id="viewContent" class="rich-text-content text-slate-600"></div>
                         </div>
 
                         <div id="viewDesignSection" class="space-y-4">
@@ -1086,15 +1217,47 @@ $csrfToken = generateCSRFToken();
                     <div>
                         <div class="flex justify-between items-center mb-2">
                              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Content</label>
-                             <button type="button" onclick="toggleEmojiPicker('editContent', 'editEmojiBtn')" id="editEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors text-sm">
-                                <i class="fa-regular fa-face-smile"></i>
-                             </button>
+                             <div class="relative">
+                                 <button type="button" onclick="toggleEmojiPicker('editContent', 'editEmojiBtn')" id="editEmojiBtn" class="text-slate-400 hover:text-brand-500 transition-colors text-sm">
+                                    <i class="fa-regular fa-face-smile"></i>
+                                 </button>
+                                 <div id="editEmojiPickerContainer" class="absolute z-50 hidden top-full mt-2 left-0 shadow-xl rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                      <emoji-picker class="light"></emoji-picker>
+                                 </div>
+                             </div>
                         </div>
                         <div class="relative">
-                            <textarea id="editContent" rows="5" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-slate-700"></textarea>
-                            <div id="editEmojiPickerContainer" class="absolute z-50 hidden mt-1 right-0 shadow-xl rounded-lg overflow-hidden border border-slate-200">
-                                 <emoji-picker class="light"></emoji-picker>
+                            <div class="rich-text-toolbar">
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('editContent', 'bold')" class="rich-text-tool" title="Bold">
+                                    <i class="fa-solid fa-bold"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('editContent', 'italic')" class="rich-text-tool" title="Italic">
+                                    <i class="fa-solid fa-italic"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('editContent', 'underline')" class="rich-text-tool" title="Underline">
+                                    <i class="fa-solid fa-underline"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('editContent', 'formatBlock', 'h2')" class="rich-text-tool" title="Heading">
+                                    H2
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('editContent', 'insertUnorderedList')" class="rich-text-tool" title="Bulleted list">
+                                    <i class="fa-solid fa-list-ul"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('editContent', 'insertOrderedList')" class="rich-text-tool" title="Numbered list">
+                                    <i class="fa-solid fa-list-ol"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="applyRichTextCommand('editContent', 'formatBlock', 'blockquote')" class="rich-text-tool" title="Quote">
+                                    <i class="fa-solid fa-quote-right"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="insertEditorLink('editContent')" class="rich-text-tool" title="Insert link">
+                                    <i class="fa-solid fa-link"></i>
+                                </button>
+                                <button type="button" onmousedown="event.preventDefault()" onclick="clearEditorFormatting('editContent')" class="rich-text-tool" title="Clear formatting">
+                                    <i class="fa-solid fa-eraser"></i>
+                                </button>
                             </div>
+                            <div id="editContentEditor" contenteditable="true" dir="auto" class="rich-text-editor" data-placeholder="What's on your mind?" data-empty="true"></div>
+                            <input type="hidden" id="editContent" required>
                         </div>
                     </div>
                 </div>
@@ -1974,9 +2137,449 @@ function viewIdeaDelete() {
 // Helper function for HTML escaping
 function escapeHtml(text) {
     const div = document.createElement('div');
-    div.textContent = text;
+    div.textContent = text || '';
     return div.innerHTML;
 }
+
+const RICH_TEXT_ALLOWED_TAGS = new Set(['p', 'br', 'strong', 'em', 'u', 's', 'ul', 'ol', 'li', 'blockquote', 'a', 'h2', 'h3']);
+const RICH_TEXT_BLOCK_TAGS = new Set(['p', 'ul', 'ol', 'li', 'blockquote', 'h2', 'h3']);
+
+function looksLikeHtml(content) {
+    return /<\/?[a-z][\s\S]*>/i.test(content || '');
+}
+
+function getRichTextEditor(inputId) {
+    return document.getElementById(`${inputId}Editor`);
+}
+
+function unwrapRichTextElement(element) {
+    const parent = element.parentNode;
+    if (!parent) return;
+    while (element.firstChild) {
+        parent.insertBefore(element.firstChild, element);
+    }
+    parent.removeChild(element);
+}
+
+function replaceRichTextTag(element, tagName) {
+    const replacement = document.createElement(tagName);
+    while (element.firstChild) {
+        replacement.appendChild(element.firstChild);
+    }
+    element.parentNode.replaceChild(replacement, element);
+    return replacement;
+}
+
+function sanitizeRichTextLink(url) {
+    const value = (url || '').trim();
+    if (!value) return '';
+    if (/^(https?:|mailto:|tel:)/i.test(value)) return value;
+    if (/^[\w.-]+\.[a-z]{2,}([/?#].*)?$/i.test(value)) return `https://${value}`;
+    return '';
+}
+
+function sanitizeRichTextNode(node) {
+    if (node.nodeType === Node.COMMENT_NODE) {
+        node.remove();
+        return;
+    }
+
+    if (node.nodeType === Node.TEXT_NODE) {
+        node.textContent = node.textContent.replace(/\u00a0/g, ' ');
+        return;
+    }
+
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+        node.remove();
+        return;
+    }
+
+    Array.from(node.childNodes).forEach(child => sanitizeRichTextNode(child));
+
+    let tag = node.tagName.toLowerCase();
+    if (['script', 'style', 'meta', 'link', 'iframe', 'object', 'embed', 'svg'].includes(tag)) {
+        node.remove();
+        return;
+    }
+
+    if (tag === 'b') {
+        node = replaceRichTextTag(node, 'strong');
+        tag = 'strong';
+    } else if (tag === 'i') {
+        node = replaceRichTextTag(node, 'em');
+        tag = 'em';
+    } else if (tag === 'strike') {
+        node = replaceRichTextTag(node, 's');
+        tag = 's';
+    } else if (tag === 'div') {
+        node = replaceRichTextTag(node, 'p');
+        tag = 'p';
+    } else if (tag === 'h1') {
+        node = replaceRichTextTag(node, 'h2');
+        tag = 'h2';
+    } else if (['h4', 'h5', 'h6'].includes(tag)) {
+        node = replaceRichTextTag(node, 'h3');
+        tag = 'h3';
+    }
+
+    if (!RICH_TEXT_ALLOWED_TAGS.has(tag)) {
+        unwrapRichTextElement(node);
+        return;
+    }
+
+    Array.from(node.attributes).forEach(attr => {
+        const name = attr.name.toLowerCase();
+        if (tag === 'a' && name === 'href') {
+            const safeHref = sanitizeRichTextLink(attr.value);
+            if (safeHref) {
+                node.setAttribute('href', safeHref);
+                node.setAttribute('target', '_blank');
+                node.setAttribute('rel', 'noopener noreferrer');
+            } else {
+                node.removeAttribute(attr.name);
+            }
+            return;
+        }
+        node.removeAttribute(attr.name);
+    });
+
+    if (tag === 'a' && !node.getAttribute('href')) {
+        unwrapRichTextElement(node);
+        return;
+    }
+
+    if (tag === 'li') {
+        const parentTag = node.parentElement?.tagName?.toLowerCase();
+        if (!['ul', 'ol'].includes(parentTag)) {
+            node = replaceRichTextTag(node, 'p');
+            tag = 'p';
+        }
+    }
+
+    const textValue = (node.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!textValue && tag !== 'br' && !node.querySelector('br, li')) {
+        node.remove();
+    }
+}
+
+function normalizeRichTextRoot(root) {
+    let paragraph = null;
+    Array.from(root.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.replace(/\s+/g, ' ').trim();
+            if (!text) {
+                node.remove();
+                return;
+            }
+            if (!paragraph) {
+                paragraph = document.createElement('p');
+                root.insertBefore(paragraph, node);
+            }
+            paragraph.appendChild(node);
+            return;
+        }
+
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+            node.remove();
+            return;
+        }
+
+        const tag = node.tagName.toLowerCase();
+        if (tag === 'br') {
+            if (!paragraph) {
+                paragraph = document.createElement('p');
+                root.insertBefore(paragraph, node);
+            }
+            paragraph.appendChild(node);
+            return;
+        }
+
+        if (RICH_TEXT_BLOCK_TAGS.has(tag)) {
+            paragraph = null;
+            return;
+        }
+
+        if (!paragraph) {
+            paragraph = document.createElement('p');
+            root.insertBefore(paragraph, node);
+        }
+        paragraph.appendChild(node);
+    });
+
+    Array.from(root.querySelectorAll('ul, ol')).forEach(list => {
+        Array.from(list.children).forEach(child => {
+            if (child.tagName.toLowerCase() !== 'li') {
+                const item = document.createElement('li');
+                item.innerHTML = child.innerHTML;
+                child.replaceWith(item);
+            }
+        });
+        if (!list.querySelector('li')) {
+            list.remove();
+        }
+    });
+}
+
+function sanitizeRichTextHtml(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<body>${html || ''}</body>`, 'text/html');
+    const root = doc.body;
+    Array.from(root.childNodes).forEach(child => sanitizeRichTextNode(child));
+    normalizeRichTextRoot(root);
+    return root.innerHTML.trim();
+}
+
+function plainTextToRichText(text) {
+    const normalized = (text || '').replace(/\r\n?/g, '\n').trim();
+    if (!normalized) return '';
+
+    const parts = [];
+    const paragraphLines = [];
+    let listType = null;
+    let listItems = [];
+
+    const flushParagraph = () => {
+        if (!paragraphLines.length) return;
+        parts.push(`<p>${paragraphLines.map(line => escapeHtml(line)).join('<br>')}</p>`);
+        paragraphLines.length = 0;
+    };
+
+    const flushList = () => {
+        if (!listType || !listItems.length) return;
+        parts.push(`<${listType}>${listItems.join('')}</${listType}>`);
+        listType = null;
+        listItems = [];
+    };
+
+    normalized.split('\n').forEach(rawLine => {
+        const line = rawLine.trim();
+        const unordered = line.match(/^[-*•]\s+(.+)$/);
+        const ordered = line.match(/^\d+[\.\)]\s+(.+)$/);
+
+        if (!line) {
+            flushParagraph();
+            flushList();
+            return;
+        }
+
+        if (unordered || ordered) {
+            flushParagraph();
+            const nextType = unordered ? 'ul' : 'ol';
+            if (listType && listType !== nextType) flushList();
+            listType = nextType;
+            listItems.push(`<li>${escapeHtml((unordered || ordered)[1].trim())}</li>`);
+            return;
+        }
+
+        flushList();
+        paragraphLines.push(line);
+    });
+
+    flushParagraph();
+    flushList();
+
+    return parts.join('');
+}
+
+function formatStoredRichText(content) {
+    const value = (content || '').trim();
+    if (!value) return '';
+    return looksLikeHtml(value) ? sanitizeRichTextHtml(value) : plainTextToRichText(value);
+}
+
+function richTextToPlainText(content) {
+    const html = formatStoredRichText(content);
+    if (!html) return '';
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    return (temp.innerText || temp.textContent || '')
+        .replace(/\u00a0/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+}
+
+function updateRichTextPlaceholder(editor) {
+    if (!editor) return;
+    const plainText = richTextToPlainText(editor.innerHTML);
+    editor.dataset.empty = plainText ? 'false' : 'true';
+}
+
+function syncRichTextEditor(inputId, options = {}) {
+    const input = document.getElementById(inputId);
+    const editor = getRichTextEditor(inputId);
+    if (!input || !editor) return '';
+
+    const normalizedHtml = sanitizeRichTextHtml(editor.innerHTML);
+    const plainText = richTextToPlainText(normalizedHtml);
+    const finalHtml = plainText ? normalizedHtml : '';
+
+    input.value = finalHtml;
+    if (options.normalize && editor.innerHTML !== finalHtml) {
+        editor.innerHTML = finalHtml;
+    }
+
+    updateRichTextPlaceholder(editor);
+    return finalHtml;
+}
+
+function setRichTextEditorContent(inputId, content) {
+    const input = document.getElementById(inputId);
+    const editor = getRichTextEditor(inputId);
+    if (!input || !editor) return;
+
+    const html = formatStoredRichText(content);
+    input.value = html;
+    editor.innerHTML = html;
+    updateRichTextPlaceholder(editor);
+}
+
+function insertTextIntoEditor(editor, text) {
+    editor.focus();
+    const inserted = document.execCommand('insertText', false, text);
+    if (inserted) return;
+
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(document.createTextNode(text));
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+function handleRichTextPaste(event, inputId) {
+    event.preventDefault();
+    const editor = getRichTextEditor(inputId);
+    if (!editor) return;
+
+    const html = event.clipboardData.getData('text/html');
+    const text = event.clipboardData.getData('text/plain');
+    const safeHtml = html ? sanitizeRichTextHtml(html) : plainTextToRichText(text);
+    const fallbackText = (text || '').trim();
+
+    editor.focus();
+    if (safeHtml) {
+        document.execCommand('insertHTML', false, safeHtml);
+    } else if (fallbackText) {
+        insertTextIntoEditor(editor, fallbackText);
+    }
+
+    syncRichTextEditor(inputId, { normalize: true });
+}
+
+function handleRichTextCopy(event, inputId) {
+    const editor = getRichTextEditor(inputId);
+    if (!editor) return;
+
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    if (!editor.contains(range.commonAncestorContainer)) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(range.cloneContents());
+    const html = sanitizeRichTextHtml(wrapper.innerHTML) || plainTextToRichText(selection.toString());
+    const plainText = richTextToPlainText(html);
+    if (!plainText) return;
+
+    event.preventDefault();
+    event.clipboardData.setData('text/plain', plainText);
+    event.clipboardData.setData('text/html', html);
+}
+
+function initRichTextEditor(inputId) {
+    const editor = getRichTextEditor(inputId);
+    if (!editor || editor.dataset.initialized) return;
+
+    try {
+        document.execCommand('defaultParagraphSeparator', false, 'p');
+    } catch (error) {
+        console.debug('defaultParagraphSeparator unsupported', error);
+    }
+
+    editor.addEventListener('input', () => syncRichTextEditor(inputId));
+    editor.addEventListener('blur', () => syncRichTextEditor(inputId, { normalize: true }));
+    editor.addEventListener('paste', event => handleRichTextPaste(event, inputId));
+    editor.addEventListener('copy', event => handleRichTextCopy(event, inputId));
+    editor.addEventListener('keydown', event => {
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            insertTextIntoEditor(editor, '    ');
+            syncRichTextEditor(inputId);
+        }
+    });
+
+    editor.dataset.initialized = 'true';
+    setRichTextEditorContent(inputId, document.getElementById(inputId)?.value || '');
+}
+
+function focusRichTextEditor(inputId) {
+    const editor = getRichTextEditor(inputId);
+    if (!editor) return null;
+    editor.focus();
+    return editor;
+}
+
+function applyRichTextCommand(inputId, command, value = null) {
+    const editor = focusRichTextEditor(inputId);
+    if (!editor) return;
+
+    if (command === 'formatBlock') {
+        const formatValue = value === 'blockquote' ? 'blockquote' : `<${value}>`;
+        document.execCommand(command, false, formatValue);
+    } else {
+        document.execCommand(command, false, value);
+    }
+
+    syncRichTextEditor(inputId, { normalize: true });
+}
+
+function clearEditorFormatting(inputId) {
+    const editor = focusRichTextEditor(inputId);
+    if (!editor) return;
+    document.execCommand('removeFormat', false, null);
+    syncRichTextEditor(inputId, { normalize: true });
+}
+
+function insertEditorLink(inputId) {
+    const url = window.prompt('Enter the link URL');
+    if (url === null) return;
+
+    const safeUrl = sanitizeRichTextLink(url);
+    if (!safeUrl) {
+        toast('Please enter a valid link', 'error');
+        return;
+    }
+
+    const editor = focusRichTextEditor(inputId);
+    if (!editor) return;
+
+    const selectionText = window.getSelection()?.toString().trim();
+    if (selectionText) {
+        document.execCommand('createLink', false, safeUrl);
+        const selection = window.getSelection();
+        const anchor = selection?.anchorNode?.parentElement?.closest('a');
+        if (anchor) {
+            anchor.setAttribute('href', safeUrl);
+            anchor.setAttribute('target', '_blank');
+            anchor.setAttribute('rel', 'noopener noreferrer');
+        }
+    } else {
+        document.execCommand(
+            'insertHTML',
+            false,
+            `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(safeUrl)}</a>`
+        );
+    }
+
+    syncRichTextEditor(inputId, { normalize: true });
+}
+
+initRichTextEditor('createContent');
+initRichTextEditor('editContent');
 
 let platformChart = null;
 
@@ -2424,6 +3027,7 @@ function updateActiveTab() {
 
 function cardHTML(post) {
     const hasChanges = post.status === 'CHANGES_REQUESTED';
+    const previewText = richTextToPlainText(post.content);
     
     // Parse platforms
     let platforms = [];
@@ -2530,7 +3134,7 @@ function cardHTML(post) {
             <!-- Content (Flex Grow) -->
             <div class="flex-1 min-h-0 flex flex-col">
                 <h4 class="text-sm font-bold text-slate-800 mb-1 leading-snug line-clamp-2 group-hover:text-brand-600 transition-colors">${escapeHtml(post.title)}</h4>
-                <p class="text-[11px] text-slate-500 leading-relaxed line-clamp-3 overflow-hidden">${escapeHtml(post.content)}</p>
+                <p class="text-[11px] text-slate-500 leading-relaxed line-clamp-3 overflow-hidden">${escapeHtml(previewText)}</p>
                 
                 <!-- Spacer to push footer down if content is short -->
                 <div class="flex-grow"></div>
@@ -2580,6 +3184,7 @@ function openCreateModal() {
         return;
     }
     document.getElementById('createForm').reset();
+    setRichTextEditorContent('createContent', '');
     // Clear all platform checkboxes
     document.querySelectorAll('input[name="createPlatforms"]').forEach(cb => cb.checked = false);
     // Clear media gallery
@@ -2637,6 +3242,8 @@ function removeCreateMedia(index) {
 
 document.getElementById('createForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const contentHtml = syncRichTextEditor('createContent', { normalize: true });
+    const contentText = richTextToPlainText(contentHtml);
     
     // Collect selected platforms from checkboxes
     const selectedPlatforms = Array.from(document.querySelectorAll('input[name="createPlatforms"]:checked'))
@@ -2646,10 +3253,14 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
         toast('Please select at least one platform', 'error');
         return;
     }
+    if (!contentText) {
+        toast('Please add post content', 'error');
+        return;
+    }
     
     const formData = new FormData();
     formData.append('title', document.getElementById('createTitle').value);
-    formData.append('content', document.getElementById('createContent').value);
+    formData.append('content', contentHtml);
     formData.append('platforms', JSON.stringify(selectedPlatforms));
     formData.append('status', document.getElementById('createStatus').value);
     formData.append('urgency', document.getElementById('createUrgent').checked ? '1' : '0');
@@ -2746,7 +3357,7 @@ async function openViewModal(id) {
         
         // Content
         const contentEl = document.getElementById('viewContent');
-        if (contentEl) contentEl.textContent = p.content;
+        if (contentEl) contentEl.innerHTML = formatStoredRichText(p.content);
         
 
         
@@ -3195,14 +3806,22 @@ function toggleEmojiPicker(textareaId, btnId) {
         const picker = container.querySelector('emoji-picker');
         if (!picker.dataset.initialized) {
             picker.addEventListener('emoji-click', event => {
-                const textarea = document.getElementById(textareaId);
                 const emoji = event.detail.unicode;
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const text = textarea.value;
-                textarea.value = text.substring(0, start) + emoji + text.substring(end);
-                textarea.focus();
-                textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+                const editor = getRichTextEditor(textareaId);
+
+                if (editor) {
+                    insertTextIntoEditor(editor, emoji);
+                    syncRichTextEditor(textareaId, { normalize: true });
+                } else {
+                    const textarea = document.getElementById(textareaId);
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = textarea.value;
+                    textarea.value = text.substring(0, start) + emoji + text.substring(end);
+                    textarea.focus();
+                    textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+                }
+
                 container.classList.add('hidden');
             });
             picker.dataset.initialized = 'true';
@@ -3459,7 +4078,7 @@ function openEditModal(post) {
     }
     document.getElementById('editPostId').value = post.id;
     document.getElementById('editTitle').value = post.title || '';
-    document.getElementById('editContent').value = post.content || '';
+    setRichTextEditorContent('editContent', post.content || '');
     
     // Set platform checkboxes
     let platforms = [];
@@ -3538,6 +4157,8 @@ function closeEditModal() {
 
 document.getElementById('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const contentHtml = syncRichTextEditor('editContent', { normalize: true });
+    const contentText = richTextToPlainText(contentHtml);
     
     // Collect selected platforms
     const selectedPlatforms = Array.from(document.querySelectorAll('input[name="editPlatforms"]:checked'))
@@ -3547,11 +4168,15 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
         toast('Please select at least one platform', 'error');
         return;
     }
+    if (!contentText) {
+        toast('Please add post content', 'error');
+        return;
+    }
     
     const formData = {
         id: document.getElementById('editPostId').value,
         title: document.getElementById('editTitle').value,
-        content: document.getElementById('editContent').value,
+        content: contentHtml,
         platforms: selectedPlatforms,
         scheduled_date: document.getElementById('editScheduled')?.value || null,
         urgency: document.getElementById('editUrgent').checked

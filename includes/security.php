@@ -322,6 +322,303 @@ function sanitizeString($input, $maxLength = 0) {
 }
 
 /**
+ * Sanitize URL used inside rich text links.
+ */
+function sanitizeRichTextUrl($url) {
+    $url = sanitizeString($url, 2048);
+    if ($url === '') {
+        return '';
+    }
+
+    if (preg_match('/^(https?:|mailto:|tel:)/i', $url)) {
+        return $url;
+    }
+
+    if (preg_match('/^[\w.-]+\.[a-z]{2,}([\/?#].*)?$/i', $url)) {
+        return 'https://' . $url;
+    }
+
+    return '';
+}
+
+/**
+ * Replace a DOM element tag while preserving its children.
+ */
+function replaceRichTextDomTag(DOMElement $element, $tagName, DOMDocument $dom) {
+    $replacement = $dom->createElement($tagName);
+    while ($element->firstChild) {
+        $replacement->appendChild($element->firstChild);
+    }
+    if ($element->parentNode) {
+        $element->parentNode->replaceChild($replacement, $element);
+    }
+    return $replacement;
+}
+
+/**
+ * Unwrap a DOM element and keep only its children.
+ */
+function unwrapRichTextDomNode(DOMNode $node) {
+    $parent = $node->parentNode;
+    if (!$parent) {
+        return;
+    }
+
+    while ($node->firstChild) {
+        $parent->insertBefore($node->firstChild, $node);
+    }
+    $parent->removeChild($node);
+}
+
+/**
+ * Normalize rich text DOM nodes recursively.
+ */
+function sanitizeRichTextDomNode(DOMNode $node, DOMDocument $dom) {
+    if ($node->nodeType === XML_COMMENT_NODE) {
+        if ($node->parentNode) {
+            $node->parentNode->removeChild($node);
+        }
+        return;
+    }
+
+    if ($node->nodeType === XML_TEXT_NODE) {
+        $node->nodeValue = preg_replace('/\x{00A0}/u', ' ', $node->nodeValue ?? '');
+        return;
+    }
+
+    if ($node->nodeType !== XML_ELEMENT_NODE) {
+        if ($node->parentNode) {
+            $node->parentNode->removeChild($node);
+        }
+        return;
+    }
+
+    foreach (iterator_to_array($node->childNodes) as $child) {
+        sanitizeRichTextDomNode($child, $dom);
+    }
+
+    $tag = strtolower($node->nodeName);
+    if (in_array($tag, ['script', 'style', 'meta', 'link', 'iframe', 'object', 'embed', 'svg'], true)) {
+        if ($node->parentNode) {
+            $node->parentNode->removeChild($node);
+        }
+        return;
+    }
+
+    if ($tag === 'b') {
+        $node = replaceRichTextDomTag($node, 'strong', $dom);
+        $tag = 'strong';
+    } elseif ($tag === 'i') {
+        $node = replaceRichTextDomTag($node, 'em', $dom);
+        $tag = 'em';
+    } elseif ($tag === 'strike') {
+        $node = replaceRichTextDomTag($node, 's', $dom);
+        $tag = 's';
+    } elseif ($tag === 'div') {
+        $node = replaceRichTextDomTag($node, 'p', $dom);
+        $tag = 'p';
+    } elseif ($tag === 'h1') {
+        $node = replaceRichTextDomTag($node, 'h2', $dom);
+        $tag = 'h2';
+    } elseif (in_array($tag, ['h4', 'h5', 'h6'], true)) {
+        $node = replaceRichTextDomTag($node, 'h3', $dom);
+        $tag = 'h3';
+    }
+
+    $allowedTags = ['p', 'br', 'strong', 'em', 'u', 's', 'ul', 'ol', 'li', 'blockquote', 'a', 'h2', 'h3'];
+    if (!in_array($tag, $allowedTags, true)) {
+        unwrapRichTextDomNode($node);
+        return;
+    }
+
+    if ($node instanceof DOMElement) {
+        $attributes = [];
+        foreach ($node->attributes as $attribute) {
+            $attributes[] = $attribute->name;
+        }
+
+        foreach ($attributes as $attributeName) {
+            if ($tag === 'a' && strtolower($attributeName) === 'href') {
+                $safeHref = sanitizeRichTextUrl($node->getAttribute($attributeName));
+                if ($safeHref !== '') {
+                    $node->setAttribute('href', $safeHref);
+                    $node->setAttribute('target', '_blank');
+                    $node->setAttribute('rel', 'noopener noreferrer');
+                } else {
+                    $node->removeAttribute($attributeName);
+                }
+                continue;
+            }
+
+            $node->removeAttribute($attributeName);
+        }
+    }
+
+    if ($tag === 'a' && (!($node instanceof DOMElement) || !$node->hasAttribute('href'))) {
+        unwrapRichTextDomNode($node);
+        return;
+    }
+
+    if ($tag === 'li') {
+        $parentTag = $node->parentNode ? strtolower($node->parentNode->nodeName) : '';
+        if (!in_array($parentTag, ['ul', 'ol'], true)) {
+            $node = replaceRichTextDomTag($node, 'p', $dom);
+            $tag = 'p';
+        }
+    }
+
+    $textValue = trim(preg_replace('/\s+/u', ' ', $node->textContent ?? ''));
+    $hasBr = $node instanceof DOMElement && $node->getElementsByTagName('br')->length > 0;
+    $hasLi = $node instanceof DOMElement && $node->getElementsByTagName('li')->length > 0;
+    if ($tag !== 'br' && $textValue === '' && !$hasBr && !$hasLi && $node->parentNode) {
+        $node->parentNode->removeChild($node);
+    }
+}
+
+/**
+ * Normalize top-level rich text structure into block elements.
+ */
+function normalizeRichTextRoot(DOMElement $root, DOMDocument $dom) {
+    $blockTags = ['p', 'ul', 'ol', 'li', 'blockquote', 'h2', 'h3'];
+    $paragraph = null;
+
+    foreach (iterator_to_array($root->childNodes) as $child) {
+        if ($child->nodeType === XML_TEXT_NODE) {
+            $text = trim(preg_replace('/\s+/u', ' ', $child->nodeValue ?? ''));
+            if ($text === '') {
+                $root->removeChild($child);
+                continue;
+            }
+            if (!$paragraph) {
+                $paragraph = $dom->createElement('p');
+                $root->insertBefore($paragraph, $child);
+            }
+            $paragraph->appendChild($child);
+            continue;
+        }
+
+        if ($child->nodeType !== XML_ELEMENT_NODE) {
+            $root->removeChild($child);
+            continue;
+        }
+
+        $tag = strtolower($child->nodeName);
+        if ($tag === 'br') {
+            if (!$paragraph) {
+                $paragraph = $dom->createElement('p');
+                $root->insertBefore($paragraph, $child);
+            }
+            $paragraph->appendChild($child);
+            continue;
+        }
+
+        if (in_array($tag, $blockTags, true)) {
+            $paragraph = null;
+            continue;
+        }
+
+        if (!$paragraph) {
+            $paragraph = $dom->createElement('p');
+            $root->insertBefore($paragraph, $child);
+        }
+        $paragraph->appendChild($child);
+    }
+
+    foreach (['ul', 'ol'] as $listTag) {
+        foreach (iterator_to_array($root->getElementsByTagName($listTag)) as $listNode) {
+            foreach (iterator_to_array($listNode->childNodes) as $child) {
+                if ($child->nodeType !== XML_ELEMENT_NODE) {
+                    if (trim($child->textContent ?? '') !== '') {
+                        $item = $dom->createElement('li');
+                        $item->appendChild($child);
+                        $listNode->appendChild($item);
+                    } else {
+                        $listNode->removeChild($child);
+                    }
+                    continue;
+                }
+
+                if (strtolower($child->nodeName) !== 'li') {
+                    $item = $dom->createElement('li');
+                    while ($child->firstChild) {
+                        $item->appendChild($child->firstChild);
+                    }
+                    $listNode->replaceChild($item, $child);
+                }
+            }
+
+            if ($listNode->getElementsByTagName('li')->length === 0 && $listNode->parentNode) {
+                $listNode->parentNode->removeChild($listNode);
+            }
+        }
+    }
+}
+
+/**
+ * Sanitize rich text HTML while preserving a safe subset of formatting tags.
+ */
+function sanitizeRichText($input, $maxLength = 12000) {
+    if (!is_string($input)) {
+        return '';
+    }
+
+    $input = sanitizeString($input, $maxLength);
+    if ($input === '') {
+        return '';
+    }
+
+    $allowed = '<p><br><strong><b><em><i><u><s><strike><ul><ol><li><blockquote><a><h1><h2><h3><h4><h5><h6><div>';
+    $input = strip_tags($input, $allowed);
+
+    if (!class_exists('DOMDocument')) {
+        return trim($input);
+    }
+
+    $previous = libxml_use_internal_errors(true);
+    $dom = new DOMDocument('1.0', 'UTF-8');
+    $html = '<!DOCTYPE html><html><body><div id="rich-text-root">' . $input . '</div></body></html>';
+    $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
+
+    $xpath = new DOMXPath($dom);
+    $root = $xpath->query("//*[@id='rich-text-root']")->item(0);
+    if (!$root instanceof DOMElement) {
+        libxml_clear_errors();
+        libxml_use_internal_errors($previous);
+        return trim($input);
+    }
+
+    foreach (iterator_to_array($root->childNodes) as $child) {
+        sanitizeRichTextDomNode($child, $dom);
+    }
+    normalizeRichTextRoot($root, $dom);
+
+    $output = '';
+    foreach (iterator_to_array($root->childNodes) as $child) {
+        $output .= $dom->saveHTML($child);
+    }
+
+    libxml_clear_errors();
+    libxml_use_internal_errors($previous);
+    return trim($output);
+}
+
+/**
+ * Convert rich text HTML into readable plain text.
+ */
+function richTextToPlainText($input) {
+    $html = sanitizeRichText($input);
+    if ($html === '') {
+        return '';
+    }
+
+    $html = preg_replace('/<br\s*\/?>/i', "\n", $html);
+    $html = preg_replace('/<\/(p|li|blockquote|h2|h3)>/i', "\n", $html);
+    $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = preg_replace("/\n{3,}/", "\n\n", $text);
+    return trim($text);
+}
+
+/**
  * Sanitize HTML - escape for safe output
  */
 function sanitizeHTML($input) {

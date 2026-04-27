@@ -1291,7 +1291,7 @@ try {
                 // Multipart form data (supports file upload)
                 $id = $_POST['id'] ?? null;
                 $title = sanitizeString(trim($_POST['title'] ?? ''), 255);
-                $content = sanitizeString(trim($_POST['content'] ?? ''));
+                $content = sanitizeRichText($_POST['content'] ?? '');
                 // Handle platforms as array or string
                 $platforms = $_POST['platforms'] ?? $_POST['platform'] ?? [];
                 if (is_string($platforms)) $platforms = json_decode($platforms, true) ?: [$platforms];
@@ -1304,7 +1304,7 @@ try {
                 $input = json_decode(file_get_contents('php://input'), true);
                 $id = $input['id'] ?? null;
                 $title = sanitizeString(trim($input['title'] ?? ''), 255);
-                $content = sanitizeString(trim($input['content'] ?? ''));
+                $content = sanitizeRichText($input['content'] ?? '');
                 // Handle platforms as array or string
                 $platforms = $input['platforms'] ?? $input['platform'] ?? [];
                 if (is_string($platforms)) $platforms = [$platforms];
@@ -1316,9 +1316,10 @@ try {
             
             // Convert platforms array to JSON
             $platformsJson = json_encode(array_values(array_filter($platforms)));
+            $contentPlainText = richTextToPlainText($content);
             
             if (empty($title)) sendResponse(false, null, 'Title required', 400);
-            if (empty($content)) sendResponse(false, null, 'Content required', 400);
+            if (empty($contentPlainText)) sendResponse(false, null, 'Content required', 400);
             if (empty($platforms)) sendResponse(false, null, 'At least one platform required', 400);
             
             $postId = null;
@@ -1355,8 +1356,8 @@ try {
                 }
                 if ($existing['content'] !== $content) {
                     $changes[] = 'المحتوى';
-                    $oldData['content'] = mb_substr($existing['content'], 0, 200);
-                    $newData['content'] = mb_substr($content, 0, 200);
+                    $oldData['content'] = mb_substr(richTextToPlainText($existing['content']), 0, 200);
+                    $newData['content'] = mb_substr($contentPlainText, 0, 200);
                 }
                 if ($existing['platforms'] !== $platformsJson) {
                     $changes[] = 'المنصات';
@@ -1602,7 +1603,7 @@ try {
                 'title' => $post['title'],
                 'status' => $post['status'],
                 'platforms' => $post['platforms'],
-                'content' => mb_substr($post['content'], 0, 200)
+                'content' => mb_substr(richTextToPlainText($post['content']), 0, 200)
             ], JSON_UNESCAPED_UNICODE);
             
             // Get author name for the description
