@@ -406,8 +406,9 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                     'Authorization: Key ' . ONESIGNAL_REST_KEY,
                 ],
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT        => 3,        // Hard timeout – never block API
-                CURLOPT_CONNECTTIMEOUT => 2,
+                CURLOPT_TIMEOUT_MS     => 1200,     // Push is best-effort; never let it slow app actions
+                CURLOPT_CONNECTTIMEOUT_MS => 400,
+                CURLOPT_NOSIGNAL       => 1,
             ]);
             $rawResponse = curl_exec($ch);
             $curlError = curl_error($ch);

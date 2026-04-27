@@ -38,6 +38,15 @@ $csrfToken = generateCSRFToken();
         if (location.protocol === 'https:' || location.hostname === 'localhost') {
             console.log('[OneSignal] Secure origin detected:', location.origin);
             window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.getOneSignalSyncSignature = function() {
+                const userId = String(<?= (int)$_SESSION['user_id'] ?>);
+                const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
+                return {
+                    userId,
+                    companyId,
+                    signature: `${location.origin}|${userId}|${companyId}`
+                };
+            };
             window.reportOneSignalSubscriptionState = function(OneSignal, label = 'Push subscription state') {
                 try {
                     console.log(`[OneSignal] ${label}:`, {
@@ -50,12 +59,19 @@ $csrfToken = generateCSRFToken();
                     console.warn('[OneSignal] Subscription state warning:', stateError);
                 }
             };
-            window.syncOneSignalWorkspace = async function(OneSignal) {
-                const userId = String(<?= (int)$_SESSION['user_id'] ?>);
-                const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
+            window.syncOneSignalWorkspace = async function(OneSignal, force = false) {
+                const syncData = window.getOneSignalSyncSignature();
+                const lastSyncSignature = localStorage.getItem('onesignal_sync_signature');
+                const currentSubscriptionId = OneSignal.User?.PushSubscription?.id || '';
 
-                await OneSignal.login(userId);
-                await OneSignal.User.addAlias('workspace_user', `${userId}:${companyId}`);
+                if (!force && lastSyncSignature === syncData.signature && currentSubscriptionId) {
+                    return false;
+                }
+
+                await OneSignal.login(syncData.userId);
+                await OneSignal.User.addAlias('workspace_user', `${syncData.userId}:${syncData.companyId}`);
+                localStorage.setItem('onesignal_sync_signature', syncData.signature);
+                return true;
             };
 
             window.detachOneSignalUser = async function() {
@@ -82,7 +98,8 @@ $csrfToken = generateCSRFToken();
                 }
             };
 
-            OneSignalDeferred.push(async function(OneSignal) {
+            const bootOneSignal = function() {
+                OneSignalDeferred.push(async function(OneSignal) {
                 try {
                     console.log('[OneSignal] Starting init with appId: <?= ONESIGNAL_APP_ID ?>');
                     await OneSignal.init({
@@ -97,8 +114,10 @@ $csrfToken = generateCSRFToken();
                         console.log('[OneSignal] Push subscription changed:', event);
 
                         try {
-                            await window.syncOneSignalWorkspace(OneSignal);
-                            console.log('[OneSignal] Re-synced user/workspace after subscription change');
+                            const synced = await window.syncOneSignalWorkspace(OneSignal, true);
+                            if (synced) {
+                                console.log('[OneSignal] Re-synced user/workspace after subscription change');
+                            }
                         } catch (syncError) {
                             console.warn('[OneSignal] Re-sync warning:', syncError);
                         }
@@ -110,8 +129,12 @@ $csrfToken = generateCSRFToken();
                     console.log('[OneSignal] Current permission:', permission);
                     
                     console.log('[OneSignal] Syncing user/workspace context');
-                    await window.syncOneSignalWorkspace(OneSignal);
-                    console.log('[OneSignal] Login successful');
+                    const synced = await window.syncOneSignalWorkspace(OneSignal);
+                    if (synced) {
+                        console.log('[OneSignal] Login successful');
+                    } else {
+                        console.log('[OneSignal] User/workspace already synced');
+                    }
 
                     try {
                         if (!OneSignal.User.PushSubscription.optedIn) {
@@ -126,7 +149,14 @@ $csrfToken = generateCSRFToken();
                 } catch(e) {
                     console.error('[OneSignal] ERROR:', e);
                 }
-            });
+                });
+            };
+
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(bootOneSignal, { timeout: 1500 });
+            } else {
+                window.setTimeout(bootOneSignal, 300);
+            }
         } else {
             console.log('[OneSignal] Skipped - not a secure origin:', location.protocol, location.hostname);
         }

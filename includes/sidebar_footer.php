@@ -8,6 +8,15 @@
     // OneSignal only works on secure origins (HTTPS or localhost)
     if (location.protocol === 'https:' || location.hostname === 'localhost') {
         window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.getOneSignalSyncSignature = function() {
+            const userId = String(<?= (int)$_SESSION['user_id'] ?>);
+            const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
+            return {
+                userId,
+                companyId,
+                signature: `${location.origin}|${userId}|${companyId}`
+            };
+        };
         window.reportOneSignalSubscriptionState = function(OneSignal, label = 'Push subscription state') {
             try {
                 console.log(`[OneSignal] ${label}:`, {
@@ -20,12 +29,19 @@
                 console.warn('OneSignal subscription state warning:', stateError);
             }
         };
-        window.syncOneSignalWorkspace = async function(OneSignal) {
-            const userId = String(<?= (int)$_SESSION['user_id'] ?>);
-            const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
+        window.syncOneSignalWorkspace = async function(OneSignal, force = false) {
+            const syncData = window.getOneSignalSyncSignature();
+            const lastSyncSignature = localStorage.getItem('onesignal_sync_signature');
+            const currentSubscriptionId = OneSignal.User?.PushSubscription?.id || '';
 
-            await OneSignal.login(userId);
-            await OneSignal.User.addAlias('workspace_user', `${userId}:${companyId}`);
+            if (!force && lastSyncSignature === syncData.signature && currentSubscriptionId) {
+                return false;
+            }
+
+            await OneSignal.login(syncData.userId);
+            await OneSignal.User.addAlias('workspace_user', `${syncData.userId}:${syncData.companyId}`);
+            localStorage.setItem('onesignal_sync_signature', syncData.signature);
+            return true;
         };
 
         window.performAppLogout = async function(event) {
@@ -64,7 +80,8 @@
             }
         };
 
-        OneSignalDeferred.push(async function(OneSignal) {
+        const bootOneSignal = function() {
+            OneSignalDeferred.push(async function(OneSignal) {
             try {
                 await OneSignal.init({
                     appId: "<?= ONESIGNAL_APP_ID ?>",
@@ -77,8 +94,10 @@
                     console.log('[OneSignal] Push subscription changed:', event);
 
                     try {
-                        await window.syncOneSignalWorkspace(OneSignal);
-                        console.log('[OneSignal] Re-synced user/workspace after subscription change');
+                        const synced = await window.syncOneSignalWorkspace(OneSignal, true);
+                        if (synced) {
+                            console.log('[OneSignal] Re-synced user/workspace after subscription change');
+                        }
                     } catch (syncError) {
                         console.warn('OneSignal re-sync warning:', syncError);
                     }
@@ -100,7 +119,14 @@
             } catch(e) {
                 console.warn('OneSignal init failed:', e);
             }
-        });
+            });
+        };
+
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(bootOneSignal, { timeout: 1500 });
+        } else {
+            window.setTimeout(bootOneSignal, 300);
+        }
     }
 </script>
 <?php endif; ?>
