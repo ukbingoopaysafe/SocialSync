@@ -226,7 +226,7 @@ $csrfToken = generateCSRFToken();
 
                     const permission = OneSignal.Notifications.permission;
                     console.log('[OneSignal] Current permission:', permission);
-                    
+
                     console.log('[OneSignal] Syncing user/workspace context');
                     const synced = await window.syncOneSignalWorkspace(OneSignal);
                     if (synced) {
@@ -270,10 +270,10 @@ $csrfToken = generateCSRFToken();
             <div class="text-slate-500 font-medium animate-pulse">Loading BroMan Social...</div>
         </div>
     </div>
-    
+
     <!-- New Layout: Sidebar + Main -->
     <div class="flex min-h-screen">
-        
+
         <!-- Dark Sidebar -->
         <aside id="sidebar" class="fixed inset-y-0 left-0 -translate-x-full lg:translate-x-0 w-64 lg:w-16 lg:hover:w-56 transition-all duration-300 bg-[#0a1628] flex flex-col z-[60] group">
             <!-- Logo -->
@@ -282,7 +282,7 @@ $csrfToken = generateCSRFToken();
                 <img id="sidebarLogo" src="images/Final_Logo White.png" alt="Company" class="h-11 max-w-[180px] object-contain hidden group-hover:block transition-all duration-300">
                 <img id="sidebarLogoSmall" src="images/Final_Logo White.png" alt="Company" class="h-10 w-auto max-w-[58px] object-contain group-hover:hidden" style="image-rendering: -webkit-optimize-contrast;">
             </div>
-            
+
             <!-- Navigation -->
             <nav class="flex-1 py-4 px-2 space-y-1">
                 <button onclick="switchTab('dashboard'); closeSidebarOnMobile()" id="tabDashboard" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
@@ -293,6 +293,16 @@ $csrfToken = generateCSRFToken();
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
                     <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Board</span>
                 </button>
+                <div id="boardModeSidebar" class="hidden px-2 pb-2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                    <div class="ml-0 lg:ml-8 rounded-lg border border-slate-700/60 bg-white/5 p-1 space-y-1">
+                        <button id="boardModeWorkflow" onclick="activateBoardMode('workflow')" class="w-full rounded-md px-3 py-2 text-left text-xs font-bold transition-all">
+                            Workflow
+                        </button>
+                        <button id="boardModeArchive" onclick="activateBoardMode('archive')" class="w-full rounded-md px-3 py-2 text-left text-xs font-bold transition-all">
+                            Archive
+                        </button>
+                    </div>
+                </div>
                 <button onclick="switchTab('calendar'); closeSidebarOnMobile()" id="tabCalendar" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Calendar</span>
@@ -314,7 +324,7 @@ $csrfToken = generateCSRFToken();
                     </a>
                 </div>
             </nav>
-            
+
             <!-- Bottom Actions -->
             <div class="p-2 border-t border-slate-700/50 flex flex-col gap-2">
                 <!-- Company Switcher -->
@@ -328,7 +338,7 @@ $csrfToken = generateCSRFToken();
                             <svg class="w-4 h-4 text-slate-400 flex-shrink-0 ml-2 lg:hidden lg:group-hover:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </div>
                     </button>
-                    
+
                     <!-- Dropdown Menu -->
                     <div class="absolute bottom-full left-0 w-48 mb-2 bg-[#0f1f38] border border-slate-700/50 rounded-lg shadow-xl shadow-black/50 overflow-hidden hidden z-50" id="companySwitcherMenu">
                         <div class="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-800/50 border-b border-slate-700/50">Switch Workspace</div>
@@ -344,10 +354,10 @@ $csrfToken = generateCSRFToken();
                 </button>
             </div>
         </aside>
-        
+
         <!-- Mobile Sidebar Overlay -->
         <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden backdrop-blur-sm"></div>
-        
+
         <!-- Main Content Area -->
         <div class="flex-1 lg:ml-16 w-full min-w-0 transition-all duration-300">
             <!-- Top Header -->
@@ -394,7 +404,7 @@ $csrfToken = generateCSRFToken();
                     </div>
                 </div>
             </header>
-            
+
             <!-- Content -->
             <main class="p-4 lg:p-6 min-h-[calc(100vh-3.5rem)]">
         <!-- Dashboard View - Advanced Analytics -->
@@ -503,7 +513,7 @@ $csrfToken = generateCSRFToken();
                     </div>
                 </div>
             </div>
-            
+
             <!-- Flow & Monitoring Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Content Pipeline Evolution -->
@@ -516,7 +526,7 @@ $csrfToken = generateCSRFToken();
                     </div>
                     <div id="workflowFunnel" class="flex items-end justify-between h-40 lg:h-56 gap-2 lg:gap-4"></div>
                 </div>
-                
+
                 <!-- Platform Dominance -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col">
                     <h3 class="font-bold text-slate-800 mb-6">Channel Authority</h3>
@@ -534,7 +544,7 @@ $csrfToken = generateCSRFToken();
                     <div id="platformLegend" class="grid grid-cols-2 gap-x-4 gap-y-2 mt-auto pt-4 border-t border-slate-50"></div>
                 </div>
             </div>
-            
+
             <!-- Employee Monitoring & Pipeline Health -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                 <!-- Team Performance Monitoring - HIGH DENSITY -->
@@ -548,7 +558,7 @@ $csrfToken = generateCSRFToken();
                     </div>
                     <div id="userPerformanceCards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:max-h-[600px] lg:overflow-y-auto pr-2 custom-scrollbar"></div>
                 </div>
-                
+
                 <!-- Right Rail: Bottlenecks & Schedule -->
                 <div class="lg:col-span-4 space-y-6">
                     <!-- Workflow Health Markers -->
@@ -567,7 +577,7 @@ $csrfToken = generateCSRFToken();
                     </div>
                 </div>
             </div>
-            
+
             <!-- Global Activity Log -->
             <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm overflow-hidden">
                 <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-50">
@@ -585,13 +595,13 @@ $csrfToken = generateCSRFToken();
         <div id="boardView" class="hidden">
             <!-- Filters Row -->
             <div class="mb-4 flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center">
-                <select id="platformFilter" onchange="loadPosts()" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                <select id="platformFilter" onchange="refreshBoardContent()" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
                     <option value="">All Platforms</option>
                     <option value="Facebook">Facebook</option><option value="Instagram">Instagram</option><option value="LinkedIn">LinkedIn</option>
                     <option value="X">X</option><option value="TikTok">TikTok</option><option value="YouTube">YouTube</option><option value="Snapchat">Snapchat</option><option value="Website">Website</option>
                 </select>
                 <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
-                    <input type="checkbox" id="myPostsFilter" onchange="loadPosts()" class="rounded border-slate-300 text-brand-500 focus:ring-brand-500">
+                    <input type="checkbox" id="myPostsFilter" onchange="refreshBoardContent()" class="rounded border-slate-300 text-brand-500 focus:ring-brand-500">
                     My Posts
                 </label>
                 <div class="relative w-full sm:flex-1 sm:max-w-xs">
@@ -599,9 +609,28 @@ $csrfToken = generateCSRFToken();
                     <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
             </div>
-            
+
+            <div id="archiveModeSummary" class="hidden mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Published</p>
+                    <p id="archiveSummaryCount" class="mt-1 text-2xl font-black text-slate-800">0</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Latest Drop</p>
+                    <p id="archiveSummaryLatest" class="mt-1 text-sm font-bold text-slate-800">No posts</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Authors</p>
+                    <p id="archiveSummaryAuthors" class="mt-1 text-2xl font-black text-slate-800">0</p>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                    <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Platforms</p>
+                    <p id="archiveSummaryPlatforms" class="mt-1 text-2xl font-black text-slate-800">0</p>
+                </div>
+            </div>
+
             <!-- Status Tabs -->
-            <div class="bg-white rounded-lg border border-slate-200 mb-6 overflow-hidden">
+            <div id="workflowStatusTabs" class="bg-white rounded-lg border border-slate-200 mb-6 overflow-hidden">
                 <div class="flex overflow-x-auto scrollbar-none whitespace-nowrap border-b border-slate-200">
                     <button onclick="setStatusFilter('')" id="tabAll" class="status-tab px-3 py-2 text-xs font-bold text-slate-800 border-b-2 border-slate-800 bg-transparent transition-all flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-gradient-to-r from-violet-400 to-slate-400"></span>
@@ -633,18 +662,27 @@ $csrfToken = generateCSRFToken();
                     </button>
                 </div>
             </div>
-            
-            <!-- Posts Grid -->
 
-            <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <!-- Posts will be rendered here -->
+            <div id="workflowBoardPanel">
+                <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Posts will be rendered here -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="emptyState" class="hidden text-center py-16">
+                    <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="text-slate-500 text-lg mb-2">No posts found</p>
+                    <p class="text-slate-400 text-sm">Try adjusting your filters or create a new post</p>
+                </div>
             </div>
-            
-            <!-- Empty State -->
-            <div id="emptyState" class="hidden text-center py-16">
-                <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <p class="text-slate-500 text-lg mb-2">No posts found</p>
-                <p class="text-slate-400 text-sm">Try adjusting your filters or create a new post</p>
+
+            <div id="archiveBoardPanel" class="hidden">
+                <div id="archiveGroups" class="space-y-8"></div>
+                <div id="archiveEmptyState" class="hidden text-center py-16">
+                    <svg class="w-16 h-16 mx-auto text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 12h14M5 16h10M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+                    <p class="text-slate-500 text-lg mb-2">No published posts match these filters</p>
+                    <p class="text-slate-400 text-sm">Try another platform, author view, or search term.</p>
+                </div>
             </div>
         </div>
 
@@ -678,14 +716,14 @@ $csrfToken = generateCSRFToken();
                     </div>
                 </div>
             </div>
-            
+
             <!-- Platform Legend (Simplified) -->
             <div class="flex items-center gap-4 mb-4 text-xs text-slate-500">
                 <span class="font-medium">Legend:</span>
                 <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> Scheduled</span>
                 <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Published</span>
             </div>
-            
+
             <!-- Calendar Grid -->
             <div class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
                 <div class="grid grid-cols-7 bg-slate-50 border-b border-slate-200">
@@ -757,12 +795,12 @@ $csrfToken = generateCSRFToken();
                     New Idea
                 </button>
             </div>
-            
+
             <!-- Ideas Grid -->
             <div id="ideasGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <!-- Ideas will be rendered here -->
             </div>
-            
+
             <!-- Empty State -->
             <div id="ideasEmptyState" class="hidden text-center py-16">
                 <div class="text-6xl mb-4">💭</div>
@@ -788,31 +826,31 @@ $csrfToken = generateCSRFToken();
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            
+
             <!-- Content -->
             <form id="ideaForm" class="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
                 <input type="hidden" id="ideaId">
-                
+
                 <!-- Title (Optional) -->
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Title (optional)</label>
                     <input type="text" id="ideaTitle" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all font-medium text-slate-800 placeholder-slate-400" placeholder="Give your idea a name...">
                 </div>
-                
+
                 <!-- Content (Required) -->
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Brain Dump 💭</label>
                     <textarea id="ideaContent" rows="6" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all text-slate-700 placeholder-slate-400 resize-none" placeholder="Write freely... bullet points, links, emojis — anything goes! 🚀"></textarea>
                     <p class="text-xs text-slate-400 mt-2">No rules here. Just let your ideas flow.</p>
                 </div>
-                
+
                 <!-- Media Upload -->
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">📎 Attachments</label>
-                    
+
                     <!-- Media Preview Grid -->
                     <div id="ideaMediaPreview" class="grid grid-cols-3 gap-2 mb-3"></div>
-                    
+
                     <!-- Upload Zone -->
                     <div id="ideaDropZone" onclick="document.getElementById('ideaFileInput').click()" class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center cursor-pointer hover:border-violet-400 hover:bg-violet-50/50 transition-all">
                         <input type="file" id="ideaFileInput" class="hidden" accept="image/*,video/mp4,video/webm" multiple onchange="handleIdeaFileSelect(event)">
@@ -824,7 +862,7 @@ $csrfToken = generateCSRFToken();
                     </div>
                 </div>
             </form>
-            
+
             <!-- Footer Actions -->
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
                 <button type="button" onclick="closeIdeaModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
@@ -845,21 +883,21 @@ $csrfToken = generateCSRFToken();
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            
+
             <!-- Content -->
             <div class="p-6 overflow-y-auto custom-scrollbar flex-1">
                 <!-- Media Gallery -->
                 <div id="viewIdeaMediaGallery" class="mb-5"></div>
-                
+
                 <!-- Content Text -->
                 <div id="viewIdeaContent" class="prose prose-slate max-w-none text-slate-700 whitespace-pre-wrap"></div>
-                
+
                 <!-- Meta Info -->
                 <div id="viewIdeaMeta" class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-4 text-sm text-slate-400">
                     <span id="viewIdeaDate"></span>
                 </div>
             </div>
-            
+
             <!-- Footer Actions -->
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
                 <button type="button" onclick="viewIdeaEdit()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
@@ -885,7 +923,7 @@ $csrfToken = generateCSRFToken();
                     <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            
+
             <!-- Scrollable Content -->
             <form id="createForm" class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
                 <!-- Title & Content -->
@@ -1007,7 +1045,7 @@ $csrfToken = generateCSRFToken();
                             </label>
                         </div>
                     </div>
-                    
+
                     <div class="space-y-4">
                          <div>
                             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Initial Status</label>
@@ -1020,7 +1058,7 @@ $csrfToken = generateCSRFToken();
                                 </div>
                             </div>
                         </div>
-                         
+
                          <label class="flex items-center gap-3 p-3 bg-red-50 border border-red-100 rounded-lg cursor-pointer hover:bg-red-100 transition-colors">
                             <input type="checkbox" id="createUrgent" class="w-4 h-4 text-red-600 rounded border-red-300 focus:ring-red-500">
                             <span class="text-sm font-bold text-red-700">Urgent Priority</span>
@@ -1043,7 +1081,7 @@ $csrfToken = generateCSRFToken();
                     </div>
                 </div>
             </form>
-            
+
             <!-- Footer Actions -->
             <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
                 <button type="button" onclick="closeCreateModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
@@ -1055,7 +1093,7 @@ $csrfToken = generateCSRFToken();
     <!-- ==================== VIEW POST MODAL (Read-Only) ==================== -->
     <div id="viewModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-0 lg:p-8">
         <div id="viewModalContainer" class="bg-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-7xl h-full lg:h-[85vh] flex flex-col lg:flex-row overflow-hidden border border-slate-100 text-right">
-            
+
             <!-- Left Column: Media (Dark Mode) - Reduced Width -->
             <div id="viewMediaColumn" class="hidden lg:w-[48%] xl:w-[48%] flex-shrink-0 bg-slate-900 items-center justify-center relative group border-l border-slate-100">
                  <div id="viewMediaWrapper" class="w-full h-full flex items-center justify-center p-4"></div>
@@ -1063,7 +1101,7 @@ $csrfToken = generateCSRFToken();
 
             <!-- Right Column: Content & Details - Increased Width -->
             <div id="viewContentColumn" class="flex-1 flex flex-col bg-white h-full relative w-full">
-                
+
                 <!-- Fixed Header (Sticky) -->
                 <div class="px-4 lg:px-6 py-4 flex justify-between items-center border-b border-slate-100 bg-white flex-shrink-0 gap-4 z-10 sticky top-0">
                      <!-- Status & Platforms -->
@@ -1071,7 +1109,7 @@ $csrfToken = generateCSRFToken();
                         <span id="viewStatusBadge" class="status-badge px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 flex-shrink-0">DRAFT</span>
                         <div id="viewPlatformBadge" class="flex items-center gap-1.5 overflow-x-auto scrollbar-none mask-linear-fade pl-4"></div>
                     </div>
-                    
+
                     <!-- Actions -->
                     <div class="flex items-center gap-1 flex-shrink-0">
                         <button id="viewEditBtn" onclick="switchToEditMode()" class="text-slate-400 hover:text-brand-600 hover:bg-brand-50 p-2 rounded-lg transition-all" title="Edit Post">
@@ -1101,7 +1139,7 @@ $csrfToken = generateCSRFToken();
                                     <i class="fa-solid fa-bolt text-[9px]"></i> Urgent
                                 </span>
                             </div>
-                            
+
                             <!-- Detailed Meta Row -->
                             <div class="flex items-center flex-wrap gap-4 text-xs font-medium text-slate-500 border-b border-slate-100 pb-6">
                                 <div class="flex items-center gap-2">
@@ -1128,7 +1166,7 @@ $csrfToken = generateCSRFToken();
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Main Content -->
                         <div class="prose prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-600 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-brand-600">
                             <div id="viewContent" class="rich-text-content text-slate-600"></div>
@@ -1152,13 +1190,13 @@ $csrfToken = generateCSRFToken();
                             </div>
                             <div id="viewDesignFiles" class="space-y-3"></div>
                         </div>
-                        
+
 
                         <!-- Action Area -->
                         <div id="viewActions" class="pt-2">
                             <div id="actionButtons" class="flex flex-wrap gap-3"></div>
                         </div>
-                        
+
                         <!-- Stacked Sections (Discussion & History) -->
                         <div class="flex flex-col gap-8 pt-8 border-t border-slate-200">
                              <!-- Comments Section -->
@@ -1169,9 +1207,9 @@ $csrfToken = generateCSRFToken();
                                     </h3>
                                     <span id="viewCommentCount" class="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">0</span>
                                 </div>
-                                
+
                                 <div id="viewComments" class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar"></div>
-                                
+
                                 <div id="viewCommentComposer" class="sticky bottom-0 bg-white pt-2">
                                     <div class="relative">
                                         <input type="text" id="viewNewComment" placeholder="Write a comment..." class="w-full pl-4 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-sm" onkeypress="if(event.key==='Enter')addViewComment()">
@@ -1181,7 +1219,7 @@ $csrfToken = generateCSRFToken();
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Activity Timeline -->
                             <div class="space-y-4 pt-8 border-t border-slate-100">
                                 <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
@@ -1206,7 +1244,7 @@ $csrfToken = generateCSRFToken();
                      <i class="fa-solid fa-xmark text-xl"></i>
                 </button>
             </div>
-            
+
             <form id="editForm" class="p-6 space-y-6 overflow-y-auto custom-scrollbar">
                 <input type="hidden" id="editPostId">
                 <div class="space-y-4">
@@ -1477,7 +1515,15 @@ $csrfToken = generateCSRFToken();
     </div>
 
 <script>
-const app = { user: null, posts: [], currentPost: null, lastUnreadCount: 0, notificationsInitialized: false };
+const app = {
+    user: null,
+    posts: [],
+    archivePosts: [],
+    currentPost: null,
+    currentTab: 'board',
+    lastUnreadCount: 0,
+    notificationsInitialized: false
+};
 const STATUS_LIST = ['DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
 const STATUS_COLORS = {
     'DRAFT': 'bg-sky-100 text-sky-700',
@@ -1598,6 +1644,7 @@ const PLATFORM_ICONS = {
     X: 'fa-brands fa-x-twitter', TikTok: 'fa-brands fa-tiktok', YouTube: 'fa-brands fa-youtube',
     Snapchat: 'fa-brands fa-snapchat', Website: 'fa-solid fa-globe'
 };
+let currentBoardMode = 'workflow';
 
 function isVideoFile(path) {
     if (!path) return false;
@@ -1612,24 +1659,28 @@ async function init() {
         if (loader) loader.classList.remove('hidden');
 
         await loadUser();
+        updateBoardModeUI();
         // Parallelize these for faster loading
         await Promise.all([loadPosts(), loadNotifications()]);
-    
+
         // Get tab from URL hash or default to 'board'
         const validTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
         let initialTab = window.location.hash.replace('#', '');
         if (!validTabs.includes(initialTab)) initialTab = 'board';
-        
+
         // Check if unauthorized role trying to access users tab
         if (initialTab === 'users' && canonicalRole(app.user?.role?.toLowerCase()) !== 'manager') initialTab = 'board';
         if (initialTab === 'ideas' && isDesignerRole(app.user?.role)) initialTab = 'board';
-        
+
         switchTab(initialTab);
 
-        // Start polling: Notifications (5s), Posts (10s)
+        // Start polling: Notifications (5s), Board data (10s while board is visible)
         setInterval(loadNotifications, 5000);
-        setInterval(() => loadPosts(true), 10000);
-        
+        setInterval(() => {
+            if (app.currentTab !== 'board') return;
+            refreshBoardContent(true);
+        }, 10000);
+
         // Initialize audio context on first user interaction
         const unlockAudio = () => {
             initAudio();
@@ -1671,7 +1722,7 @@ async function api(action, method = 'GET', body = null) {
         if (csrfToken) opts.headers['X-CSRF-TOKEN'] = csrfToken;
     }
     if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
-    
+
     // Prevent caching for GET requests
     let url = `api.php?action=${action}`;
     if (method === 'GET') {
@@ -1693,7 +1744,7 @@ async function loadUser() {
         if (canonicalRole(data.data.role) === 'manager') document.getElementById('managerLogsLink').classList.remove('hidden');
         document.getElementById('tabIdeas')?.classList.toggle('hidden', isDesignerRole(data.data.role));
         document.getElementById('newPostButton')?.classList.toggle('hidden', isDesignerRole(data.data.role));
-        
+
         // Update company branding (use white logo for dark sidebar)
         if (data.data.company_logo) {
             // Convert to white logo version for dark sidebar background
@@ -1727,26 +1778,32 @@ async function logout() {
 function switchTab(tab) {
     const allTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
     const titles = { dashboard: 'Dashboard', board: 'Content Board', calendar: 'Calendar', ideas: 'My Ideas', users: 'User Management' };
+    app.currentTab = tab;
+    document.getElementById('boardModeSidebar')?.classList.toggle('hidden', tab !== 'board');
     
     allTabs.forEach(t => {
         const view = document.getElementById(t + 'View');
         if (view) view.classList.toggle('hidden', t !== tab);
         const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
         if (btn) {
-            btn.className = t === tab 
+            btn.className = t === tab
                 ? 'sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-white bg-white/10 transition-colors'
                 : 'sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors';
         }
     });
-    
+
     document.getElementById('pageTitle').textContent = titles[tab] || tab;
-    
+
     // Update URL hash without triggering hashchange event
     if (window.location.hash !== '#' + tab) {
         history.replaceState(null, '', '#' + tab);
     }
-    
+
     if (tab === 'dashboard') loadDashboard();
+    if (tab === 'board') {
+        updateBoardModeUI();
+        refreshBoardContent();
+    }
     if (tab === 'calendar') loadCalendar();
     if (tab === 'ideas') loadIdeas();
     if (tab === 'users') loadUsers();
@@ -1759,7 +1816,7 @@ async function loadIdeas() {
     try {
         const data = await api('get_user_ideas');
         if (!data.success) return;
-        
+
         userIdeas = data.data || [];
         renderIdeas();
     } catch (error) {
@@ -1770,15 +1827,15 @@ async function loadIdeas() {
 function renderIdeas() {
     const grid = document.getElementById('ideasGrid');
     const emptyState = document.getElementById('ideasEmptyState');
-    
+
     if (userIdeas.length === 0) {
         grid.innerHTML = '';
         emptyState.classList.remove('hidden');
         return;
     }
-    
+
     emptyState.classList.add('hidden');
-    
+
     grid.innerHTML = userIdeas.map(idea => {
         const title = idea.title || 'Untitled Idea';
         const content = idea.content || '';
@@ -1788,11 +1845,11 @@ function renderIdeas() {
         const hasMedia = media.length > 0;
         const primaryMedia = media.find(m => m.is_primary) || media[0];
         const isVideo = primaryMedia?.file_type?.startsWith('video/');
-        
+
         // Media thumbnail section
         let mediaThumbnail = '';
         if (hasMedia && primaryMedia) {
-            mediaThumbnail = isVideo 
+            mediaThumbnail = isVideo
                 ? `<div class="relative mb-3 rounded-lg overflow-hidden bg-slate-100 aspect-video">
                      <video src="${primaryMedia.file_path}" class="w-full h-full object-cover"></video>
                      <div class="absolute inset-0 flex items-center justify-center bg-black/30">
@@ -1805,7 +1862,7 @@ function renderIdeas() {
                      ${media.length > 1 ? `<span class="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">+${media.length - 1}</span>` : ''}
                    </div>`;
         }
-        
+
         return `
             <div class="group bg-white rounded-xl border border-slate-200 hover:border-violet-300 hover:shadow-lg transition-all p-5 flex flex-col cursor-pointer" onclick="viewIdea(${idea.id})">
                 <div class="flex items-start justify-between mb-3">
@@ -1856,19 +1913,19 @@ async function saveIdea() {
     const id = document.getElementById('ideaId').value;
     const title = document.getElementById('ideaTitle').value.trim();
     const content = document.getElementById('ideaContent').value.trim();
-    
+
     if (!content) {
         alert('Please write something in your idea!');
         return;
     }
-    
+
     try {
         const action = id ? 'update_idea' : 'create_idea';
         const payload = { title, content };
         if (id) payload.id = parseInt(id);
-        
+
         const data = await api(action, 'POST', payload);
-        
+
         if (data.success) {
             closeIdeaModal();
             loadIdeas();
@@ -1884,7 +1941,7 @@ async function saveIdea() {
 function editIdea(ideaId) {
     const idea = userIdeas.find(i => i.id == ideaId);
     if (!idea) return;
-    
+
     document.getElementById('ideaId').value = idea.id;
     document.getElementById('ideaTitle').value = idea.title || '';
     document.getElementById('ideaContent').value = idea.content || '';
@@ -1897,7 +1954,7 @@ function editIdea(ideaId) {
 
 async function deleteIdea(ideaId) {
     if (!confirm('Delete this idea? This cannot be undone.')) return;
-    
+
     try {
         const data = await api(`delete_idea&id=${ideaId}`, 'GET');
         if (data.success) {
@@ -1913,12 +1970,12 @@ async function deleteIdea(ideaId) {
 
 async function convertIdeaToDraft(ideaId) {
     if (!confirm('Convert this idea to a Draft post?\n\nThis will create a new Draft in your workflow. You can choose to keep or delete the original idea.')) return;
-    
+
     const deleteAfter = confirm('Do you want to delete the idea after converting?\n\nClick OK to delete, Cancel to keep it.');
-    
+
     try {
         const data = await api('convert_idea_to_draft', 'POST', { idea_id: ideaId, delete_idea: deleteAfter });
-        
+
         if (data.success) {
             alert('✅ Idea converted to Draft successfully!\n\nSwitch to the Board to see your new draft.');
             if (deleteAfter) {
@@ -1938,17 +1995,17 @@ async function convertIdeaToDraft(ideaId) {
 function renderIdeaMediaPreview() {
     const container = document.getElementById('ideaMediaPreview');
     if (!container) return;
-    
+
     if (currentIdeaMedia.length === 0) {
         container.innerHTML = '';
         return;
     }
-    
+
     container.innerHTML = currentIdeaMedia.map(m => {
         const isVideo = m.file_type?.startsWith('video/');
         return `
             <div class="relative group rounded-lg overflow-hidden bg-slate-100 aspect-square">
-                ${isVideo 
+                ${isVideo
                     ? `<video src="${m.file_path}" class="w-full h-full object-cover"></video>
                        <div class="absolute inset-0 flex items-center justify-center bg-black/30">
                          <i class="fa-solid fa-play text-white text-sm"></i>
@@ -1966,31 +2023,31 @@ function renderIdeaMediaPreview() {
 async function handleIdeaFileSelect(event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
-    
+
     const ideaId = document.getElementById('ideaId').value;
-    
+
     // If no idea ID yet, we need to create the idea first
     if (!ideaId) {
         const title = document.getElementById('ideaTitle').value.trim();
         const content = document.getElementById('ideaContent').value.trim() || 'New idea with attachments';
-        
+
         // Create idea first
         const createData = await api('create_idea', 'POST', { title, content });
         if (!createData.success) {
             alert('Please save the idea first before adding files');
             return;
         }
-        
+
         document.getElementById('ideaId').value = createData.data.id;
         document.getElementById('ideaContent').value = content;
     }
-    
+
     const currentIdeaId = document.getElementById('ideaId').value;
-    
+
     for (const file of files) {
         await uploadIdeaMedia(currentIdeaId, file);
     }
-    
+
     // Reload ideas to get updated media list
     await loadIdeas();
     const idea = userIdeas.find(i => i.id == currentIdeaId);
@@ -1998,7 +2055,7 @@ async function handleIdeaFileSelect(event) {
         currentIdeaMedia = idea.media || [];
         renderIdeaMediaPreview();
     }
-    
+
     // Clear file input
     event.target.value = '';
 }
@@ -2007,14 +2064,14 @@ async function uploadIdeaMedia(ideaId, file) {
     const formData = new FormData();
     formData.append('idea_id', ideaId);
     formData.append('file', file);
-    
+
     try {
         const response = await fetch(`api.php?action=upload_idea_media`, {
             method: 'POST',
             body: formData,
             credentials: 'include'
         });
-        
+
         const data = await response.json();
         if (!data.success) {
             alert(data.message || 'Failed to upload file');
@@ -2027,7 +2084,7 @@ async function uploadIdeaMedia(ideaId, file) {
 
 async function deleteIdeaMedia(mediaId) {
     if (!confirm('Delete this attachment?')) return;
-    
+
     try {
         const data = await api(`delete_idea_media&id=${mediaId}`, 'GET');
         if (data.success) {
@@ -2049,37 +2106,37 @@ let currentViewIdea = null;
 function viewIdea(ideaId) {
     const idea = userIdeas.find(i => i.id == ideaId);
     if (!idea) return;
-    
+
     currentViewIdea = idea;
-    
+
     // Set title
     document.getElementById('viewIdeaTitle').textContent = idea.title || 'Untitled Idea';
-    
+
     // Set content
     document.getElementById('viewIdeaContent').textContent = idea.content || '';
-    
+
     // Set date
-    const createdDate = new Date(idea.created_at).toLocaleDateString('en-US', { 
-        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    const createdDate = new Date(idea.created_at).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
-    const updatedDate = new Date(idea.updated_at).toLocaleDateString('en-US', { 
-        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+    const updatedDate = new Date(idea.updated_at).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
     });
     document.getElementById('viewIdeaDate').innerHTML = `
         <i class="fa-regular fa-clock"></i> Created: ${createdDate}
         ${idea.created_at !== idea.updated_at ? `<span class="mx-2">•</span> Updated: ${updatedDate}` : ''}
     `;
-    
+
     // Render media gallery
     const media = idea.media || [];
     const galleryContainer = document.getElementById('viewIdeaMediaGallery');
-    
+
     if (media.length === 0) {
         galleryContainer.innerHTML = '';
     } else if (media.length === 1) {
         const m = media[0];
         const isVideo = m.file_type?.startsWith('video/');
-        galleryContainer.innerHTML = isVideo 
+        galleryContainer.innerHTML = isVideo
             ? `<video src="${m.file_path}" controls class="w-full rounded-lg max-h-80 object-contain bg-black"></video>`
             : `<img src="${m.file_path}" class="w-full rounded-lg max-h-80 object-contain bg-slate-100" alt="">`;
     } else {
@@ -2089,7 +2146,7 @@ function viewIdea(ideaId) {
                     const isVideo = m.file_type?.startsWith('video/');
                     return `
                         <div class="relative rounded-lg overflow-hidden bg-slate-100 aspect-video cursor-pointer" onclick="window.open('${m.file_path}', '_blank')">
-                            ${isVideo 
+                            ${isVideo
                                 ? `<video src="${m.file_path}" class="w-full h-full object-cover"></video>
                                    <div class="absolute inset-0 flex items-center justify-center bg-black/30">
                                      <i class="fa-solid fa-play text-white text-lg"></i>
@@ -2102,7 +2159,7 @@ function viewIdea(ideaId) {
             </div>
         `;
     }
-    
+
     document.getElementById('viewIdeaModal').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
 }
@@ -2588,9 +2645,9 @@ async function loadDashboard() {
         const days = document.getElementById('analyticsPeriod')?.value || 30;
         const data = await api(`get_dashboard_stats&days=${days}`);
         if (!data.success) return;
-        
+
         const d = data.data;
-        
+
         // === Health Score Ring ===
         const health = d.health || { score: 0, status: 'healthy', label: 'Loading...' };
         const healthPath = document.getElementById('healthPath');
@@ -2601,17 +2658,17 @@ async function loadDashboard() {
             document.getElementById('healthScore').textContent = health.score;
             document.getElementById('healthLabel').textContent = health.label;
         }
-    
+
     // === Smart Recommendations ===
-    const recColors = { 
-        warning: 'bg-amber-50 border-amber-100 rec-item', 
-        success: 'bg-emerald-50 border-emerald-100 rec-item', 
-        alert: 'bg-red-50 border-red-100 rec-item', 
-        info: 'bg-blue-50 border-blue-100 rec-item' 
+    const recColors = {
+        warning: 'bg-amber-50 border-amber-100 rec-item',
+        success: 'bg-emerald-50 border-emerald-100 rec-item',
+        alert: 'bg-red-50 border-red-100 rec-item',
+        info: 'bg-blue-50 border-blue-100 rec-item'
     };
     const recTextColors = { warning: 'text-amber-800', success: 'text-emerald-800', alert: 'text-red-800', info: 'text-blue-800' };
     const recIcons = { warning: '⚠️', success: '✅', alert: '🚨', info: 'ℹ️' };
-    
+
     document.getElementById('recommendationsSection').innerHTML = (d.recommendations || []).slice(0, 4).map(r => `
         <div class="flex items-start gap-3 p-4 rounded-xl border-l-4 ${recColors[r.type] || 'bg-slate-50 border-slate-200'}">
             <span class="text-xl">${r.icon || recIcons[r.type] || '💡'}</span>
@@ -2621,14 +2678,14 @@ async function loadDashboard() {
             </div>
         </div>
     `).join('') || '<div class="col-span-2 py-8 text-center text-slate-400 text-xs font-bold uppercase tracking-widest">System stabilized. No critical insights.</div>';
-    
+
     // === KPIs with Trends ===
     document.getElementById('kpiTotal').textContent = d.overview?.total_posts || 0;
     document.getElementById('kpiPublished').textContent = d.overview?.published_period || 0;
     document.getElementById('kpiPending').textContent = (d.overview?.pending_review || 0) + (d.overview?.reviewed || 0);
     document.getElementById('kpiScheduled').textContent = d.overview?.scheduled_upcoming || 0;
     document.getElementById('kpiApprovalRate').textContent = (d.overview?.approval_rate || 0) + '%';
-    
+
     const trendBadge = (val) => {
         if (!val || val === 0) return '';
         const isPos = val > 0;
@@ -2650,14 +2707,14 @@ async function loadDashboard() {
     document.getElementById('kpiApprovalTrend').className = `text-[9px] font-bold px-1.5 py-0.5 rounded ${appTrend >= 0 ? 'bg-blue-500/20 text-blue-400' : 'bg-red-500/20 text-red-400'}`;
     if (appTrend === 0) document.getElementById('kpiApprovalTrend').classList.add('hidden');
     else document.getElementById('kpiApprovalTrend').classList.remove('hidden');
-    
+
     // === Time Insights ===
     const timeInsights = d.time_insights || {};
     document.getElementById('bestDay').textContent = timeInsights.best_day || '-';
     document.getElementById('bestDayCount').textContent = timeInsights.best_day_count ? `${timeInsights.best_day_count} posts` : '';
     document.getElementById('bestHour').textContent = timeInsights.best_hour || '-';
     document.getElementById('bestHourCount').textContent = timeInsights.best_hour_count ? `${timeInsights.best_hour_count} posts` : '';
-    
+
     // === Bottleneck Bars ===
     const bottlenecks = d.bottlenecks || [];
     const maxHours = Math.max(...bottlenecks.map(b => b.avg_hours || 0), 48);
@@ -2676,20 +2733,20 @@ async function loadDashboard() {
             </div>
         `;
     }).join('') || '<p class="text-slate-400 text-[10px] font-bold uppercase py-4">Efficiency data pending...</p>';
-    
+
     // === Workflow Funnel ===
     const statuses = ['DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
     const maxCount = Math.max(...statuses.map(s => d.by_status?.[s] || 0), 1);
     const statusLabels = ['Drafts', 'Review', 'Reviewed', 'Approved', 'Sched', 'Pub'];
     const gradients = [
-        'from-sky-400 to-sky-600', 
+        'from-sky-400 to-sky-600',
         'from-amber-400 to-amber-600',
         'from-orange-400 to-orange-600',
         'from-emerald-400 to-emerald-600',
         'from-indigo-400 to-indigo-600',
         'from-slate-400 to-slate-600'
     ];
-    
+
     document.getElementById('workflowFunnel').innerHTML = statuses.map((s, i) => {
         const count = d.by_status?.[s] || 0;
         const height = Math.max((count / maxCount) * 100, 10);
@@ -2709,15 +2766,15 @@ async function loadDashboard() {
             </div>
         `;
     }).join('');
-    
+
     // === Platform Chart ===
     const platformData = d.by_platform || [];
     const platformColors = {
         Facebook: '#1877f2', Instagram: '#e4405f', LinkedIn: '#0077b5',
-        X: '#000000', TikTok: '#000000', YouTube: '#ff0000', 
+        X: '#000000', TikTok: '#000000', YouTube: '#ff0000',
         Snapchat: '#fffc00', Website: '#6366f1'
     };
-    
+
     const ctx = document.getElementById('platformChart')?.getContext('2d');
     if (ctx) {
         if (platformChart) platformChart.destroy();
@@ -2741,7 +2798,7 @@ async function loadDashboard() {
                 animation: { animateRotate: true, animateScale: true }
             }
         });
-        
+
         document.getElementById('platformLegend').innerHTML = (platformData.length > 0 ? platformData.slice(0, 6) : []).map(p => `
             <div class="flex items-center justify-between p-1">
                 <div class="flex items-center gap-2 min-w-0">
@@ -2752,16 +2809,16 @@ async function loadDashboard() {
             </div>
         `).join('') || '<div class="col-span-2 text-center text-[8px] text-slate-300 font-bold uppercase tracking-widest pt-4">No data</div>';
     }
-    
+
     // === User Performance Cards ===
     const teamMembers = d.user_performance || [];
     document.getElementById('teamMemberCount').textContent = teamMembers.length > 0 ? `${teamMembers.length} ACTIVE` : 'NONE';
-    
+
     document.getElementById('userPerformanceCards').innerHTML = teamMembers.map(u => {
         const roleStr = canonicalRole(String(u.role).toLowerCase());
         const isReviewerMember = roleStr === 'admin' || roleStr === 'manager';
         const lastActivity = u.last_activity ? formatDate(u.last_activity) : 'Never';
-        
+
         // Dynamic Metrics based on Role
         let metricsHtml = '';
         if (isReviewerMember) {
@@ -2826,7 +2883,7 @@ async function loadDashboard() {
                 </div>
             `;
         }
-        
+
         return `
         <div class="p-5 bg-white border border-slate-100 rounded-3xl hover:border-brand-200 hover:shadow-xl transition-all duration-500 group">
             <div class="flex items-center gap-4 mb-4">
@@ -2842,9 +2899,9 @@ async function loadDashboard() {
                     </div>
                 </div>
             </div>
-            
+
             ${metricsHtml}
-            
+
             <div class="flex items-center justify-between px-1">
                 <div class="flex items-center gap-1.5">
                     <div class="w-2 h-2 rounded-full ${isReviewerMember ? 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]'}"></div>
@@ -2853,7 +2910,7 @@ async function loadDashboard() {
             </div>
         </div>
     `}).join('') || '<div class="col-span-full py-12 text-center text-slate-400 font-bold uppercase tracking-widest">No team pulse detected</div>';
-    
+
     // === Upcoming Scheduled ===
     document.getElementById('upcomingScheduled').innerHTML = (d.upcoming_scheduled || []).map(p => {
         const schedDate = new Date(p.scheduled_date);
@@ -2870,7 +2927,7 @@ async function loadDashboard() {
             </div>
         `;
     }).join('') || '<p class="text-slate-300 text-[10px] font-bold uppercase py-6 text-center">Calendar is clear</p>';
-    
+
     // === Recent Activity ===
     const actionConfig = {
         'created': { icon: '✚', bg: 'bg-emerald-50 text-emerald-500', label: 'Draft Created' },
@@ -2880,21 +2937,21 @@ async function loadDashboard() {
         'media_uploaded': { icon: '📎', bg: 'bg-purple-50 text-purple-500', label: 'Media Injection' },
         'deleted': { icon: '✕', bg: 'bg-red-50 text-red-500', label: 'Node Purged' },
     };
-    
+
     const activityStatusColors = {
         'DRAFT': 'bg-sky-500', 'PENDING_REVIEW': 'bg-amber-500',
         'REVIEWED': 'bg-orange-500', 'CHANGES_REQUESTED': 'bg-orange-500', 'APPROVED': 'bg-emerald-500',
         'SCHEDULED': 'bg-indigo-500', 'PUBLISHED': 'bg-slate-600'
     };
-    
+
     document.getElementById('recentActivity').innerHTML = (d.recent_activity || []).map(a => {
         const config = actionConfig[a.action] || { icon: '•', bg: 'bg-slate-50 text-slate-500', label: a.action };
-        
+
         let statusTransition = '';
         if (a.action === 'status_changed' && a.new_value) {
             statusTransition = `<span class="ml-2 px-1.5 py-0.5 rounded-[4px] text-[8px] font-black text-white uppercase ${activityStatusColors[a.new_value] || 'bg-slate-400'}">${a.new_value.replace('_', ' ')}</span>`;
         }
-        
+
         return `
         <div class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-100 hover:shadow-md transition-all cursor-pointer group" onclick="openViewModal(${a.post_id})">
             <div class="flex items-start gap-3">
@@ -2914,11 +2971,11 @@ async function loadDashboard() {
             </div>
         </div>
     `}).join('') || '<div class="col-span-full py-12 text-center text-slate-300 text-xs font-bold uppercase tracking-widest">Awaiting system events...</div>';
-    
+
     // Update activity count
     const activityCount = (d.recent_activity || []).length;
     document.getElementById('activityCount').textContent = activityCount > 0 ? `${activityCount} REAL-TIME EVENTS` : '';
-    
+
     } catch (err) {
         console.error('loadDashboard ERROR:', err);
         toast('Failed to load dashboard sync', 'error');
@@ -2926,26 +2983,31 @@ async function loadDashboard() {
 }
 
 async function loadPosts(checkChanges = false) {
-    let url = 'fetch_posts';
-    const params = [];
-    const platform = document.getElementById('platformFilter')?.value;
-    const myPosts = document.getElementById('myPostsFilter')?.checked;
-    const search = document.getElementById('searchInput')?.value;
-    if (platform) params.push(`platform=${platform}`);
-    if (myPosts) params.push('my_posts=true');
-    if (search) params.push(`search=${encodeURIComponent(search)}`);
-    if (params.length) url += '&' + params.join('&');
-    
-    // Preserve scroll position if checking changes
+    const url = buildPostsUrl('workflow');
     const scrollPos = window.scrollY;
 
     const data = await api(url);
-    if (data.success) { 
-        // Always render to ensure fresh data
-        app.posts = data.data; 
-        renderBoard(); 
-        
-        // Restore scroll if it was a background update
+    if (data.success) {
+        app.posts = data.data;
+        if (currentBoardMode === 'archive') {
+            await loadArchivePosts(checkChanges);
+            return;
+        }
+        renderBoard();
+        if (checkChanges) window.scrollTo(0, scrollPos);
+    }
+}
+
+async function loadArchivePosts(checkChanges = false) {
+    const url = buildPostsUrl('archive');
+    const scrollPos = window.scrollY;
+
+    const data = await api(url);
+    if (data.success) {
+        app.archivePosts = data.data;
+        if (currentBoardMode === 'archive') {
+            renderArchiveBoard();
+        }
         if (checkChanges) window.scrollTo(0, scrollPos);
     }
 }
@@ -2953,13 +3015,99 @@ async function loadPosts(checkChanges = false) {
 // Current status filter for board tabs
 let currentStatusFilter = '';
 
+function refreshBoardContent(checkChanges = false) {
+    return currentBoardMode === 'archive' ? loadArchivePosts(checkChanges) : loadPosts(checkChanges);
+}
+
+function getBoardFilters() {
+    return {
+        platform: document.getElementById('platformFilter')?.value || '',
+        myPosts: !!document.getElementById('myPostsFilter')?.checked,
+        search: document.getElementById('searchInput')?.value?.trim() || ''
+    };
+}
+
+function buildPostsUrl(view = 'workflow') {
+    let url = 'fetch_posts';
+    const params = [];
+    const filters = getBoardFilters();
+
+    if (view === 'archive') params.push('view=archive');
+    if (filters.platform) params.push(`platform=${encodeURIComponent(filters.platform)}`);
+    if (filters.myPosts) params.push('my_posts=true');
+    if (filters.search) params.push(`search=${encodeURIComponent(filters.search)}`);
+    if (params.length) url += '&' + params.join('&');
+
+    return url;
+}
+
+function setBoardMode(mode) {
+    if (!['workflow', 'archive'].includes(mode) || currentBoardMode === mode) return;
+    currentBoardMode = mode;
+    updateBoardModeUI();
+    refreshBoardContent();
+}
+
+function activateBoardMode(mode) {
+    currentBoardMode = mode;
+    if (app.currentTab !== 'board') {
+        switchTab('board');
+    } else {
+        updateBoardModeUI();
+        refreshBoardContent();
+    }
+    closeSidebarOnMobile();
+}
+
+function updateBoardModeUI() {
+    const isArchive = currentBoardMode === 'archive';
+    const workflowBtn = document.getElementById('boardModeWorkflow');
+    const archiveBtn = document.getElementById('boardModeArchive');
+    const sidebarModePanel = document.getElementById('boardModeSidebar');
+    const workflowTabs = document.getElementById('workflowStatusTabs');
+    const workflowPanel = document.getElementById('workflowBoardPanel');
+    const archivePanel = document.getElementById('archiveBoardPanel');
+    const archiveSummary = document.getElementById('archiveModeSummary');
+    const searchInput = document.getElementById('searchInput');
+
+    if (workflowBtn) {
+        workflowBtn.className = isArchive
+            ? 'w-full rounded-md px-3 py-2 text-left text-xs font-bold text-slate-300 transition-all hover:bg-white/5 hover:text-white'
+            : 'w-full rounded-md bg-white px-3 py-2 text-left text-xs font-bold text-slate-900 shadow-sm transition-all';
+    }
+
+    if (archiveBtn) {
+        archiveBtn.className = isArchive
+            ? 'w-full rounded-md bg-white px-3 py-2 text-left text-xs font-bold text-slate-900 shadow-sm transition-all'
+            : 'w-full rounded-md px-3 py-2 text-left text-xs font-bold text-slate-300 transition-all hover:bg-white/5 hover:text-white';
+    }
+
+    sidebarModePanel?.classList.toggle('hidden', app.currentTab !== 'board');
+    workflowTabs?.classList.toggle('hidden', isArchive);
+    workflowPanel?.classList.toggle('hidden', isArchive);
+    archivePanel?.classList.toggle('hidden', !isArchive);
+    archiveSummary?.classList.toggle('hidden', !isArchive);
+
+    if (searchInput) {
+        searchInput.placeholder = isArchive ? 'Search published posts...' : 'Search posts...';
+    }
+
+    if (isArchive) {
+        renderArchiveBoard();
+    } else {
+        renderBoard();
+    }
+}
+
 function renderBoard() {
     const grouped = { DRAFT: [], PENDING_REVIEW: [], REVIEWED: [], APPROVED: [], SCHEDULED: [], PUBLISHED: [] };
-    
+
     app.posts.forEach(p => {
         if (p.status === 'CHANGES_REQUESTED') grouped.DRAFT.push(p);
         else if (grouped[p.status]) grouped[p.status].push(p);
     });
+
+    grouped.PUBLISHED.sort((a, b) => getArchiveTimestamp(b) - getArchiveTimestamp(a));
     
     // Update all tab counts
     let totalCount = 0;
@@ -2969,11 +3117,11 @@ function renderBoard() {
         const countEl = document.getElementById('count' + status);
         if (countEl) countEl.textContent = count;
     });
-    
+
     // Update "All" tab count
     const countAllEl = document.getElementById('countAll');
     if (countAllEl) countAllEl.textContent = totalCount;
-    
+
     // Filter posts based on current status filter
     let filteredPosts = [];
     if (currentStatusFilter === '') {
@@ -2984,11 +3132,11 @@ function renderBoard() {
     } else {
         filteredPosts = grouped[currentStatusFilter] || [];
     }
-    
+
     // Render posts in grid
     const grid = document.getElementById('postsGrid');
     const emptyState = document.getElementById('emptyState');
-    
+
     if (filteredPosts.length === 0) {
         grid.innerHTML = '';
         emptyState.classList.remove('hidden');
@@ -2996,7 +3144,7 @@ function renderBoard() {
         emptyState.classList.add('hidden');
         grid.innerHTML = filteredPosts.map(p => cardHTML(p)).join('');
     }
-    
+
     // Update active tab styling
     updateActiveTab();
 }
@@ -3007,15 +3155,15 @@ function setStatusFilter(status) {
 }
 
 function updateActiveTab() {
-    const tabs = ['All', 'DRAFT', 'PENDING_REVIEW', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
-    
+    const tabs = ['All', 'DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
+
     tabs.forEach(tab => {
         const tabId = tab === 'All' ? 'tabAll' : 'tab' + tab;
         const tabEl = document.getElementById(tabId);
         if (!tabEl) return;
-        
+
         const isActive = (tab === 'All' && currentStatusFilter === '') || currentStatusFilter === tab;
-        
+
         // Minimalist Tab Style
         if (isActive) {
             tabEl.className = `status-tab px-3 py-2 text-xs font-bold text-slate-800 border-b-2 border-slate-800 bg-transparent transition-all flex items-center gap-2`;
@@ -3025,34 +3173,213 @@ function updateActiveTab() {
     });
 }
 
+function renderArchiveBoard() {
+    const container = document.getElementById('archiveGroups');
+    const emptyState = document.getElementById('archiveEmptyState');
+    if (!container || !emptyState) return;
+
+    const sortedPosts = [...app.archivePosts].sort((a, b) => {
+        const aTime = getArchiveTimestamp(a);
+        const bTime = getArchiveTimestamp(b);
+        return bTime - aTime;
+    });
+
+    renderArchiveSummary(sortedPosts);
+
+    if (sortedPosts.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    const monthGroups = [];
+    const monthMap = new Map();
+
+    sortedPosts.forEach(post => {
+        const publishedAt = getArchiveDate(post);
+        const monthKey = `${publishedAt.getFullYear()}-${String(publishedAt.getMonth() + 1).padStart(2, '0')}`;
+        const dayKey = `${publishedAt.getFullYear()}-${String(publishedAt.getMonth() + 1).padStart(2, '0')}-${String(publishedAt.getDate()).padStart(2, '0')}`;
+
+        if (!monthMap.has(monthKey)) {
+            const monthGroup = {
+                key: monthKey,
+                label: publishedAt.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+                days: []
+            };
+            monthMap.set(monthKey, monthGroup);
+            monthGroups.push(monthGroup);
+        }
+
+        const monthGroup = monthMap.get(monthKey);
+        let dayGroup = monthGroup.days.find(day => day.key === dayKey);
+        if (!dayGroup) {
+            dayGroup = {
+                key: dayKey,
+                label: publishedAt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+                posts: []
+            };
+            monthGroup.days.push(dayGroup);
+        }
+
+        dayGroup.posts.push(post);
+    });
+
+    container.innerHTML = monthGroups.map(group => `
+        <section class="space-y-4">
+            <div class="flex items-end justify-between gap-3 border-b border-slate-200 pb-3">
+                <div>
+                    <p class="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Published Archive</p>
+                    <h3 class="text-2xl font-black text-slate-900">${group.label}</h3>
+                </div>
+                <div class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                    ${group.days.reduce((count, day) => count + day.posts.length, 0)} posts
+                </div>
+            </div>
+            <div class="space-y-5">
+                ${group.days.map(day => `
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3">
+                            <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-slate-500">${day.label}</span>
+                            <span class="text-xs font-medium text-slate-300">${day.posts.length} items</span>
+                        </div>
+                        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            ${day.posts.map(post => archiveCardHTML(post)).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </section>
+    `).join('');
+}
+
+function renderArchiveSummary(posts) {
+    const latestPost = posts[0] || null;
+    const authorIds = new Set();
+    const platforms = new Set();
+
+    posts.forEach(post => {
+        if (post.author_id) authorIds.add(String(post.author_id));
+        getPostPlatforms(post).forEach(platform => platforms.add(platform));
+    });
+
+    document.getElementById('archiveSummaryCount').textContent = posts.length;
+    document.getElementById('archiveSummaryLatest').textContent = latestPost ? formatAbsoluteDate(getArchiveDate(latestPost), { month: 'short', day: 'numeric' }) : 'No posts';
+    document.getElementById('archiveSummaryAuthors').textContent = authorIds.size;
+    document.getElementById('archiveSummaryPlatforms').textContent = platforms.size;
+}
+
+function getPostPlatforms(post) {
+    if (!post) return [];
+    if (Array.isArray(post.platforms)) return post.platforms.filter(Boolean);
+    if (typeof post.platforms === 'string' && post.platforms.trim() !== '') {
+        try {
+            const parsed = JSON.parse(post.platforms);
+            return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+        } catch (error) {
+            console.error('Platform parse error', error);
+        }
+    }
+    if (post.platform) return [post.platform];
+    return [];
+}
+
+function getArchiveDate(post) {
+    return new Date(post?.published_date || post?.updated_at || post?.created_at || Date.now());
+}
+
+function getArchiveTimestamp(post) {
+    return getArchiveDate(post).getTime();
+}
+
+function formatAbsoluteDate(dateInput, options = { month: 'short', day: 'numeric', year: 'numeric' }) {
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+    return date.toLocaleDateString('en-US', options);
+}
+
+function getPostDisplayMeta(post) {
+    if (post.status === 'PUBLISHED' && post.published_date) {
+        return { label: 'Published', value: formatDate(post.published_date) };
+    }
+    if (post.status === 'SCHEDULED' && post.scheduled_date) {
+        return { label: 'Scheduled', value: formatDate(post.scheduled_date) };
+    }
+    return { label: 'Updated', value: formatDate(post.updated_at || post.created_at) };
+}
+
+function archiveCardHTML(post) {
+    const previewText = richTextToPlainText(post.content || '');
+    const publishedAt = getArchiveDate(post);
+    const primaryMedia = Array.isArray(post.media) && post.media.length > 0 ? post.media[0] : (post.primary_image ? { file_path: post.primary_image } : null);
+    const platforms = getPostPlatforms(post);
+    const platformBadges = platforms.slice(0, 3).map(platform => {
+        const color = PLATFORM_COLORS[platform] || 'bg-slate-500';
+        return `<span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-bold text-white ${color}">${escapeHtml(platform)}</span>`;
+    }).join('');
+    const extraPlatforms = platforms.length > 3 ? `<span class="text-[10px] font-bold text-slate-400">+${platforms.length - 3}</span>` : '';
+
+    return `
+        <article class="group flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md cursor-pointer" onclick="openViewModal(${post.id})">
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">Published</p>
+                    <p class="text-sm font-bold text-slate-800">${formatAbsoluteDate(publishedAt, { weekday: 'short', month: 'short', day: 'numeric' })}</p>
+                </div>
+                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    ${publishedAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+            </div>
+
+            <div class="flex gap-4">
+                ${primaryMedia ? `
+                    <div class="h-20 w-24 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+                        ${isVideoFile(primaryMedia.file_path)
+                            ? `<video src="${primaryMedia.file_path}" class="h-full w-full object-cover" muted></video>`
+                            : `<img src="${primaryMedia.file_path}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105">`
+                        }
+                    </div>
+                ` : ''}
+                <div class="min-w-0 flex-1">
+                    <h4 class="text-base font-bold leading-snug text-slate-900 line-clamp-2">${escapeHtml(post.title)}</h4>
+                    <p class="mt-1 text-sm leading-relaxed text-slate-500 line-clamp-3">${escapeHtml(previewText)}</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                <div class="flex flex-wrap items-center gap-2">
+                    ${platformBadges || '<span class="text-[11px] font-medium text-slate-400">No platform tags</span>'}
+                    ${extraPlatforms}
+                </div>
+                <div class="text-right">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">${escapeHtml(post.author_name?.split(' ')?.[0] || post.author_full_name?.split(' ')?.[0] || 'Team')}</p>
+                    <p class="text-[10px] text-slate-400">${post.comment_count > 0 ? `${post.comment_count} comments` : 'No comments'}</p>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
 function cardHTML(post) {
     const hasChanges = post.status === 'CHANGES_REQUESTED';
     const previewText = richTextToPlainText(post.content);
-    
-    // Parse platforms
-    let platforms = [];
-    if (post.platforms) {
-        platforms = typeof post.platforms === 'string' ? JSON.parse(post.platforms) : post.platforms;
-    } else if (post.platform) {
-        platforms = [post.platform];
-    }
-    
-    // Minimalist Status Indicators
+    const platforms = getPostPlatforms(post);
+
     const statusConfig = {
         'DRAFT': { color: 'bg-sky-50 text-sky-600', dot: 'bg-sky-400', label: 'Draft', border: 'border-sky-400' },
         'PENDING_REVIEW': { color: 'bg-amber-50 text-amber-600', dot: 'bg-amber-400', label: 'Pending', border: 'border-amber-400' },
+        'REVIEWED': { color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400', label: 'Reviewed', border: 'border-orange-400' },
         'CHANGES_REQUESTED': { color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-400', label: 'Revise', border: 'border-orange-400' },
         'APPROVED': { color: 'bg-emerald-50 text-emerald-600', dot: 'bg-emerald-500', label: 'Approved', border: 'border-emerald-400' },
         'SCHEDULED': { color: 'bg-indigo-50 text-indigo-600', dot: 'bg-indigo-500', label: 'Scheduled', border: 'border-indigo-400' },
         'PUBLISHED': { color: 'bg-slate-50 text-slate-600', dot: 'bg-slate-500', label: 'Published', border: 'border-slate-400' }
     };
-    
+
     const config = statusConfig[post.status] || { color: 'bg-slate-50 text-slate-500', dot: 'bg-slate-400', label: post.status, border: 'border-slate-300' };
-    
-    // Media Content Logic
+
     let mediaHtml = '';
     let mediaList = [];
-    
+
     // Safety check for media parsing
     if (post.media) {
         try {
@@ -3078,7 +3405,7 @@ function cardHTML(post) {
         } else if (mediaList.length === 2) {
             // Split View (50/50)
             mediaHtml = `<div class="h-40 w-full grid grid-cols-2 gap-0.5 overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 group-hover:border-slate-200 transition-colors flex-shrink-0">
-                ${mediaList.map(m => isVideoFile(m.file_path) 
+                ${mediaList.map(m => isVideoFile(m.file_path)
                     ? `<div class="relative w-full h-full"><video src="${m.file_path}" class="w-full h-full object-cover"></video><div class="absolute inset-0 flex items-center justify-center bg-black/10"><i class="fa-solid fa-play text-[8px] text-white"></i></div></div>`
                     : `<img src="${m.file_path}" class="w-full h-full object-cover">`
                 ).join('')}
@@ -3098,29 +3425,23 @@ function cardHTML(post) {
             </div>`;
         }
     }
-    
+
     // Changes Requested Indicator (Minimal)
-    const changesIndicator = hasChanges ? 
+    const changesIndicator = hasChanges ?
         `<div class="flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded mb-2"><i class="fa-solid fa-circle-exclamation"></i> Revision Requested</div>` : '';
 
-    // Date Logic
-    const updatedDate = formatDate(post.updated_at || post.created_at);
+    const dateMeta = getPostDisplayMeta(post);
 
-    // Platform Icons
     const platformIcons = platforms.map(p => {
         const color = PLATFORM_COLORS[p] || 'text-slate-400';
         const icon = PLATFORM_ICONS[p] || 'fa-solid fa-share-nodes';
         const textColor = color.replace('bg-', 'text-').replace('-500', '-600');
-        return `<span class="${textColor} text-xs"><i class="${icon}"></i></span>`; // Increased size slightly
+        return `<span class="${textColor} text-xs"><i class="${icon}"></i></span>`;
     }).join('');
 
-    // --- HTML Structure ---
-    // Added border-t-4 for status distinction
-    // Fixed height h-96 (24rem)
     return `
         <div class="group bg-white rounded-lg p-4 border border-slate-200 border-t-4 ${config.border} hover:shadow-md transition-all cursor-pointer h-96 flex flex-col" onclick="openViewModal(${post.id})">
-            
-            <!-- Header -->
+
             <div class="flex items-center justify-between mb-3 flex-shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">${config.label}</span>
@@ -3130,27 +3451,23 @@ function cardHTML(post) {
 
             ${changesIndicator}
             ${mediaHtml}
-            
-            <!-- Content (Flex Grow) -->
+
             <div class="flex-1 min-h-0 flex flex-col">
                 <h4 class="text-sm font-bold text-slate-800 mb-1 leading-snug line-clamp-2 group-hover:text-brand-600 transition-colors">${escapeHtml(post.title)}</h4>
                 <p class="text-[11px] text-slate-500 leading-relaxed line-clamp-3 overflow-hidden">${escapeHtml(previewText)}</p>
-                
-                <!-- Spacer to push footer down if content is short -->
                 <div class="flex-grow"></div>
             </div>
-            
-            <!-- Footer -->
+
             <div class="flex items-center justify-between pt-3 mt-2 border-t border-slate-50 flex-shrink-0">
                 <div class="flex items-center gap-2 text-xs">
                    ${platformIcons ? `<div class="flex gap-2 opacity-70 group-hover:opacity-100 transition-opacity">${platformIcons}</div>` : ''}
                 </div>
                 <div class="flex flex-col items-end">
                      <div class="flex items-center gap-1.5 mb-0.5">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${post.author_name?.split(' ')[0]}</span>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${post.author_name?.split(' ')?.[0] || post.author_full_name?.split(' ')?.[0] || 'Team'}</span>
                         ${post.comment_count > 0 ? `<div class="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 px-1 rounded"><i class="fa-regular fa-comment"></i> ${post.comment_count}</div>` : ''}
                      </div>
-                     <span class="text-[9px] text-slate-300 font-medium">${updatedDate}</span>
+                     <span class="text-[9px] text-slate-300 font-medium">${dateMeta.label}: ${dateMeta.value}</span>
                 </div>
             </div>
         </div>
@@ -3166,7 +3483,7 @@ function formatDate(dateStr) {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -3218,11 +3535,11 @@ function renderCreateMediaGallery() {
         gallery.innerHTML = '';
         return;
     }
-    
+
     gallery.innerHTML = createMediaFiles.map((file, index) => {
         const isVideo = file.type.startsWith('video/');
         const url = URL.createObjectURL(file);
-        const mediaEl = isVideo 
+        const mediaEl = isVideo
             ? `<video src="${url}" class="w-full h-20 object-cover rounded-lg" muted></video>`
             : `<img src="${url}" class="w-full h-20 object-cover rounded-lg">`;
         return `
@@ -3244,11 +3561,11 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const contentHtml = syncRichTextEditor('createContent', { normalize: true });
     const contentText = richTextToPlainText(contentHtml);
-    
+
     // Collect selected platforms from checkboxes
     const selectedPlatforms = Array.from(document.querySelectorAll('input[name="createPlatforms"]:checked'))
         .map(cb => cb.value);
-    
+
     if (selectedPlatforms.length === 0) {
         toast('Please select at least one platform', 'error');
         return;
@@ -3257,27 +3574,27 @@ document.getElementById('createForm').addEventListener('submit', async (e) => {
         toast('Please add post content', 'error');
         return;
     }
-    
+
     const formData = new FormData();
     formData.append('title', document.getElementById('createTitle').value);
     formData.append('content', contentHtml);
     formData.append('platforms', JSON.stringify(selectedPlatforms));
     formData.append('status', document.getElementById('createStatus').value);
     formData.append('urgency', document.getElementById('createUrgent').checked ? '1' : '0');
-    
+
     // Append all media files
     createMediaFiles.forEach((file, i) => {
         formData.append(`files[${i}]`, file);
     });
-    
+
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-    const res = await fetch('api.php?action=save_post', { 
-        method: 'POST', 
+    const res = await fetch('api.php?action=save_post', {
+        method: 'POST',
         body: formData,
         headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}
     });
     const data = await res.json();
-    
+
     if (data.success) {
         toast('Post created successfully!', 'success');
         closeCreateModal();
@@ -3292,10 +3609,10 @@ async function openViewModal(id) {
     try {
         const data = await api(`get_post&id=${id}`);
         if (!data.success) { toast('Failed to load post', 'error'); return; }
-        
+
         app.currentPost = data.data;
         const p = data.data;
-        
+
         // Status badge
         const statusBadge = document.getElementById('viewStatusBadge');
         if (statusBadge) {
@@ -3310,7 +3627,7 @@ async function openViewModal(id) {
             };
             statusBadge.className = `px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 border ${statusColors[p.status] || 'bg-slate-100 text-slate-600'}`;
         }
-        
+
         // Platform badges
         let platforms = [];
         if (p.platforms) {
@@ -3318,11 +3635,11 @@ async function openViewModal(id) {
         } else if (p.platform) {
             platforms = [p.platform];
         }
-        
+
         // Safe access to globals
         const icons = typeof PLATFORM_ICONS !== 'undefined' ? PLATFORM_ICONS : {};
         const colors = typeof PLATFORM_COLORS !== 'undefined' ? PLATFORM_COLORS : {};
-        
+
         const platformBadgesHtml = platforms.map(plat => {
             const icon = icons[plat] || 'fa-solid fa-share-nodes';
             const colorClass = colors[plat]?.replace('bg-', 'text-').replace('50', '600') || 'text-slate-600';
@@ -3333,17 +3650,17 @@ async function openViewModal(id) {
         }).join('');
         const badgeContainer = document.getElementById('viewPlatformBadge');
         if (badgeContainer) badgeContainer.innerHTML = platformBadgesHtml;
-        
+
         // Title and meta
         const titleEl = document.getElementById('viewTitle');
         if (titleEl) titleEl.textContent = p.title;
-        
+
         const authorEl = document.getElementById('viewAuthor');
         if (authorEl) authorEl.textContent = p.author_full_name || p.author_name;
-        
+
         const dateEl = document.getElementById('viewDate');
         if (dateEl) dateEl.textContent = new Date(p.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        
+
         const urgentBadge = document.getElementById('viewUrgentBadge');
         if (urgentBadge) {
             if (p.urgency == 1) {
@@ -3354,43 +3671,43 @@ async function openViewModal(id) {
                 urgentBadge.classList.remove('inline-flex');
             }
         }
-        
+
         // Content
         const contentEl = document.getElementById('viewContent');
         if (contentEl) contentEl.innerHTML = formatStoredRichText(p.content);
-        
 
-        
+
+
         // Media Gallery - Handle Split View (Desktop) and Mobile Fallback
         const mediaColumn = document.getElementById('viewMediaColumn');
         const mediaWrapper = document.getElementById('viewMediaWrapper'); // Desktop
         const mediaMobile = document.getElementById('viewMediaMobile');   // Mobile
         const modalContainer = document.getElementById('viewModalContainer');
         const contentColumn = document.getElementById('viewContentColumn');
-        
+
         const hasMedia = p.media && p.media.length > 0;
-        
+
         // Helper to generate Media HTML
         const getMediaHtml = (isMobile) => {
             if (p.media.length === 0) return '';
-            
+
             // Generate Slides
             const slides = p.media.map((m, idx) => {
                 const isVid = isVideoFile(m.file_path);
                 const isActive = idx === 0 ? '' : 'hidden';
                 const heightClass = isMobile ? 'max-h-96' : 'max-h-full h-auto';
                 const objectClass = isMobile ? 'object-contain bg-slate-100' : 'object-contain';
-                
+
                 return `<div class="media-slide w-full h-full flex items-center justify-center transition-opacity duration-300 ${isActive}" data-index="${idx}">
-                    ${isVid 
-                        ? `<video src="${m.file_path}" controls playsinline webkit-playsinline class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm bg-black"></video>` 
+                    ${isVid
+                        ? `<video src="${m.file_path}" controls playsinline webkit-playsinline class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm bg-black"></video>`
                         : `<img src="${m.file_path}" class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm mx-auto">`}
                 </div>`;
             }).join('');
-            
+
             // Single Item - No Controls
             if (p.media.length === 1) return slides;
-            
+
             // Carousel Controls
             return `
                 <div class="relative w-full h-full group">
@@ -3398,17 +3715,17 @@ async function openViewModal(id) {
                     <div class="w-full h-full flex items-center justify-center" id="carouselSlides-${isMobile ? 'mo' : 'dt'}">
                         ${slides}
                     </div>
-                    
+
                     <!-- Prev Button -->
                     <button onclick="changeMediaSlide(-1, '${isMobile ? 'mo' : 'dt'}')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10">
                         <i class="fa-solid fa-chevron-left"></i>
                     </button>
-                    
+
                     <!-- Next Button -->
                     <button onclick="changeMediaSlide(1, '${isMobile ? 'mo' : 'dt'}')" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10">
                         <i class="fa-solid fa-chevron-right"></i>
                     </button>
-                    
+
                     <!-- Dots -->
                     <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
                         ${p.media.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full transition-colors pointer-events-auto ${i === 0 ? 'bg-white' : 'bg-white/40'}" id="dot-${isMobile ? 'mo' : 'dt'}-${i}"></div>`).join('')}
@@ -3416,27 +3733,27 @@ async function openViewModal(id) {
                 </div>
             `;
         };
-        
+
         // Expose slider function globally if not already
         if (!window.changeMediaSlide) {
             window.changeMediaSlide = (dir, type) => {
                 const container = document.getElementById(`carouselSlides-${type}`);
                 if (!container) return;
-                
+
                 const slides = container.querySelectorAll('.media-slide');
                 let currentIndex = Array.from(slides).findIndex(s => !s.classList.contains('hidden'));
-                
+
                 // Hide current
                 slides[currentIndex].classList.add('hidden');
-                
+
                 // Calculate next
                 let nextIndex = currentIndex + dir;
                 if (nextIndex >= slides.length) nextIndex = 0;
                 if (nextIndex < 0) nextIndex = slides.length - 1;
-                
+
                 // Show next
                 slides[nextIndex].classList.remove('hidden');
-                
+
                 // Update dots
                 const dots = document.querySelectorAll(`[id^="dot-${type}-"]`);
                 dots.forEach((d, i) => {
@@ -3453,7 +3770,7 @@ async function openViewModal(id) {
 
         if (hasMedia) {
             const isMobile = window.innerWidth < 1024;
-            
+
             // Adjust modal width for media
             if (modalContainer) {
                 modalContainer.classList.remove('max-w-2xl');
@@ -3478,7 +3795,7 @@ async function openViewModal(id) {
                     mediaWrapper.innerHTML = '';
                 }
             }
-            
+
             // Mobile: Show Top Section
             if (mediaMobile) {
                 if (isMobile) {
@@ -3513,7 +3830,7 @@ async function openViewModal(id) {
                 mediaMobile.innerHTML = '';
             }
         }
-        
+
         // Changes notice
         const changesNotice = document.getElementById('viewChangesNotice');
         if (changesNotice && p.change_request_reason) {
@@ -3523,31 +3840,31 @@ async function openViewModal(id) {
         } else if (changesNotice) {
             changesNotice.classList.add('hidden');
         }
-        
+
         // Action buttons
         if (typeof renderActionButtons === 'function') renderActionButtons(p);
 
         // Design/media collaboration
         if (typeof renderDesignFiles === 'function') renderDesignFiles(p);
-        
+
         // Comments
         if (typeof renderViewComments === 'function') renderViewComments(p.comments || []);
-        
+
         // Activity
         if (typeof renderViewActivity === 'function') renderViewActivity(p.activity || []);
-        
+
         const editBtn = document.getElementById('viewEditBtn');
         if (editBtn) editBtn.classList.toggle('hidden', !canCurrentUserEditPost(p));
-        
+
         const deleteBtn = document.getElementById('viewDeleteBtn');
         if (deleteBtn) deleteBtn.classList.toggle('hidden', !canCurrentUserDeletePost(p));
 
         const commentComposer = document.getElementById('viewCommentComposer');
         if (commentComposer) commentComposer.classList.toggle('hidden', !canCurrentUserCommentOnPost(p));
-        
+
         const modal = document.getElementById('viewModal');
         if (modal) modal.classList.remove('hidden');
-        
+
     } catch (err) {
         console.error('Error opening view modal:', err);
         toast('Error opening post: ' + err.message, 'error');
@@ -3562,14 +3879,14 @@ function renderActionButtons(p) {
     const isAdminOrManager = ['admin', 'manager'].includes(currentRole);
     const isOwner = p.author_id == app.user.id;
     let buttons = [];
-    
+
     // Premium button base styles
     const btnPrimary = 'flex-1 bg-slate-800 hover:bg-slate-900 text-white font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm transition-colors';
     const btnSuccess = 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm transition-colors';
     const btnWarning = 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-5 rounded-md flex items-center justify-center gap-2 text-sm border border-slate-200 transition-colors';
     const btnSecondary = 'bg-white hover:bg-slate-50 text-slate-600 font-medium py-2.5 px-4 rounded-md text-sm border border-slate-200 transition-colors';
-    
-    
+
+
     if (p.status === 'DRAFT' || p.status === 'CHANGES_REQUESTED') {
         if (isOwner || isAdmin || isManager) {
             buttons.push(`<button onclick="submitForReview()" class="${btnPrimary}"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>Submit for Review</button>`);
@@ -3613,7 +3930,7 @@ function renderActionButtons(p) {
         const pubStr = pubDate ? pubDate.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
         buttons.push(`<div class="flex-1 text-center py-2.5 px-5 bg-slate-50 text-slate-500 font-medium rounded-md text-sm border border-slate-200"><svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>Published: ${pubStr}</div>`);
     }
-    
+
     container.innerHTML = buttons.join('') || '<div class="text-slate-400 text-center py-2 text-sm">No actions available</div>';
 }
 
@@ -3734,7 +4051,7 @@ function renderViewActivity(activities) {
             statsEl.textContent = `(${activities.length} event${activities.length !== 1 ? 's' : ''})`;
         }
     }
-    
+
     // Action icons and labels mapping
     const actionConfig = {
         'created': { icon: '✦', color: 'text-emerald-500', label: 'created this post' },
@@ -3749,16 +4066,16 @@ function renderViewActivity(activities) {
         'scheduled': { icon: '📅', color: 'text-indigo-500', label: 'scheduled' },
         'published': { icon: '🚀', color: 'text-slate-600', label: 'published' }
     };
-    
+
     const statusLabels = {
         'DRAFT': 'Draft', 'PENDING_REVIEW': 'Pending Review',
         'CHANGES_REQUESTED': 'Changes Requested', 'APPROVED': 'Approved',
         'SCHEDULED': 'Scheduled', 'PUBLISHED': 'Published'
     };
-    
+
     document.getElementById('viewActivity').innerHTML = activities.map(a => {
         const config = actionConfig[a.action] || { icon: '•', color: 'text-slate-400', label: a.action };
-        
+
         // Build detailed description
         let details = '';
         if (a.action === 'status_changed' && a.old_value && a.new_value) {
@@ -3773,7 +4090,7 @@ function renderViewActivity(activities) {
         } else if (a.description) {
             details = `<span class="text-slate-500">${escapeHtml(a.description)}</span>`;
         }
-        
+
         return `
         <div class="relative flex gap-3 items-start text-sm pb-3">
             <div class="absolute -left-5 top-0.5 w-2 h-2 bg-slate-300 rounded-full"></div>
@@ -3795,13 +4112,13 @@ function toggleEmojiPicker(textareaId, btnId) {
     const containerId = textareaId === 'createContent' ? 'createEmojiPickerContainer' : 'editEmojiPickerContainer';
     const container = document.getElementById(containerId);
     const isHidden = container.classList.contains('hidden');
-    
+
     // Hide all other pickers
     document.querySelectorAll('[id$="EmojiPickerContainer"]').forEach(c => c.classList.add('hidden'));
-    
+
     if (isHidden) {
         container.classList.remove('hidden');
-        
+
         // One-time initialization of the picker inside this container
         const picker = container.querySelector('emoji-picker');
         if (!picker.dataset.initialized) {
@@ -3839,7 +4156,7 @@ document.addEventListener('mousedown', (e) => {
 async function addViewComment() {
     const content = document.getElementById('viewNewComment').value.trim();
     if (!content || !app.currentPost) return;
-    
+
     const data = await api('add_comment', 'POST', { post_id: app.currentPost.id, content });
     if (data.success) {
         document.getElementById('viewNewComment').value = '';
@@ -3849,12 +4166,12 @@ async function addViewComment() {
 
 async function deletePost() {
     if (!app.currentPost) return;
-    
+
     const postTitle = app.currentPost.title || 'this post';
     if (!confirm(`Are you sure you want to delete "${postTitle}"?\n\nThis action cannot be undone.`)) {
         return;
     }
-    
+
     const data = await api(`delete_post&id=${app.currentPost.id}`, 'DELETE');
     if (data.success) {
         toast('Post deleted', 'success');
@@ -3978,7 +4295,7 @@ async function confirmRequestChanges() {
     const reason = document.getElementById('changesReasonInput').value.trim();
     if (!reason) { toast('Please provide a reason', 'error'); return; }
     if (!app.currentPost) return;
-    
+
     const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'CHANGES_REQUESTED', reason });
     if (data.success) {
         toast('Changes requested!', 'success');
@@ -4008,19 +4325,19 @@ async function confirmSchedule() {
     const dateTime = document.getElementById('scheduleDateTime').value;
     if (!dateTime) { toast('Please select a date and time', 'error'); return; }
     if (!app.currentPost) return;
-    
+
     const scheduledDate = new Date(dateTime);
     if (scheduledDate <= new Date()) {
         toast('Please select a future date and time', 'error');
         return;
     }
-    
-    const data = await api('update_status', 'POST', { 
-        id: app.currentPost.id, 
+
+    const data = await api('update_status', 'POST', {
+        id: app.currentPost.id,
         status: 'SCHEDULED',
         scheduled_date: dateTime
     });
-    
+
     if (data.success) {
         toast('Post scheduled!', 'success');
         closeScheduleModal();
@@ -4034,7 +4351,7 @@ async function confirmSchedule() {
 async function publishNow() {
     if (!app.currentPost) return;
     if (!confirm('Publish this post now?')) return;
-    
+
     const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'PUBLISHED' });
     if (data.success) {
         toast('Post published!', 'success');
@@ -4048,7 +4365,7 @@ async function publishNow() {
 async function unschedulePost() {
     if (!app.currentPost) return;
     if (!confirm('Unschedule this post? It will return to Approved status.')) return;
-    
+
     const data = await api('update_status', 'POST', { id: app.currentPost.id, status: 'APPROVED' });
     if (data.success) {
         toast('Post unscheduled', 'success');
@@ -4079,7 +4396,7 @@ function openEditModal(post) {
     document.getElementById('editPostId').value = post.id;
     document.getElementById('editTitle').value = post.title || '';
     setRichTextEditorContent('editContent', post.content || '');
-    
+
     // Set platform checkboxes
     let platforms = [];
     if (post.platforms) {
@@ -4091,19 +4408,19 @@ function openEditModal(post) {
     document.querySelectorAll('input[name="editPlatforms"]').forEach(cb => {
         cb.checked = platforms.includes(cb.value);
     });
-    
+
     document.getElementById('editUrgent').checked = post.urgency == 1;
-    
+
     // Media gallery
     renderEditMediaGallery(post.media || []);
-    
+
     document.getElementById('editModal').classList.remove('hidden');
 }
 
 function renderEditMediaGallery(media) {
     document.getElementById('editMediaGallery').innerHTML = media.map(m => {
         const isVideo = isVideoFile(m.file_path);
-        const mediaEl = isVideo 
+        const mediaEl = isVideo
             ? `<video src="${m.file_path}" class="w-full h-20 object-cover rounded-lg" muted></video>`
             : `<img src="${m.file_path}" class="w-full h-20 object-cover rounded-lg">`;
         return `
@@ -4119,14 +4436,14 @@ function renderEditMediaGallery(media) {
 async function uploadEditFile(e) {
     const postId = document.getElementById('editPostId').value;
     if (!postId) return;
-    
+
     for (const file of e.target.files) {
         const fd = new FormData();
         fd.append('file', file);
         fd.append('post_id', postId);
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        const res = await fetch('api.php?action=upload_media', { 
-            method: 'POST', 
+        const res = await fetch('api.php?action=upload_media', {
+            method: 'POST',
             body: fd,
             headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}
         });
@@ -4159,11 +4476,11 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const contentHtml = syncRichTextEditor('editContent', { normalize: true });
     const contentText = richTextToPlainText(contentHtml);
-    
+
     // Collect selected platforms
     const selectedPlatforms = Array.from(document.querySelectorAll('input[name="editPlatforms"]:checked'))
         .map(cb => cb.value);
-    
+
     if (selectedPlatforms.length === 0) {
         toast('Please select at least one platform', 'error');
         return;
@@ -4172,7 +4489,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
         toast('Please add post content', 'error');
         return;
     }
-    
+
     const formData = {
         id: document.getElementById('editPostId').value,
         title: document.getElementById('editTitle').value,
@@ -4181,7 +4498,7 @@ document.getElementById('editForm').addEventListener('submit', async (e) => {
         scheduled_date: document.getElementById('editScheduled')?.value || null,
         urgency: document.getElementById('editUrgent').checked
     };
-    
+
     const data = await api('save_post', 'POST', formData);
     if (data.success) {
         toast('Post updated!', 'success');
@@ -4210,13 +4527,13 @@ async function loadNotifications() {
             app.lastUnreadCount = newCount;
             app.notificationsInitialized = true;
 
-            if (newCount > 0) { 
-                badge.textContent = newCount; 
-                badge.classList.remove('hidden'); 
+            if (newCount > 0) {
+                badge.textContent = newCount;
+                badge.classList.remove('hidden');
             } else {
                 badge.classList.add('hidden');
             }
-        
+
         const notifList = document.getElementById('notifList');
         const notifHtml = data.data.notifications.slice(0, 15).map(n => `
             <div class="p-4 border-b border-slate-50 cursor-pointer transition-all ${n.is_read ? 'bg-white hover:bg-slate-50' : 'bg-brand-50/30 hover:bg-brand-50/50 border-l-4 border-l-brand-500'}" onclick="notifClick(${n.id}, ${n.post_id})">
@@ -4235,7 +4552,7 @@ async function loadNotifications() {
                 </div>
             </div>
         `).join('') || '<div class="flex flex-col items-center justify-center py-12 px-6 text-center"><div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-3"><i class="fa-solid fa-bell-slash text-xl"></i></div><p class="text-slate-400 text-sm font-medium">No notifications yet</p></div>';
-        
+
         notifList.innerHTML = notifHtml;
     }
     } catch (e) {
@@ -4243,11 +4560,11 @@ async function loadNotifications() {
     }
 }
 
-function toggleNotifications() { 
+function toggleNotifications() {
     const dropdown = document.getElementById('notifDropdown');
     const isHidden = dropdown.classList.contains('hidden');
     dropdown.classList.toggle('hidden');
-    
+
     // Smart mobile backdrop
     if (window.innerWidth < 1024) {
         let overlay = document.getElementById('notifOverlay');
@@ -4258,7 +4575,7 @@ function toggleNotifications() {
             overlay.onclick = toggleNotifications;
             document.body.appendChild(overlay);
         }
-        
+
         if (isHidden) {
             overlay.classList.remove('hidden');
             setTimeout(() => overlay.style.opacity = '1', 10);
@@ -4270,11 +4587,11 @@ function toggleNotifications() {
         }
     }
 }
-async function notifClick(id, postId) { 
-    await api('mark_notification_read', 'POST', { id }); 
-    toggleNotifications(); 
-    if (postId) openViewModal(postId); 
-    loadNotifications(); 
+async function notifClick(id, postId) {
+    await api('mark_notification_read', 'POST', { id });
+    toggleNotifications();
+    if (postId) openViewModal(postId);
+    loadNotifications();
 }
 async function markAllRead() { await api('mark_notification_read', 'POST', { mark_all: true }); loadNotifications(); }
 
@@ -4283,7 +4600,7 @@ function escapeHtml(text) { const div = document.createElement('div'); div.textC
 function formatDate(str) { return str ? new Date(str).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''; }
 
 let searchTimeout;
-function debounceSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(loadPosts, 500); }
+function debounceSearch() { clearTimeout(searchTimeout); searchTimeout = setTimeout(refreshBoardContent, 500); }
 
 // ==================== CALENDAR FUNCTIONS ====================
 let calendarYear = new Date().getFullYear();
@@ -4292,7 +4609,7 @@ let calendarPosts = [];
 
 function prevMonth() { calendarMonth--; if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; } loadCalendar(); }
 function nextMonth() { calendarMonth++; if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; } loadCalendar(); }
-function goToToday() { 
+function goToToday() {
     const today = new Date();
     calendarYear = today.getFullYear();
     calendarMonth = today.getMonth();
@@ -4302,16 +4619,16 @@ function goToToday() {
 async function loadCalendar() {
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     document.getElementById('currentMonth').textContent = `${monthNames[calendarMonth]} ${calendarYear}`;
-    
+
     const data = await api(`fetch_calendar&year=${calendarYear}&month=${calendarMonth + 1}`);
     calendarPosts = data.success ? data.data : [];
-    
+
     // Update stats
     const scheduledCount = calendarPosts.filter(p => p.status === 'SCHEDULED').length;
     const publishedCount = calendarPosts.filter(p => p.status === 'PUBLISHED').length;
     document.getElementById('scheduledCount').textContent = scheduledCount;
     document.getElementById('publishedCount').textContent = publishedCount;
-    
+
     renderCalendar();
 }
 
@@ -4320,39 +4637,39 @@ function renderCalendar() {
     const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
     const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
     const today = new Date();
-    
+
     const platformIcons = {
         'Facebook': 'fa-brands fa-facebook', 'Instagram': 'fa-brands fa-instagram',
         'LinkedIn': 'fa-brands fa-linkedin', 'X': 'fa-brands fa-x-twitter',
         'TikTok': 'fa-brands fa-tiktok', 'YouTube': 'fa-brands fa-youtube',
         'Snapchat': 'fa-brands fa-snapchat', 'Website': 'fa-solid fa-globe'
     };
-    
+
     const platformColors = {
         'Facebook': 'text-blue-600', 'Instagram': 'text-pink-600',
         'LinkedIn': 'text-blue-700', 'X': 'text-slate-800',
         'TikTok': 'text-slate-900', 'YouTube': 'text-red-600',
         'Snapchat': 'text-yellow-500', 'Website': 'text-indigo-600'
     };
-    
+
     let html = '';
     // Empty cells for days before the 1st
     for (let i = 0; i < firstDay; i++) {
         html += '<div class="h-[140px] bg-slate-50/30 border-r border-b border-slate-100"></div>';
     }
-    
+
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         const isToday = today.getFullYear() === calendarYear && today.getMonth() === calendarMonth && today.getDate() === day;
         const dayPosts = calendarPosts.filter(p => (p.scheduled_date || p.published_date || '').startsWith(dateStr));
-        
+
         // Professional: Clean white background, today gets subtle brand accent
         const dayBg = isToday ? 'bg-brand-50/50' : 'bg-white';
-        const dateStyle = isToday 
-            ? 'w-6 h-6 flex items-center justify-center rounded-full bg-brand-600 text-white text-[10px] font-bold' 
+        const dateStyle = isToday
+            ? 'w-6 h-6 flex items-center justify-center rounded-full bg-brand-600 text-white text-[10px] font-bold'
             : 'text-[10px] text-slate-400 font-medium';
-        
+
         html += `
             <div class="h-[140px] p-1.5 ${dayBg} border-r border-b border-slate-100 hover:bg-slate-50/50 transition-colors flex flex-col">
                 <div class="flex items-center justify-between mb-1 flex-shrink-0">
@@ -4362,23 +4679,23 @@ function renderCalendar() {
                 <div class="space-y-1 flex-1 overflow-y-auto pr-0.5" style="scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent;">
                     ${dayPosts.map(p => {
                         const time = p.scheduled_date ? new Date(p.scheduled_date).toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'}) : '';
-                        
+
                         // Status styling
                         const isScheduled = p.status === 'SCHEDULED';
                         const statusDot = isScheduled ? 'bg-indigo-500' : 'bg-emerald-500';
-                        
+
                         // Platforms
                         let platforms = [];
                         if (p.platforms) {
                             platforms = typeof p.platforms === 'string' ? JSON.parse(p.platforms) : p.platforms;
                         }
-                        
+
                         const iconsHtml = platforms.slice(0, 2).map(plat => {
                             const icon = platformIcons[plat] || 'fa-solid fa-share-nodes';
                             const color = platformColors[plat] || 'text-slate-400';
                             return `<i class="${icon} ${color} text-[9px]"></i>`;
                         }).join('');
-                        
+
                         // Compact card
                         return `
                             <div onclick="openViewModal(${p.id})" class="cursor-pointer p-1.5 rounded border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all group">
@@ -4395,7 +4712,7 @@ function renderCalendar() {
             </div>
         `;
     }
-    
+
     grid.innerHTML = html;
 }
 
@@ -4413,14 +4730,14 @@ let allUsers = [];
 
 async function loadUsers() {
     if (!['admin', 'manager'].includes(canonicalRole(app.user?.role?.toLowerCase()))) return;
-    
+
     const data = await api('fetch_users');
     if (data.success) {
         allUsers = data.data;
         document.getElementById('totalUsersCount').textContent = allUsers.length;
         document.getElementById('activeUsersCount').textContent = allUsers.filter(u => u.is_active).length;
         document.getElementById('adminUsersCount').textContent = allUsers.filter(u => canonicalRole(u.role?.toLowerCase()) === 'admin').length;
-        
+
         // Render Action Button
         const actionContainer = document.getElementById('userActionsContainer');
         if (actionContainer) {
@@ -4439,7 +4756,7 @@ async function loadUsers() {
 function renderUsersTable() {
     const tableBody = document.getElementById('usersTableBody');
     const mobileGrid = document.getElementById('usersMobileGrid');
-    
+
     // Desktop HTML
     const desktopHtml = allUsers.map(u => `
         <tr class="hover:bg-slate-50">
@@ -4531,13 +4848,13 @@ async function toggleUserStatus(id, active) {
 function openEditUserModal(userId) {
     const user = allUsers.find(u => u.id === userId);
     if (!user) return;
-    
+
     document.getElementById('editUserId').value = user.id;
     document.getElementById('editUserUsername').value = user.username;
     document.getElementById('editUserFullName').value = user.full_name || '';
     document.getElementById('editUserRole').value = user.role;
     document.getElementById('editUserPassword').value = '';
-    
+
     document.getElementById('editUserModal').classList.remove('hidden');
 }
 
@@ -4547,19 +4864,19 @@ function closeEditUserModal() {
 
 document.getElementById('editUserForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const data = {
         id: parseInt(document.getElementById('editUserId').value),
         full_name: document.getElementById('editUserFullName').value.trim(),
         role: document.getElementById('editUserRole').value,
         password: document.getElementById('editUserPassword').value
     };
-    
+
     if (!data.full_name) {
         toast('Full name is required', 'error');
         return;
     }
-    
+
     const result = await api('update_user', 'POST', data);
     if (result.success) {
         toast('User updated successfully', 'success');
@@ -4584,14 +4901,14 @@ function closeAddUserModal() {
 
 document.getElementById('addUserForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const data = {
         username: document.getElementById('addUserUsername').value.trim(),
         full_name: document.getElementById('addUserFullName').value.trim(),
         role: document.getElementById('addUserRole').value,
         password: document.getElementById('addUserPassword').value
     };
-    
+
     if (!data.username) {
         toast('Username is required', 'error');
         return;
@@ -4604,7 +4921,7 @@ document.getElementById('addUserForm').addEventListener('submit', async function
         toast('Password is required', 'error');
         return;
     }
-    
+
     const result = await api('create_user', 'POST', data);
     if (result.success) {
         toast('User created successfully', 'success');
@@ -4617,19 +4934,19 @@ document.getElementById('addUserForm').addEventListener('submit', async function
 
 
 function toast(msg, type = 'info') {
-    const config = { 
-        success: { bg: 'bg-emerald-600', icon: 'fa-circle-check' }, 
-        error: { bg: 'bg-rose-600', icon: 'fa-circle-exclamation' }, 
-        info: { bg: 'bg-slate-800', icon: 'fa-circle-info' } 
+    const config = {
+        success: { bg: 'bg-emerald-600', icon: 'fa-circle-check' },
+        error: { bg: 'bg-rose-600', icon: 'fa-circle-exclamation' },
+        info: { bg: 'bg-slate-800', icon: 'fa-circle-info' }
     };
     const style = config[type] || config.info;
-    
+
     const t = document.createElement('div');
     t.className = `${style.bg} text-white px-6 py-3 rounded-lg shadow-xl text-sm font-medium flex items-center gap-3 transform translate-y-4 opacity-0 transition-all duration-300 min-w-[300px] border border-white/10 z-50`;
     t.innerHTML = `<i class="fa-solid ${style.icon} text-lg opacity-90"></i> <span>${msg}</span>`;
-    
+
     document.getElementById('toasts').appendChild(t);
-    
+
     // Animate in
     requestAnimationFrame(() => {
         t.classList.remove('translate-y-4', 'opacity-0');
@@ -4642,12 +4959,12 @@ function toast(msg, type = 'info') {
     }, 3500);
 }
 
-document.addEventListener('click', e => { 
+document.addEventListener('click', e => {
     // Specific check for notification dropdown to avoid accidental closures or non-closures
     const notifDropdown = document.getElementById('notifDropdown');
     const isNotifButton = e.target.closest('button[onclick="toggleNotifications()"]');
     const isInsideNotif = e.target.closest('#notifDropdown');
-    
+
     if (!isNotifButton && !isInsideNotif) {
         notifDropdown.classList.add('hidden');
     }
@@ -4655,7 +4972,7 @@ document.addEventListener('click', e => {
     // Handle other dropdowns (like notification badge clicks or others that might use .relative if any)
     if (!e.target.closest('.relative') && !isInsideNotif) {
          // This is a bit generic, keeping it for other possible future dropdowns but specifically excluded notif
-    }    
+    }
     // Auto-close sidebar when clicking outside on mobile
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -4668,7 +4985,7 @@ function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
     const isHidden = sidebar.classList.contains('-translate-x-full');
-    
+
     if (isHidden) {
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden');
@@ -4696,7 +5013,7 @@ window.addEventListener('resize', () => {
     const currentWidth = window.innerWidth;
     const isLg = currentWidth >= 1024;
     const wasLg = lastWidth >= 1024;
-    
+
     if (isLg) {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
@@ -4707,12 +5024,12 @@ window.addEventListener('resize', () => {
         const sidebar = document.getElementById('sidebar');
         if (sidebar) sidebar.classList.add('-translate-x-full');
     }
-    
+
     // Refresh view modal if open ONLY if breakpoint changed (to fix media layout without resetting video)
     if (isLg !== wasLg && app.currentPost && !document.getElementById('viewModal').classList.contains('hidden')) {
         openViewModal(app.currentPost.id);
     }
-    
+
     lastWidth = currentWidth;
 });
 
@@ -4731,7 +5048,7 @@ function initAudio() {
 function playNotificationSound(force = false) {
     if (!audioCtx) initAudio();
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-    
+
     if (!audioCtx) {
         if (force) alert("Audio is disabled. interact with the page first.");
         return;
@@ -4771,7 +5088,7 @@ let companiesLoaded = false;
 async function toggleCompanySwitcher() {
     const menu = document.getElementById('companySwitcherMenu');
     menu.classList.toggle('hidden');
-    
+
     if (!menu.classList.contains('hidden') && !companiesLoaded) {
         try {
             const res = await fetch('api.php?action=get_companies');
@@ -4780,7 +5097,7 @@ async function toggleCompanySwitcher() {
                 const list = document.getElementById('companySwitcherList');
                 list.innerHTML = '';
                 const currentId = <?= isset($_SESSION['company_id']) ? (int)$_SESSION['company_id'] : 1 ?>;
-                
+
                 json.data.forEach(c => {
                     const btn = document.createElement('button');
                     btn.className = `w-full text-left px-3 py-2 flex items-center gap-3 hover:bg-white/10 transition-colors ${c.id == currentId ? 'bg-white/5' : ''}`;

@@ -882,7 +882,8 @@ ALTER TABLE `posts`
   ADD KEY `change_requested_by` (`change_requested_by`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_author` (`author_id`),
-  ADD KEY `idx_posts_company` (`company_id`);
+  ADD KEY `idx_posts_company` (`company_id`),
+  ADD KEY `idx_posts_archive` (`company_id`,`status`,`published_date`);
 
 --
 -- Indexes for table `rate_limits`

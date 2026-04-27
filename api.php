@@ -508,33 +508,33 @@ define('MAX_FILE_SIZE', 100 * 1024 * 1024);
 
 try {
     switch ($action) {
-        
+
         // ===== AUTH =====
-        
+
         case 'login':
             // Rate limiting for login to prevent brute force
             enforceRateLimit('login');
-            
+
             $input = json_decode(file_get_contents('php://input'), true);
             $username = sanitizeString(trim($input['username'] ?? ''), 50);
             $password = $input['password'] ?? '';
             $companyId = (int)($input['company_id'] ?? 1); // Default to BroMan
-            
+
             if (empty($username) || empty($password)) sendResponse(false, null, 'Username and password required', 400);
-            
+
             $user = fetchOne("SELECT * FROM users WHERE username = ? AND is_active = 1", [$username]);
-            
+
             if (!$user || !password_verify($password, $user['password_hash'])) {
                 sendResponse(false, null, 'Invalid credentials', 401);
             }
-            
+
             // Validate company exists
             $company = fetchOne("SELECT * FROM companies WHERE id = ?", [$companyId]);
             if (!$company) {
                 $companyId = 1; // Fallback to default
                 $company = fetchOne("SELECT * FROM companies WHERE id = 1");
             }
-            
+
             session_regenerate_id(true);
 
             $_SESSION['user_id'] = $user['id'];
@@ -543,19 +543,19 @@ try {
             $_SESSION['company_id'] = $companyId;
             $_SESSION['company_name'] = $company['name'] ?? 'BroMan';
             $_SESSION['company_logo'] = $company['logo_url'] ?? 'images/Final_Logo White.png';
-            
+
             executeQuery("UPDATE users SET last_login = NOW() WHERE id = ?", [$user['id']]);
-            
+
             unset($user['password_hash']);
             $user['company'] = $company;
             sendResponse(true, $user, 'Login successful');
             break;
-        
+
         case 'logout':
             destroyAppSession();
             sendResponse(true, null, 'Logged out');
             break;
-        
+
         case 'get_user':
             requireAuth();
             $user = getCurrentUser();
@@ -565,7 +565,7 @@ try {
             $user['company_logo'] = $_SESSION['company_logo'] ?? 'images/Final_Logo White.png';
             sendResponse(true, $user);
             break;
-        
+
         case 'get_companies':
             // Public endpoint - no auth required for login page
             $companies = fetchAll("SELECT id, name, slug, logo_url, primary_color FROM companies ORDER BY id");
@@ -580,21 +580,21 @@ try {
             }
             sendResponse(true, $companies);
             break;
-        
+
         case 'get_current_company':
             requireAuth();
             $companyId = $_SESSION['company_id'] ?? 1;
             $company = fetchOne("SELECT * FROM companies WHERE id = ?", [$companyId]);
             sendResponse(true, $company);
             break;
-            
+
         case 'switch_company':
             requireAuth();
             $input = json_decode(file_get_contents('php://input'), true);
             $companyId = (int)($input['company_id'] ?? 0);
-            
+
             if (!$companyId) sendResponse(false, null, 'Company ID required', 400);
-            
+
             $company = fetchOne("SELECT * FROM companies WHERE id = ?", [$companyId]);
             if (!$company) {
                 // Fallback
@@ -610,18 +610,18 @@ try {
                     sendResponse(false, null, 'Company not found', 404);
                 }
             }
-            
+
             $_SESSION['company_id'] = $company['id'];
             $_SESSION['company_name'] = $company['name'];
             $_SESSION['company_logo'] = $company['logo_url'] ?? 'images/Final_Logo White.png';
-            
+
             session_write_close();
-            
+
             sendResponse(true, ['company_id' => $company['id'], 'company_name' => $company['name']], 'Company switched successfully');
             break;
-        
+
         // ===== DASHBOARD =====
-        
+
         case 'get_dashboard_stats':
         case 'get_analytics':
             requireAuth();
@@ -632,30 +632,30 @@ try {
             $days = isset($_GET['days']) ? intval($_GET['days']) : 30;
             $dateFrom = date('Y-m-d H:i:s', strtotime("-{$days} days"));
             $datePrev = date('Y-m-d H:i:s', strtotime("-" . ($days * 2) . " days"));
-            
+
             $analytics = [];
-            
+
             // Get current company for data isolation
             $companyId = $_SESSION['company_id'] ?? 1;
-            
+
             // === OVERVIEW KPIs WITH TRENDS (filtered by company) ===
             $currentPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PUBLISHED' AND published_date >= ?", [$companyId, $dateFrom])['c'];
             $prevPublished = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PUBLISHED' AND published_date >= ? AND published_date < ?", [$companyId, $datePrev, $dateFrom])['c'];
-            
+
             $currentCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND created_at >= ?", [$companyId, $dateFrom])['c'];
             $prevCreated = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND created_at >= ? AND created_at < ?", [$companyId, $datePrev, $dateFrom])['c'];
-            
+
             $submitted = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'PENDING_REVIEW' AND a.created_at >= ?", [$companyId, $dateFrom])['c'];
             $approved = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'APPROVED' AND a.created_at >= ?", [$companyId, $dateFrom])['c'];
             $approvalRate = $submitted > 0 ? round(($approved / $submitted) * 100) : 0;
-            
+
             $prevSubmitted = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'PENDING_REVIEW' AND a.created_at >= ? AND a.created_at < ?", [$companyId, $datePrev, $dateFrom])['c'];
             $prevApproved = (int)fetchOne("SELECT COUNT(DISTINCT a.post_id) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'APPROVED' AND a.created_at >= ? AND a.created_at < ?", [$companyId, $datePrev, $dateFrom])['c'];
             $prevApprovalRate = $prevSubmitted > 0 ? round(($prevApproved / $prevSubmitted) * 100) : 0;
-            
+
             $pending = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'PENDING_REVIEW'", [$companyId])['c'];
             $reviewed = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'REVIEWED'", [$companyId])['c'];
-            
+
             $analytics['overview'] = [
                 'total_posts' => (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ?", [$companyId])['c'],
                 'published_period' => $currentPublished,
@@ -668,7 +668,7 @@ try {
                 'approval_rate' => $approvalRate,
                 'approval_trend' => $approvalRate - $prevApprovalRate,
             ];
-            
+
             // === BOTTLENECK DETECTION (avg time per stage) ===
             $bottlenecks = [];
             $stageTransitions = [
@@ -678,12 +678,12 @@ try {
                 ['from' => 'APPROVED', 'to' => 'SCHEDULED', 'label' => 'Scheduling'],
                 ['from' => 'SCHEDULED', 'to' => 'PUBLISHED', 'label' => 'Publishing'],
             ];
-            
+
             foreach ($stageTransitions as $trans) {
                 $avgHours = fetchOne(
                     "SELECT AVG(TIMESTAMPDIFF(HOUR, a1.created_at, a2.created_at)) as avg_hours
                      FROM activity_log a1
-                     JOIN activity_log a2 ON a1.post_id = a2.post_id 
+                     JOIN activity_log a2 ON a1.post_id = a2.post_id
                         AND a2.action = 'status_changed' AND a2.new_value = ?
                         AND a2.created_at > a1.created_at
                      WHERE a1.action = 'status_changed' AND a1.new_value = ?
@@ -701,7 +701,7 @@ try {
                 ];
             }
             $analytics['bottlenecks'] = $bottlenecks;
-            
+
             // === POSTS BY STATUS (Funnel) - filtered by company ===
             $analytics['by_status'] = [];
             $statuses = ['DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
@@ -709,7 +709,7 @@ try {
                 $analytics['by_status'][$status] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = ?", [$companyId, $status])['c'];
             }
             $analytics['by_status']['CHANGES_REQUESTED'] = (int)fetchOne("SELECT COUNT(*) as c FROM posts WHERE company_id = ? AND status = 'CHANGES_REQUESTED'", [$companyId])['c'];
-            
+
             // === POSTS BY PLATFORM (counts each platform from JSON arrays) ===
             $allPosts = fetchAll("SELECT platforms FROM posts WHERE company_id = ? AND platforms IS NOT NULL AND platforms != ''", [$companyId]);
             $platformCounts = [];
@@ -730,17 +730,17 @@ try {
             foreach ($platformCounts as $platform => $count) {
                 $analytics['by_platform'][] = ['platform' => $platform, 'count' => $count];
             }
-            
+
             // === TIME-BASED INSIGHTS - filtered by company ===
             $bestDay = fetchOne(
-                "SELECT DAYNAME(created_at) as day, COUNT(*) as count 
-                 FROM posts WHERE company_id = ? AND status = 'PUBLISHED' 
+                "SELECT DAYNAME(created_at) as day, COUNT(*) as count
+                 FROM posts WHERE company_id = ? AND status = 'PUBLISHED'
                  GROUP BY DAYOFWEEK(created_at) ORDER BY count DESC LIMIT 1",
                 [$companyId]
             );
             $bestHour = fetchOne(
-                "SELECT HOUR(created_at) as hour, COUNT(*) as count 
-                 FROM posts WHERE company_id = ? AND status = 'PUBLISHED' 
+                "SELECT HOUR(created_at) as hour, COUNT(*) as count
+                 FROM posts WHERE company_id = ? AND status = 'PUBLISHED'
                  GROUP BY HOUR(created_at) ORDER BY count DESC LIMIT 1",
                 [$companyId]
             );
@@ -750,9 +750,9 @@ try {
                 'best_hour' => isset($bestHour['hour']) ? sprintf('%02d:00', $bestHour['hour']) : 'N/A',
                 'best_hour_count' => (int)($bestHour['count'] ?? 0),
             ];
-            
+
             // === USER PERFORMANCE WITH DETAILED METRICS (filtered by company) ===
-            $userQuery = $isAdminOrManager 
+            $userQuery = $isAdminOrManager
                 ? "SELECT u.id, u.username, u.full_name, u.role,
                       -- Ideas from staff_ideas table
                       (SELECT COUNT(*) FROM staff_ideas si WHERE si.user_id = u.id AND si.company_id = ? AND si.created_at >= ?) as ideas_created,
@@ -761,12 +761,12 @@ try {
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('PENDING_REVIEW', 'REVIEWED') AND p2.created_at >= ?) as pending_review_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status IN ('APPROVED', 'SCHEDULED', 'PUBLISHED') AND p2.created_at >= ?) as approved_count,
                       (SELECT COUNT(*) FROM posts p2 WHERE p2.author_id = u.id AND p2.company_id = ? AND p2.status = 'PUBLISHED' AND p2.created_at >= ?) as published_count,
-                      
+
                       -- Admin/Manager stats (Reviewer focus)
                       (SELECT COUNT(DISTINCT al.post_id) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value IN ('REVIEWED', 'APPROVED') AND al.created_at >= ?) as reviews_approved,
                       (SELECT COUNT(DISTINCT al.post_id) FROM activity_log al JOIN posts p3 ON al.post_id = p3.id WHERE al.user_id = u.id AND p3.company_id = ? AND al.action = 'status_changed' AND al.new_value = 'CHANGES_REQUESTED' AND al.created_at >= ?) as reviews_rejected,
                       (SELECT COUNT(*) FROM comments c JOIN posts p4 ON c.post_id = p4.id WHERE c.user_id = u.id AND p4.company_id = ? AND c.created_at >= ?) as comments_count,
-                      
+
                       -- Meta
                       (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p5 ON al2.post_id = p5.id WHERE al2.user_id = u.id AND p5.company_id = ?) as last_activity
                    FROM users u WHERE u.is_active = 1 ORDER BY u.role DESC, u.full_name ASC"
@@ -779,7 +779,7 @@ try {
                       (SELECT COUNT(*) FROM comments c JOIN posts p4 ON c.post_id = p4.id WHERE c.user_id = u.id AND p4.company_id = ? AND c.created_at >= ?) as comments_count,
                       (SELECT MAX(al2.created_at) FROM activity_log al2 JOIN posts p5 ON al2.post_id = p5.id WHERE al2.user_id = u.id AND p5.company_id = ?) as last_activity
                    FROM users u WHERE u.id = ? AND u.is_active = 1";
-            
+
             // Common params: company_id, date_from
             if ($isAdminOrManager) {
                 $userParams = [
@@ -805,9 +805,9 @@ try {
                     $user['id']
                 ];
             }
-            
+
             $users = fetchAll($userQuery, $userParams);
-            
+
             foreach ($users as &$u) {
                 // Ensure all keys exist to prevent JS errors
                 $u['ideas_created'] = (int)($u['ideas_created'] ?? 0);
@@ -818,16 +818,16 @@ try {
                 $u['reviews_approved'] = (int)($u['reviews_approved'] ?? 0);
                 $u['reviews_rejected'] = (int)($u['reviews_rejected'] ?? 0);
                 $u['comments_count'] = (int)($u['comments_count'] ?? 0);
-                
+
                 // Calculate approval rate based on drafts and approved
                 $totalAuthoring = $u['drafts_created'] + $u['approved_count'];
                 $u['author_approval_rate'] = $totalAuthoring > 0 ? round(($u['approved_count'] / $totalAuthoring) * 100) : 0;
             }
             $analytics['user_performance'] = $users;
-            
+
             // === SMART RECOMMENDATIONS ===
             $recommendations = [];
-            
+
             // Bottleneck recommendation
             $maxBottleneck = null;
             foreach ($bottlenecks as $b) {
@@ -843,7 +843,7 @@ try {
                     'message' => "Posts spend avg {$maxBottleneck['avg_days']} days in {$maxBottleneck['stage']}. Consider faster review cycles.",
                 ];
             }
-            
+
             // High performer recommendation
             if ($isAdmin && count($users) > 1) {
                 usort($users, fn($a, $b) => $b['productivity_score'] - $a['productivity_score']);
@@ -857,7 +857,7 @@ try {
                     ];
                 }
             }
-            
+
             // Pending review alert
             $pending = $analytics['overview']['pending_review'];
             if ($pending >= 3) {
@@ -868,7 +868,7 @@ try {
                     'message' => "{$pending} posts waiting for review. Schedule time to clear the queue.",
                 ];
             }
-            
+
             // Best time insight
             if ($bestDay['day'] ?? false) {
                 $recommendations[] = [
@@ -878,9 +878,9 @@ try {
                     'message' => "Most content gets published on {$bestDay['day']}s. Plan your workflow accordingly.",
                 ];
             }
-            
+
             $analytics['recommendations'] = $recommendations;
-            
+
             // === WEEKLY TRENDS - filtered by company ===
             $analytics['weekly_trends'] = fetchAll(
                 "SELECT YEARWEEK(created_at, 1) as week, DATE_FORMAT(MIN(created_at), '%b %d') as week_start,
@@ -889,20 +889,20 @@ try {
                  GROUP BY YEARWEEK(created_at, 1) ORDER BY week",
                 [$companyId]
             );
-            
+
             // === REVISION ANALYTICS - filtered by company ===
             $analytics['revision_stats'] = [
                 'total_revisions' => (int)fetchOne("SELECT COUNT(*) as c FROM activity_log a JOIN posts p ON a.post_id = p.id WHERE p.company_id = ? AND a.action = 'status_changed' AND a.new_value = 'CHANGES_REQUESTED' AND a.created_at >= ?", [$companyId, $dateFrom])['c'],
                 'by_platform' => [], // Disabled after migration to multi-platform
             ];
-            
+
             // === RECENT ACTIVITY - filtered by company, manager only ===
             if ($isManager) {
                 $analytics['recent_activity'] = fetchAll(
                     "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platforms, p.id as post_id
-                     FROM activity_log al 
-                     JOIN users u ON al.user_id = u.id 
-                     LEFT JOIN posts p ON al.post_id = p.id 
+                     FROM activity_log al
+                     JOIN users u ON al.user_id = u.id
+                     LEFT JOIN posts p ON al.post_id = p.id
                      WHERE (p.company_id = ? OR al.post_id IS NULL)
                      ORDER BY al.created_at DESC LIMIT 25",
                     [$companyId]
@@ -910,7 +910,7 @@ try {
             } else {
                 $analytics['recent_activity'] = [];
             }
-            
+
             // === UPCOMING SCHEDULED - filtered by company ===
             $analytics['upcoming_scheduled'] = fetchAll(
                 "SELECT p.id, p.title, p.platforms, p.scheduled_date, u.username as author
@@ -919,38 +919,38 @@ try {
                  ORDER BY p.scheduled_date ASC LIMIT 5",
                 [$companyId]
             );
-            
+
             // === CONTENT HEALTH SCORE ===
             $healthScore = 100;
             $totalBacklog = $pending + $reviewed;
             if ($totalBacklog >= 8) $healthScore -= 30;
             elseif ($totalBacklog >= 5) $healthScore -= 20;
             elseif ($totalBacklog >= 3) $healthScore -= 10;
-            
+
             if ($maxBottleneck) $healthScore -= 15;
             if ($approvalRate < 50) $healthScore -= 20;
             elseif ($approvalRate < 70) $healthScore -= 10;
-            
+
             $analytics['health'] = [
                 'score' => max(0, $healthScore),
                 'status' => $healthScore >= 80 ? 'healthy' : ($healthScore >= 50 ? 'warning' : 'critical'),
                 'label' => $healthScore >= 80 ? 'Healthy Pipeline' : ($healthScore >= 50 ? 'Needs Attention' : 'Critical Issues'),
             ];
-            
+
             sendResponse(true, $analytics);
             break;
-        
+
         // ===== CALENDAR =====
-        
+
         case 'fetch_calendar':
             requireAuth();
             $year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
             $month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
             $companyId = $_SESSION['company_id'] ?? 1;
-            
+
             $startDate = sprintf('%04d-%02d-01', $year, $month);
             $endDate = date('Y-m-t', strtotime($startDate));
-            
+
             $posts = fetchAll(
                 "SELECT p.id, p.title, p.status, p.platforms, p.scheduled_date, p.published_date,
                         (SELECT file_path FROM media_files WHERE post_id = p.id AND is_primary = 1 LIMIT 1) as primary_image
@@ -964,42 +964,42 @@ try {
                  ORDER BY COALESCE(p.scheduled_date, p.published_date) ASC",
                 [$companyId, $startDate, $endDate . ' 23:59:59', $startDate, $endDate . ' 23:59:59']
             );
-            
+
             sendResponse(true, $posts);
             break;
-        
+
         // ===== USERS MANAGEMENT =====
-        
+
         case 'get_users':
         case 'fetch_users':
             requireManager();
             $users = fetchAll(
-                "SELECT id, username, full_name, role, is_active, created_at, 
+                "SELECT id, username, full_name, role, is_active, created_at,
                         (SELECT COUNT(*) FROM posts WHERE author_id = users.id) as post_count
-                 FROM users 
+                 FROM users
                  ORDER BY created_at DESC"
             );
             $users = array_map('normalizeUserRecord', $users);
             sendResponse(true, $users);
             break;
-        
+
         case 'update_user_status':
             requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
             $userId = $input['id'] ?? 0;
             $isActive = $input['is_active'] ?? 0;
-            
+
             if (!$userId) sendResponse(false, null, 'User ID required', 400);
-            
+
             // Prevent deactivating yourself
             if ($userId == $_SESSION['user_id'] && !$isActive) {
                 sendResponse(false, null, 'Cannot deactivate yourself', 400);
             }
-            
+
             executeQuery("UPDATE users SET is_active = ? WHERE id = ?", [$isActive, $userId]);
             sendResponse(true, null, $isActive ? 'User activated' : 'User deactivated');
             break;
-        
+
         case 'update_user':
             requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
@@ -1007,20 +1007,20 @@ try {
             $fullName = trim($input['full_name'] ?? '');
             $role = canonicalRole($input['role'] ?? '');
             $password = $input['password'] ?? '';
-            
+
             if (!$userId) sendResponse(false, null, 'User ID required', 400);
             if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
             if (!in_array($role, ['admin', 'designer', 'manager'], true)) sendResponse(false, null, 'Invalid role', 400);
-            
+
             // Check if user exists and get current role
             $existingUser = fetchOne("SELECT id, role FROM users WHERE id = ?", [$userId]);
             if (!$existingUser) sendResponse(false, null, 'User not found', 404);
-            
+
             // Prevent changing your own role (security measure)
             if ($userId == $_SESSION['user_id'] && $existingUser['role'] !== $role) {
                 sendResponse(false, null, 'Cannot demote yourself', 400);
             }
-            
+
             // Update user
             if (!empty($password)) {
                 // Update with new password
@@ -1036,10 +1036,10 @@ try {
                     [$fullName, roleForStorage($role), $userId]
                 );
             }
-            
+
             sendResponse(true, null, 'User updated successfully');
             break;
-        
+
         case 'create_user':
             requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
@@ -1047,39 +1047,39 @@ try {
             $fullName = trim($input['full_name'] ?? '');
             $role = canonicalRole($input['role'] ?? 'designer');
             $password = $input['password'] ?? '';
-            
+
             if (empty($username)) sendResponse(false, null, 'Username is required', 400);
             if (empty($fullName)) sendResponse(false, null, 'Full name is required', 400);
             if (empty($password)) sendResponse(false, null, 'Password is required', 400);
             if (!in_array($role, ['admin', 'designer', 'manager'], true)) sendResponse(false, null, 'Invalid role', 400);
-            
+
             // Check if username already exists
             $existingUser = fetchOne("SELECT id FROM users WHERE username = ?", [$username]);
             if ($existingUser) sendResponse(false, null, 'Username already exists', 400);
-            
+
             // Create user
             $passwordHash = password_hash($password, PASSWORD_DEFAULT);
             executeQuery(
                 "INSERT INTO users (username, full_name, role, password_hash, is_active, created_at) VALUES (?, ?, ?, ?, 1, NOW())",
                 [$username, $fullName, roleForStorage($role), $passwordHash]
             );
-            
+
             sendResponse(true, ['id' => lastInsertId()], 'User created successfully');
             break;
-        
+
         case 'get_user_by_id':
             requireManager();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'User ID required', 400);
-            
+
             $user = fetchOne(
-                "SELECT id, username, full_name, role, is_active, created_at, last_login 
+                "SELECT id, username, full_name, role, is_active, created_at, last_login
                  FROM users WHERE id = ?", [$id]
             );
             if (!$user) sendResponse(false, null, 'User not found', 404);
             sendResponse(true, normalizeUserRecord($user));
             break;
-        
+
         case 'save_user':
             requireManager();
             $input = json_decode(file_get_contents('php://input'), true);
@@ -1089,19 +1089,19 @@ try {
             $role = canonicalRole($input['role'] ?? 'designer');
             $password = $input['password'] ?? '';
             $isActive = isset($input['is_active']) ? (bool)$input['is_active'] : true;
-            
+
             if (empty($username)) sendResponse(false, null, 'Username is required', 400);
             if (!in_array($role, ['admin', 'designer', 'manager'], true)) $role = 'designer';
-            
+
             if ($id) {
                 // Update existing user
                 $existingUser = fetchOne("SELECT id FROM users WHERE id = ?", [$id]);
                 if (!$existingUser) sendResponse(false, null, 'User not found', 404);
-                
+
                 // Check for duplicate username
                 $dup = fetchOne("SELECT id FROM users WHERE username = ? AND id != ?", [$username, $id]);
                 if ($dup) sendResponse(false, null, 'Username already exists', 400);
-                
+
                 if (!empty($password)) {
                     $hash = password_hash($password, PASSWORD_DEFAULT);
                     executeQuery("UPDATE users SET username=?, full_name=?, role=?, password_hash=?, is_active=? WHERE id=?",
@@ -1114,23 +1114,25 @@ try {
             } else {
                 // Create new user
                 if (empty($password)) sendResponse(false, null, 'Password is required for new users', 400);
-                
+
                 $dup = fetchOne("SELECT id FROM users WHERE username = ?", [$username]);
                 if ($dup) sendResponse(false, null, 'Username already exists', 400);
-                
+
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 executeQuery("INSERT INTO users (username, full_name, role, password_hash, is_active, created_at) VALUES (?, ?, ?, ?, ?, 1, NOW())",
                     [$username, $fullName, roleForStorage($role), $hash, $isActive]);
                 sendResponse(true, ['id' => lastInsertId()], 'User created successfully', 201);
             }
             break;
-        
+
         // ===== POSTS =====
-        
+
         case 'fetch_posts':
             requireAuth();
             $user = getCurrentUser();
-            
+            $view = $_GET['view'] ?? 'workflow';
+            $isArchiveView = $view === 'archive';
+
             // Auto-publish check: Move SCHEDULED posts to PUBLISHED if due
             try {
                 $duePosts = fetchAll("SELECT id, title, author_id FROM posts WHERE status = 'SCHEDULED' AND scheduled_date <= NOW()");
@@ -1144,16 +1146,18 @@ try {
                 // Don't fail fetch_posts if auto-publish has an issue
                 error_log("Auto-publish error: " . $e->getMessage());
             }
-            
+
             $where = [];
             $params = [];
-            
+
             // CRITICAL: Filter by current company for data isolation
             $companyId = getCurrentCompanyId();
             $where[] = "p.company_id = ?";
             $params[] = $companyId;
 
-            if (!empty($_GET['status'])) {
+            if ($isArchiveView) {
+                $where[] = "p.status = 'PUBLISHED'";
+            } elseif (!empty($_GET['status'])) {
                 $where[] = "p.status = ?";
                 $params[] = $_GET['status'];
             }
@@ -1171,19 +1175,22 @@ try {
                 $params[] = $term;
                 $params[] = $term;
             }
-            
+
             $whereClause = $where ? 'WHERE ' . implode(' AND ', $where) : '';
-            
+            $orderBy = $isArchiveView
+                ? "ORDER BY COALESCE(p.published_date, p.updated_at, p.created_at) DESC, p.id DESC"
+                : "ORDER BY p.urgency DESC, p.updated_at DESC";
+
             $sql = "SELECT p.*, u.username as author_name, u.full_name as author_full_name,
                            (SELECT file_path FROM media_files WHERE post_id = p.id AND is_primary = 1 LIMIT 1) as primary_image,
                            (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
                     FROM posts p
                     LEFT JOIN users u ON p.author_id = u.id
                     $whereClause
-                    ORDER BY p.urgency DESC, p.updated_at DESC";
-            
+                    $orderBy";
+
             $posts = fetchAll($sql, $params);
-            
+
             // Populate media for all posts efficiently
             if (!empty($posts)) {
                 $postIds = array_column($posts, 'id');
@@ -1191,57 +1198,57 @@ try {
                 if (!empty($postIds)) {
                     $placeholders = str_repeat('?,', count($postIds) - 1) . '?';
                     $mediaFiles = fetchAll("SELECT id, post_id, file_path, file_type as type FROM media_files WHERE post_id IN ($placeholders)", $postIds);
-                    
+
                     // Group media by post_id
                     $mediaMap = [];
                     foreach ($mediaFiles as $file) {
                         $mediaMap[$file['post_id']][] = $file;
                     }
-                    
+
                     // Attach to posts
                     foreach ($posts as &$post) {
                         $post['media'] = $mediaMap[$post['id']] ?? [];
                     }
                 }
             }
-            
+
             sendResponse(true, $posts);
             break;
-        
+
         case 'get_calendar_posts':
             requireAuth();
             $month = intval($_GET['month'] ?? date('m'));
             $year = intval($_GET['year'] ?? date('Y'));
-            
+
             $startDate = "$year-$month-01";
             $endDate = date('Y-m-t', strtotime($startDate));
-            
+
             $companyId = $_SESSION['company_id'] ?? 1;
-            
+
             $posts = fetchAll("
-                SELECT p.id, p.title, p.platforms, p.status, p.scheduled_date, p.published_date, 
+                SELECT p.id, p.title, p.platforms, p.status, p.scheduled_date, p.published_date,
                        u.username as author_name, u.full_name as author_full_name
                 FROM posts p
                 LEFT JOIN users u ON p.author_id = u.id
                 WHERE p.company_id = ?
-                  AND ((p.scheduled_date BETWEEN ? AND ?) 
+                  AND ((p.scheduled_date BETWEEN ? AND ?)
                    OR (p.published_date BETWEEN ? AND ?))
                 ORDER BY COALESCE(p.scheduled_date, p.published_date) ASC
             ", [$companyId, $startDate, $endDate, $startDate, $endDate]);
-            
+
             sendResponse(true, [
                 'posts' => $posts,
                 'month' => $month,
                 'year' => $year
             ]);
             break;
-        
+
         case 'get_post':
             requireAuth();
             $user = getCurrentUser();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'Post ID required', 400);
-            
+
             $post = fetchOne(
                 "SELECT p.*, u.username as author_name, u.full_name as author_full_name,
                         cr.username as change_requested_by_name
@@ -1250,10 +1257,10 @@ try {
                  LEFT JOIN users cr ON p.change_requested_by = cr.id
                  WHERE p.id = ?", [$id]
             );
-            
+
             if (!$post) sendResponse(false, null, 'Post not found', 404);
             requirePostAccess($user, $post);
-            
+
             $post['media'] = fetchAll(
                 "SELECT m.*, u.username, u.full_name
                  FROM media_files m
@@ -1263,20 +1270,20 @@ try {
                 [$id]
             );
             $post['comments'] = fetchAll(
-                "SELECT c.*, u.username, u.full_name FROM comments c 
+                "SELECT c.*, u.username, u.full_name FROM comments c
                  JOIN users u ON c.user_id = u.id WHERE c.post_id = ? ORDER BY c.created_at", [$id]
             );
-            
 
-            
+
+
             $post['activity'] = fetchAll(
-                "SELECT al.*, u.username FROM activity_log al 
+                "SELECT al.*, u.username FROM activity_log al
                  JOIN users u ON al.user_id = u.id WHERE al.post_id = ? ORDER BY al.created_at DESC LIMIT 20", [$id]
             );
-            
+
             sendResponse(true, $post);
             break;
-        
+
         case 'save_post':
             requireAuth();
             $user = getCurrentUser();
@@ -1284,7 +1291,7 @@ try {
             if (isDesignerRole($user['role'])) {
                 sendResponse(false, null, 'Designers cannot create or edit post content.', 403);
             }
-            
+
             // Handle both multipart/form-data (with files) and JSON
             $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
             if (strpos($contentType, 'multipart/form-data') !== false) {
@@ -1313,26 +1320,26 @@ try {
                 $priority = $input['priority'] ?? 'normal';
                 $scheduled_date = $input['scheduled_date'] ?? null;
             }
-            
+
             // Convert platforms array to JSON
             $platformsJson = json_encode(array_values(array_filter($platforms)));
             $contentPlainText = richTextToPlainText($content);
-            
+
             if (empty($title)) sendResponse(false, null, 'Title required', 400);
             if (empty($contentPlainText)) sendResponse(false, null, 'Content required', 400);
             if (empty($platforms)) sendResponse(false, null, 'At least one platform required', 400);
-            
+
             $postId = null;
-            
+
             if ($id) {
                 $existing = fetchOne("SELECT * FROM posts WHERE id = ?", [$id]);
                 if (!$existing) sendResponse(false, null, 'Post not found', 404);
-                
+
                 // No one can edit posts after manager approval (APPROVED, SCHEDULED, PUBLISHED)
                 if (in_array($existing['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'])) {
                     sendResponse(false, null, 'Cannot edit post after manager approval', 403);
                 }
-                
+
                 // Staff & Admin restriction: ONLY edit their own DRAFT or CHANGES_REQUESTED
                 // Manager restriction: Managers can edit any post (passing above approval check)
                 if ($user['role'] === 'admin') {
@@ -1343,12 +1350,12 @@ try {
                         sendResponse(false, null, 'Cannot edit post in current status', 403);
                     }
                 }
-                
+
                 // Track what changed for detailed logging
                 $changes = [];
                 $oldData = [];
                 $newData = [];
-                
+
                 if ($existing['title'] !== $title) {
                     $changes[] = 'العنوان';
                     $oldData['title'] = $existing['title'];
@@ -1374,22 +1381,22 @@ try {
                     $oldData['priority'] = $existing['priority'];
                     $newData['priority'] = $priority;
                 }
-                
+
                 executeQuery(
                     "UPDATE posts SET title=?, content=?, platforms=?, urgency=?, priority=?, scheduled_date=? WHERE id=?",
                     [$title, $content, $platformsJson, $urgency, $priority, $scheduled_date, $id]
                 );
-                
+
                 $changeDesc = !empty($changes) ? 'تم تعديل: ' . implode('، ', $changes) : 'Content updated';
-                logActivity($id, $user['id'], 'updated', 
-                    !empty($oldData) ? json_encode($oldData, JSON_UNESCAPED_UNICODE) : null, 
-                    !empty($newData) ? json_encode($newData, JSON_UNESCAPED_UNICODE) : null, 
+                logActivity($id, $user['id'], 'updated',
+                    !empty($oldData) ? json_encode($oldData, JSON_UNESCAPED_UNICODE) : null,
+                    !empty($newData) ? json_encode($newData, JSON_UNESCAPED_UNICODE) : null,
                     $changeDesc);
                 $postId = $id;
             } else {
                 // Get current company from session
                 $companyId = getCurrentCompanyId();
-                
+
                 executeQuery(
                     "INSERT INTO posts (company_id, title, content, platforms, status, urgency, priority, author_id, scheduled_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     [$companyId, $title, $content, $platformsJson, $status, $urgency, $priority, $user['id'], $scheduled_date]
@@ -1397,10 +1404,10 @@ try {
                 $postId = lastInsertId();
                 logActivity($postId, $user['id'], 'created', null, null, "Created as $status");
             }
-            
+
             // Handle multiple file uploads (files[] array) or single file (legacy)
             $uploadedFiles = [];
-            
+
             // Check for files array (new multi-upload)
             if (isset($_FILES['files']) && is_array($_FILES['files']['name'])) {
                 $fileCount = count($_FILES['files']['name']);
@@ -1419,26 +1426,26 @@ try {
             elseif (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
                 $uploadedFiles[] = $_FILES['file'];
             }
-            
+
             // Process all uploaded files
             foreach ($uploadedFiles as $fileIndex => $file) {
                 $mime = mime_content_type($file['tmp_name']);
-                
+
                 if (in_array($mime, ALLOWED_TYPES) && $file['size'] <= MAX_FILE_SIZE) {
                     $year = date('Y');
                     $month = date('m');
                     $uploadPath = UPLOAD_DIR . "$year/$month/";
                     if (!is_dir($uploadPath)) mkdir($uploadPath, 0755, true);
-                    
+
                     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
                     $uniqueName = uniqid() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
                     $fullPath = $uploadPath . $uniqueName;
                     $relativePath = "uploads/$year/$month/$uniqueName";
-                    
+
                     if (move_uploaded_file($file['tmp_name'], $fullPath)) {
                         $isImage = str_starts_with($mime, 'image/');
                         $isPrimary = fetchOne("SELECT COUNT(*) as c FROM media_files WHERE post_id = ?", [$postId])['c'] == 0;
-                        
+
                         executeQuery(
                             "INSERT INTO media_files (post_id, original_name, file_name, file_path, file_type, mime_type, file_size, is_primary, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                             [$postId, $file['name'], $uniqueName, $relativePath, $isImage ? 'image' : 'video', $mime, $file['size'], $isPrimary, $user['id']]
@@ -1447,71 +1454,71 @@ try {
                     }
                 }
             }
-            
+
             sendResponse(true, ['id' => $postId], $id ? 'Post updated' : 'Post created', $id ? 200 : 201);
             break;
 
-        
+
         case 'update_status':
             requireAuth();
             $user = getCurrentUser();
             $input = json_decode(file_get_contents('php://input'), true);
-            
+
             $id = $input['id'] ?? 0;
             $newStatus = $input['status'] ?? '';
             $reason = $input['reason'] ?? null;
             $scheduledDate = $input['scheduled_date'] ?? null;
-            
+
             if (!$id || !$newStatus) sendResponse(false, null, 'ID and status required', 400);
-            
+
             $post = fetchOne("SELECT * FROM posts WHERE id = ?", [$id]);
             if (!$post) sendResponse(false, null, 'Post not found', 404);
             requirePostAccess($user, $post);
-            
+
             $oldStatus = $post['status'];
 
             if ($user['role'] === 'admin' && (int)$post['author_id'] !== (int)$user['id']) {
                 sendResponse(false, null, 'You can only change the status of your own posts.', 403);
             }
-            
+
             // Validate transitions with Centralized WorkflowManager
             if (!WorkflowManager::canTransition($user['role'], $oldStatus, $newStatus)) {
                 sendResponse(false, null, 'You do not have permission to perform this transition.', 403);
             }
-            
+
             if ($newStatus === 'DRAFT' && $user['role'] !== 'manager') {
                 if ($post['author_id'] != $user['id']) {
                     sendResponse(false, null, 'You can only recall your own posts to DRAFT.', 403);
                 }
             }
-            
+
             if ($newStatus === 'SCHEDULED' && empty($scheduledDate)) {
                 sendResponse(false, null, 'Scheduled date is required', 400);
             }
-            
+
             $updateSql = "UPDATE posts SET status = ?, reviewer_id = ?";
             $updateParams = [$newStatus, $user['id']];
-            
+
             if ($newStatus === 'CHANGES_REQUESTED') {
                 $updateSql .= ", change_request_reason = ?, change_requested_by = ?, change_requested_at = NOW()";
                 $updateParams[] = $reason;
                 $updateParams[] = $user['id'];
             }
-            
+
             if ($newStatus === 'SCHEDULED' && $scheduledDate) {
                 $updateSql .= ", scheduled_date = ?";
                 $updateParams[] = $scheduledDate;
             }
-            
+
             if ($newStatus === 'PUBLISHED') {
                 $updateSql .= ", published_date = NOW()";
             }
-            
+
             $updateSql .= " WHERE id = ?";
             $updateParams[] = $id;
-            
+
             executeQuery($updateSql, $updateParams);
-            
+
             // Enhanced activity logging
             $description = $reason;
             if ($newStatus === 'SCHEDULED' && $scheduledDate) {
@@ -1529,9 +1536,9 @@ try {
             } elseif ($oldStatus === 'REVIEWED' && $newStatus === 'APPROVED') {
                 $description = "Manager final approval";
             }
-            
+
             logActivity($id, $user['id'], 'status_changed', $oldStatus, $newStatus, "{$user['full_name']} changed status: " . ($description ?: $newStatus));
-            
+
             // Notifications
             if ($newStatus === 'PENDING_REVIEW') {
                 $designers = fetchDesignerUsers($user['id']);
@@ -1567,17 +1574,17 @@ try {
             } elseif ($newStatus === 'PUBLISHED') {
                 notify($post['author_id'], 'published', 'Post Published', "Your post '{$post['title']}' has been published!", $id, $user['id']);
             }
-            
+
             sendResponse(true, ['id' => $id, 'status' => $newStatus], 'Status updated');
             break;
-        
+
         case 'delete_post':
             requireAuth();
             $user = getCurrentUser();
             $id = $_GET['id'] ?? 0;
-            
+
             if (!$id) sendResponse(false, null, 'ID required', 400);
-            
+
             $post = fetchOne("SELECT * FROM posts WHERE id = ?", [$id]);
             if (!$post) sendResponse(false, null, 'Not found', 404);
             requirePostAccess($user, $post);
@@ -1585,19 +1592,19 @@ try {
             if (isDesignerRole($user['role'])) {
                 sendResponse(false, null, 'Designers cannot delete posts.', 403);
             }
-            
+
             // No one can delete posts after manager approval
             if (in_array($post['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'])) {
                 sendResponse(false, null, 'Cannot delete post after manager approval', 403);
             }
-            
+
             // Staff & Admin restriction: ONLY delete if author_id == user_id AND status == 'DRAFT'
             // Manager restriction: Managers can delete any post (passing above approval check)
             if ($user['role'] === 'admin') {
                 if ($post['author_id'] != $user['id']) sendResponse(false, null, 'Cannot delete others posts', 403);
                 if ($post['status'] !== 'DRAFT') sendResponse(false, null, 'Cannot delete submitted post', 403);
             }
-            
+
             // Log deletion BEFORE deleting (post_id will become NULL after deletion due to SET NULL FK)
             $deletedPostInfo = json_encode([
                 'title' => $post['title'],
@@ -1605,37 +1612,37 @@ try {
                 'platforms' => $post['platforms'],
                 'content' => mb_substr(richTextToPlainText($post['content']), 0, 200)
             ], JSON_UNESCAPED_UNICODE);
-            
+
             // Get author name for the description
             $postAuthor = fetchOne("SELECT full_name FROM users WHERE id = ?", [$post['author_id']]);
             $authorName = $postAuthor['full_name'] ?? 'Unknown';
-            
-            logActivity($id, $user['id'], 'post_deleted', $deletedPostInfo, null, 
+
+            logActivity($id, $user['id'], 'post_deleted', $deletedPostInfo, null,
                 'تم حذف بوست: "' . mb_substr($post['title'], 0, 50) . '" (الكاتب: ' . $authorName . ')');
-            
+
             // Delete media files
             $media = fetchAll("SELECT file_path FROM media_files WHERE post_id = ?", [$id]);
             foreach ($media as $m) {
                 $path = __DIR__ . '/' . $m['file_path'];
                 if (file_exists($path)) unlink($path);
             }
-            
+
             executeQuery("DELETE FROM posts WHERE id = ?", [$id]);
             sendResponse(true, null, 'Post deleted');
             break;
-        
+
         // ===== MEDIA =====
-        
+
         case 'upload_media':
             requireAuth();
             $user = getCurrentUser();
             $postId = $_POST['post_id'] ?? 0;
-            
+
             if (!$postId) sendResponse(false, null, 'Post ID required', 400);
             if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
                 sendResponse(false, null, 'Upload error', 400);
             }
-            
+
             $post = fetchOne("SELECT id, title, status, company_id, author_id FROM posts WHERE id = ?", [$postId]);
             if (!$post) sendResponse(false, null, 'Post not found', 404);
             requirePostAccess($user, $post);
@@ -1658,27 +1665,27 @@ try {
 
             $file = $_FILES['file'];
             $mime = mime_content_type($file['tmp_name']);
-            
+
             if (!in_array($mime, ALLOWED_TYPES)) sendResponse(false, null, 'Invalid file type', 400);
             if ($file['size'] > MAX_FILE_SIZE) sendResponse(false, null, 'File too large (max 100MB)', 400);
-            
+
             $year = date('Y');
             $month = date('m');
             $uploadPath = UPLOAD_DIR . "$year/$month/";
             if (!is_dir($uploadPath)) mkdir($uploadPath, 0755, true);
-            
+
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
             $uniqueName = uniqid() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             $fullPath = $uploadPath . $uniqueName;
             $relativePath = "uploads/$year/$month/$uniqueName";
-            
+
             if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
                 sendResponse(false, null, 'Failed to save', 500);
             }
-            
+
             $isImage = str_starts_with($mime, 'image/');
             $isPrimary = fetchOne("SELECT COUNT(*) as c FROM media_files WHERE post_id = ?", [$postId])['c'] == 0;
-            
+
             $existingDesignerMediaCount = $isDesigner
                 ? (int)fetchOne("SELECT COUNT(*) AS c FROM media_files WHERE post_id = ? AND uploaded_by = ?", [$postId, $user['id']])['c']
                 : 0;
@@ -1698,16 +1705,16 @@ try {
                     : "A designer uploaded files for '{$post['title']}'";
                 notify($post['author_id'], $type, $title, $message, $postId, $user['id']);
             }
-            
+
             sendResponse(true, ['id' => lastInsertId(), 'file_path' => $relativePath], 'Uploaded');
             break;
-        
+
         case 'delete_media':
             requireAuth();
             $user = getCurrentUser();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'ID required', 400);
-            
+
             $media = fetchOne("SELECT * FROM media_files WHERE id = ?", [$id]);
             if (!$media) sendResponse(false, null, 'Not found', 404);
             $post = fetchOne("SELECT id, status, company_id, author_id FROM posts WHERE id = ?", [$media['post_id']]);
@@ -1734,33 +1741,33 @@ try {
             } elseif ($user['role'] === 'manager' && in_array($post['status'], ['APPROVED', 'SCHEDULED', 'PUBLISHED'], true)) {
                 sendResponse(false, null, 'Cannot delete media after approval.', 403);
             }
-            
+
             // Log media deletion
-            logActivity($media['post_id'], $user['id'], 'media_deleted', 
-                json_encode(['file_name' => $media['original_name'], 'file_type' => $media['file_type']], JSON_UNESCAPED_UNICODE), 
-                null, 
+            logActivity($media['post_id'], $user['id'], 'media_deleted',
+                json_encode(['file_name' => $media['original_name'], 'file_type' => $media['file_type']], JSON_UNESCAPED_UNICODE),
+                null,
                 'تم حذف ملف: ' . $media['original_name']);
-            
+
             $path = __DIR__ . '/' . $media['file_path'];
             if (file_exists($path)) unlink($path);
-            
+
             executeQuery("DELETE FROM media_files WHERE id = ?", [$id]);
             sendResponse(true, null, 'Deleted');
             break;
-        
+
         // ===== COMMENTS =====
-        
+
         case 'add_comment':
             requireAuth();
             $user = getCurrentUser();
             $input = json_decode(file_get_contents('php://input'), true);
-            
+
             $postId = (int)($input['post_id'] ?? 0);
             $content = sanitizeString(trim($input['content'] ?? ''));
-            
+
             if (!$postId || !$content) sendResponse(false, null, 'Post ID and content required', 400);
             if (mb_strlen($content) > 5000) sendResponse(false, null, 'Comment too long (max 5000 chars)', 400);
-            
+
             // Get post information to find the author
             $post = fetchOne("SELECT id, title, author_id, company_id, status FROM posts WHERE id = ?", [$postId]);
             if (!$post) sendResponse(false, null, 'Post not found', 404);
@@ -1769,10 +1776,10 @@ try {
             if (isDesignerRole($user['role']) && $post['status'] !== 'PENDING_REVIEW') {
                 sendResponse(false, null, 'Designers can only comment while the post is pending.', 403);
             }
-            
+
             executeQuery("INSERT INTO comments (post_id, user_id, content) VALUES (?, ?, ?)", [$postId, $user['id'], $content]);
             logActivity($postId, $user['id'], 'comment_added');
-            
+
             $commenterName = $user['full_name'] ?: $user['username'];
             $messagePreview = mb_substr($content, 0, 100) . (mb_strlen($content) > 100 ? '...' : '');
 
@@ -1800,41 +1807,41 @@ try {
                     }
                 }
             }
-            
+
             $comment = fetchOne(
                 "SELECT c.*, u.username, u.full_name FROM comments c JOIN users u ON c.user_id = u.id WHERE c.id = ?",
                 [lastInsertId()]
             );
-            
+
             sendResponse(true, $comment, 'Comment added');
             break;
-        
+
         // ===== NOTIFICATIONS =====
-        
+
         case 'get_notifications':
             requireAuth();
             $user = getCurrentUser();
             $companyId = $_SESSION['company_id'] ?? 1;
-            
+
             // Filter notifications to only show those for posts in current company
             $notifs = fetchAll(
-                "SELECT n.*, p.title as post_title FROM notifications n 
-                 LEFT JOIN posts p ON n.post_id = p.id 
-                 WHERE n.user_id = ? AND (p.company_id = ? OR p.id IS NULL) 
+                "SELECT n.*, p.title as post_title FROM notifications n
+                 LEFT JOIN posts p ON n.post_id = p.id
+                 WHERE n.user_id = ? AND (p.company_id = ? OR p.id IS NULL)
                  ORDER BY n.created_at DESC LIMIT 30",
                 [$user['id'], $companyId]
             );
             $unread = fetchOne("SELECT COUNT(*) as c FROM notifications n LEFT JOIN posts p ON n.post_id = p.id WHERE n.user_id = ? AND n.is_read = 0 AND (p.company_id = ? OR p.id IS NULL)", [$user['id'], $companyId])['c'];
-            
+
             sendResponse(true, ['notifications' => $notifs, 'unread_count' => $unread]);
             break;
-        
+
         case 'mark_notification_read':
             requireAuth();
             $user = getCurrentUser();
             $input = json_decode(file_get_contents('php://input'), true);
             $companyId = $_SESSION['company_id'] ?? 1;
-            
+
             if (!empty($input['mark_all'])) {
                 executeQuery(
                     "UPDATE notifications n
@@ -1854,35 +1861,35 @@ try {
             }
             sendResponse(true, null, 'Marked as read');
             break;
-        
+
         case 'delete_user':
             requireManager();
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'ID required', 400);
-            
+
             $user = getCurrentUser();
             if ($id == $user['id']) sendResponse(false, null, 'Cannot delete yourself', 400);
-            
+
             executeQuery("DELETE FROM users WHERE id = ?", [$id]);
             sendResponse(true, null, 'User deleted');
             break;
-        
+
         // ===== PERSONAL IDEAS WORKSPACE =====
-        
+
         case 'get_user_ideas':
             requireAuth();
             $user = getCurrentUser();
             if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers do not have access to personal ideas.', 403);
             $companyId = getCurrentCompanyId();
-            
+
             // Only fetch ideas owned by the current user
             $ideas = fetchAll(
-                "SELECT * FROM staff_ideas 
-                 WHERE user_id = ? AND company_id = ? 
+                "SELECT * FROM staff_ideas
+                 WHERE user_id = ? AND company_id = ?
                  ORDER BY updated_at DESC",
                 [$user['id'], $companyId]
             );
-            
+
             // Attach media to each idea
             foreach ($ideas as &$idea) {
                 $idea['media'] = fetchAll(
@@ -1890,109 +1897,109 @@ try {
                     [$idea['id']]
                 );
             }
-            
+
             sendResponse(true, $ideas);
             break;
-        
+
         case 'create_idea':
             requireAuth();
             $user = getCurrentUser();
             if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot create personal ideas.', 403);
             $companyId = getCurrentCompanyId();
-            
+
             $input = json_decode(file_get_contents('php://input'), true);
             $title = sanitizeString(trim($input['title'] ?? ''), 255);
             $content = sanitizeString(trim($input['content'] ?? ''));
-            
+
             if (empty($content)) sendResponse(false, null, 'Content is required', 400);
-            
+
             executeQuery(
                 "INSERT INTO staff_ideas (user_id, company_id, title, content) VALUES (?, ?, ?, ?)",
                 [$user['id'], $companyId, $title ?: null, $content]
             );
-            
+
             $ideaId = lastInsertId();
             $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ?", [$ideaId]);
-            
+
             sendResponse(true, $idea, 'Idea created successfully', 201);
             break;
-        
+
         case 'update_idea':
             requireAuth();
             $user = getCurrentUser();
             if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot edit personal ideas.', 403);
-            
+
             $input = json_decode(file_get_contents('php://input'), true);
             $id = $input['id'] ?? 0;
             $title = sanitizeString(trim($input['title'] ?? ''), 255);
             $content = sanitizeString(trim($input['content'] ?? ''));
-            
+
             if (!$id) sendResponse(false, null, 'Idea ID required', 400);
             if (empty($content)) sendResponse(false, null, 'Content is required', 400);
-            
+
             // Verify ownership
             $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$id, $user['id']]);
             if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
-            
+
             executeQuery(
                 "UPDATE staff_ideas SET title = ?, content = ?, updated_at = NOW() WHERE id = ?",
                 [$title ?: null, $content, $id]
             );
-            
+
             $updatedIdea = fetchOne("SELECT * FROM staff_ideas WHERE id = ?", [$id]);
             sendResponse(true, $updatedIdea, 'Idea updated successfully');
             break;
-        
+
         case 'delete_idea':
             requireAuth();
             $user = getCurrentUser();
             if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot delete personal ideas.', 403);
-            
+
             $id = $_GET['id'] ?? 0;
             if (!$id) sendResponse(false, null, 'Idea ID required', 400);
-            
+
             // Verify ownership
             $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$id, $user['id']]);
             if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
-            
+
             // Delete media files from disk
             $media = fetchAll("SELECT file_path FROM idea_media WHERE idea_id = ?", [$id]);
             foreach ($media as $m) {
                 $path = __DIR__ . '/' . $m['file_path'];
                 if (file_exists($path)) unlink($path);
             }
-            
+
             executeQuery("DELETE FROM staff_ideas WHERE id = ?", [$id]);
             sendResponse(true, null, 'Idea deleted successfully');
             break;
-        
+
         case 'convert_idea_to_draft':
             requireAuth();
             $user = getCurrentUser();
             if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot convert ideas to drafts.', 403);
             $companyId = getCurrentCompanyId();
-            
+
             $input = json_decode(file_get_contents('php://input'), true);
             $ideaId = $input['idea_id'] ?? 0;
-            
+
             if (!$ideaId) sendResponse(false, null, 'Idea ID required', 400);
-            
+
             // Verify ownership
             $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$ideaId, $user['id']]);
             if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
-            
+
             // Create a new DRAFT post from the idea (clean start, no history)
             $title = $idea['title'] ?: 'Untitled Post';
             $content = $idea['content'];
-            
+
             executeQuery(
-                "INSERT INTO posts (company_id, title, content, platforms, status, author_id, created_at, updated_at) 
+                "INSERT INTO posts (company_id, title, content, platforms, status, author_id, created_at, updated_at)
                  VALUES (?, ?, ?, '[]', 'DRAFT', ?, NOW(), NOW())",
                 [$companyId, $title, $content, $user['id']]
             );
-            
+
             $postId = lastInsertId();
-            
+
             // Copy media from idea to post
             $ideaMedia = fetchAll("SELECT * FROM idea_media WHERE idea_id = ?", [$ideaId]);
             $copiedMediaCount = 0;
@@ -2008,10 +2015,10 @@ try {
                     error_log("Failed to copy idea media: " . $e->getMessage());
                 }
             }
-            
+
             // Log the creation (fresh start)
             logActivity($postId, $user['id'], 'created', null, null, 'Created from personal idea');
-            
+
             // Optionally delete the idea after converting (user can also keep it)
             $deleteAfterConvert = $input['delete_idea'] ?? false;
             if ($deleteAfterConvert) {
@@ -2019,120 +2026,120 @@ try {
                 executeQuery("DELETE FROM idea_media WHERE idea_id = ?", [$ideaId]);
                 executeQuery("DELETE FROM staff_ideas WHERE id = ?", [$ideaId]);
             }
-            
+
             $post = fetchOne("SELECT * FROM posts WHERE id = ?", [$postId]);
             $post['media'] = fetchAll("SELECT * FROM media_files WHERE post_id = ?", [$postId]);
             sendResponse(true, $post, 'Idea converted to draft successfully', 201);
             break;
-        
+
         case 'upload_idea_media':
             requireAuth();
             $user = getCurrentUser();
             if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot upload idea media.', 403);
-            
+
             $ideaId = $_POST['idea_id'] ?? 0;
             if (!$ideaId) sendResponse(false, null, 'Idea ID required', 400);
-            
+
             // Verify ownership
             $idea = fetchOne("SELECT * FROM staff_ideas WHERE id = ? AND user_id = ?", [$ideaId, $user['id']]);
             if (!$idea) sendResponse(false, null, 'Idea not found or access denied', 404);
-            
+
             if (empty($_FILES['file'])) sendResponse(false, null, 'No file uploaded', 400);
-            
+
             $file = $_FILES['file'];
             $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
-            
+
             if (!in_array($file['type'], $allowed)) {
                 sendResponse(false, null, 'Invalid file type. Allowed: JPG, PNG, GIF, WebP, MP4, WebM', 400);
             }
-            
+
             if ($file['size'] > 100 * 1024 * 1024) {
                 sendResponse(false, null, 'File too large. Max 100MB', 400);
             }
-            
+
             // Create uploads/ideas directory if it doesn't exist
             $uploadDir = __DIR__ . '/uploads/ideas/';
             if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-            
+
             $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
             $filename = 'idea_' . $ideaId . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
             $filePath = 'uploads/ideas/' . $filename;
-            
+
             if (!move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
                 sendResponse(false, null, 'Failed to save file', 500);
             }
-            
+
             // Check if this is first media (make it primary)
             $existingMedia = fetchOne("SELECT COUNT(*) as c FROM idea_media WHERE idea_id = ?", [$ideaId]);
             $isPrimary = ($existingMedia['c'] == 0) ? 1 : 0;
-            
+
             executeQuery(
                 "INSERT INTO idea_media (idea_id, file_path, file_type, file_name, file_size, is_primary) VALUES (?, ?, ?, ?, ?, ?)",
                 [$ideaId, $filePath, $file['type'], $file['name'], $file['size'], $isPrimary]
             );
-            
+
             $mediaId = lastInsertId();
             $media = fetchOne("SELECT * FROM idea_media WHERE id = ?", [$mediaId]);
-            
+
             sendResponse(true, $media, 'File uploaded successfully', 201);
             break;
-        
+
         case 'delete_idea_media':
             requireAuth();
             $user = getCurrentUser();
             if (isDesignerRole($user['role'])) sendResponse(false, null, 'Designers cannot delete idea media.', 403);
-            
+
             $mediaId = $_GET['id'] ?? 0;
             if (!$mediaId) sendResponse(false, null, 'Media ID required', 400);
-            
+
             // Get media and verify ownership through idea
             $media = fetchOne(
-                "SELECT m.*, i.user_id FROM idea_media m 
-                 JOIN staff_ideas i ON m.idea_id = i.id 
+                "SELECT m.*, i.user_id FROM idea_media m
+                 JOIN staff_ideas i ON m.idea_id = i.id
                  WHERE m.id = ?",
                 [$mediaId]
             );
-            
+
             if (!$media || $media['user_id'] != $user['id']) {
                 sendResponse(false, null, 'Media not found or access denied', 404);
             }
-            
+
             // Delete file from disk
             $path = __DIR__ . '/' . $media['file_path'];
             if (file_exists($path)) unlink($path);
-            
+
             executeQuery("DELETE FROM idea_media WHERE id = ?", [$mediaId]);
             sendResponse(true, null, 'Media deleted successfully');
             break;
-        
+
         // ===== ACTIVITY LOGS (Manager Only) =====
-        
+
         case 'get_all_logs':
             requireAuth();
             $user = getCurrentUser();
             if ($user['role'] !== 'manager') sendResponse(false, null, 'Manager access required', 403);
-            
+
             $companyId = $_SESSION['company_id'] ?? 1;
             $page = max(1, intval($_GET['page'] ?? 1));
             $limit = min(100, max(10, intval($_GET['limit'] ?? 50)));
             $offset = ($page - 1) * $limit;
-            
+
             // Build filter conditions
             $where = ["(p.company_id = ? OR al.post_id IS NULL)"];
             $params = [$companyId];
-            
+
             // Filter by action type
             if (!empty($_GET['action_type'])) {
                 $where[] = "al.action = ?";
                 $params[] = $_GET['action_type'];
             }
-            
+
             // Filter by user
             if (!empty($_GET['user_id'])) {
                 $where[] = "al.user_id = ?";
                 $params[] = intval($_GET['user_id']);
             }
-            
+
             // Filter by date range
             if (!empty($_GET['date_from'])) {
                 $where[] = "al.created_at >= ?";
@@ -2142,7 +2149,7 @@ try {
                 $where[] = "al.created_at <= ?";
                 $params[] = $_GET['date_to'] . ' 23:59:59';
             }
-            
+
             // Search in description
             if (!empty($_GET['search'])) {
                 $where[] = "(al.description LIKE ? OR p.title LIKE ? OR u.full_name LIKE ?)";
@@ -2151,44 +2158,44 @@ try {
                 $params[] = $term;
                 $params[] = $term;
             }
-            
+
             $whereClause = implode(' AND ', $where);
-            
+
             // Get total count
             $total = (int)fetchOne(
-                "SELECT COUNT(*) as c FROM activity_log al 
-                 JOIN users u ON al.user_id = u.id 
-                 LEFT JOIN posts p ON al.post_id = p.id 
+                "SELECT COUNT(*) as c FROM activity_log al
+                 JOIN users u ON al.user_id = u.id
+                 LEFT JOIN posts p ON al.post_id = p.id
                  WHERE $whereClause",
                 $params
             )['c'];
-            
+
             // Get logs
             $logParams = array_merge($params, [$limit, $offset]);
             $logs = fetchAll(
-                "SELECT al.*, u.username, u.full_name as user_full_name, 
+                "SELECT al.*, u.username, u.full_name as user_full_name,
                         p.title as post_title, p.status as post_status
-                 FROM activity_log al 
-                 JOIN users u ON al.user_id = u.id 
-                 LEFT JOIN posts p ON al.post_id = p.id 
+                 FROM activity_log al
+                 JOIN users u ON al.user_id = u.id
+                 LEFT JOIN posts p ON al.post_id = p.id
                  WHERE $whereClause
-                 ORDER BY al.created_at DESC 
+                 ORDER BY al.created_at DESC
                  LIMIT ? OFFSET ?",
                 $logParams
             );
-            
+
             // Get available action types for filter
             $actionTypes = fetchAll(
                 "SELECT DISTINCT action FROM activity_log ORDER BY action"
             );
-            
+
             // Get users for filter
             $logUsers = fetchAll(
-                "SELECT DISTINCT u.id, u.full_name, u.username 
-                 FROM activity_log al JOIN users u ON al.user_id = u.id 
+                "SELECT DISTINCT u.id, u.full_name, u.username
+                 FROM activity_log al JOIN users u ON al.user_id = u.id
                  ORDER BY u.full_name"
             );
-            
+
             sendResponse(true, [
                 'logs' => $logs,
                 'total' => $total,
@@ -2199,12 +2206,12 @@ try {
                 'users' => $logUsers
             ]);
             break;
-        
+
         default:
             sendResponse(false, null, 'Invalid action', 400);
     }
-    
-    
+
+
 } catch (Throwable $e) {
     error_log("API Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
     http_response_code(500);
