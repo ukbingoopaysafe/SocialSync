@@ -165,6 +165,7 @@ $csrfToken = generateCSRFToken();
         if (location.protocol === 'https:' || location.hostname === 'localhost') {
             console.log('[OneSignal] Secure origin detected:', location.origin);
             window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.oneSignalAppEntryUrl = <?= json_encode(getAppEntryUrl('index.php'), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
             window.getOneSignalSyncSignature = function() {
                 const userId = String(<?= (int)$_SESSION['user_id'] ?>);
                 const companyId = String(<?= (int)($_SESSION['company_id'] ?? 1) ?>);
@@ -199,6 +200,68 @@ $csrfToken = generateCSRFToken();
                 await OneSignal.User.addAlias('workspace_user', `${syncData.userId}:${syncData.companyId}`);
                 localStorage.setItem('onesignal_sync_signature', syncData.signature);
                 return true;
+            };
+
+            window.getOneSignalNotificationLaunchData = function(event) {
+                const notification = event?.notification || event || {};
+                const additionalData = notification.additionalData
+                    || notification.data
+                    || notification.rawPayload?.custom?.a
+                    || {};
+
+                const normalized = {
+                    companyId: Number(additionalData.company_id || additionalData.companyId || 0) || null,
+                    postId: Number(additionalData.post_id || additionalData.postId || 0) || null,
+                    type: String(additionalData.notification_type || additionalData.type || ''),
+                    url: String(notification.launchURL || notification.url || additionalData.url || '')
+                };
+
+                return normalized;
+            };
+
+            window.buildOneSignalLaunchUrl = function(launchData) {
+                if (launchData?.url) {
+                    return launchData.url;
+                }
+
+                if (!launchData?.companyId) {
+                    return '';
+                }
+
+                const launchUrl = new URL(window.oneSignalAppEntryUrl || `${location.origin}/index.php`, location.origin);
+                launchUrl.searchParams.set('notification_company_id', launchData.companyId);
+
+                if (launchData.postId) {
+                    launchUrl.searchParams.set('notification_post_id', launchData.postId);
+                }
+
+                if (launchData.type) {
+                    launchUrl.searchParams.set('notification_type', launchData.type);
+                }
+
+                launchUrl.hash = launchData.type.startsWith('submission_') && !launchData.postId ? '#submissions' : '#board';
+                return launchUrl.toString();
+            };
+
+            window.redirectFromOneSignalClick = function(event) {
+                try {
+                    const launchData = window.getOneSignalNotificationLaunchData(event);
+                    const targetUrl = window.buildOneSignalLaunchUrl(launchData);
+
+                    if (!targetUrl) {
+                        return;
+                    }
+
+                    const currentUrl = `${window.location.origin}${window.location.pathname}${window.location.search}${window.location.hash}`;
+                    if (currentUrl === targetUrl) {
+                        window.location.reload();
+                        return;
+                    }
+
+                    window.location.assign(targetUrl);
+                } catch (clickError) {
+                    console.warn('[OneSignal] Click redirect warning:', clickError);
+                }
             };
 
             window.detachOneSignalUser = async function() {
@@ -236,6 +299,11 @@ $csrfToken = generateCSRFToken();
                         serviceWorkerPath: "OneSignalSDKWorker.js"
                     });
                     console.log('[OneSignal] Init successful');
+
+                    OneSignal.Notifications.addEventListener('click', function(event) {
+                        console.log('[OneSignal] Notification click event:', event);
+                        window.redirectFromOneSignalClick(event);
+                    });
 
                     OneSignal.User.PushSubscription.addEventListener('change', async function(event) {
                         console.log('[OneSignal] Push subscription changed:', event);
