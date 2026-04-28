@@ -102,7 +102,7 @@ function buildNotificationLaunchUrl($companyId, $postId = null, $type = '') {
 
     $hash = (strpos((string) $type, 'submission_') === 0 && empty($postId)) ? '#submissions' : '#board';
 
-    return getAppEntryUrl('index.php') . '?' . http_build_query($query) . $hash;
+    return getAppEntryUrl('notification_redirect.php') . '?' . http_build_query($query) . $hash;
 }
 
 function sendResponse($success, $data = null, $message = '', $code = 200) {

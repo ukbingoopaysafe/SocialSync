@@ -11,6 +11,13 @@ $notificationLaunchContext = [
     'type' => '',
 ];
 
+if (!empty($_SESSION['notification_launch']) && is_array($_SESSION['notification_launch'])) {
+    $notificationLaunchContext['company_id'] = max(0, (int) ($_SESSION['notification_launch']['company_id'] ?? 0));
+    $notificationLaunchContext['post_id'] = max(0, (int) ($_SESSION['notification_launch']['post_id'] ?? 0));
+    $notificationLaunchContext['type'] = preg_replace('/[^a-z0-9_]/i', '', (string) ($_SESSION['notification_launch']['type'] ?? ''));
+    unset($_SESSION['notification_launch']);
+}
+
 if (isset($_GET['notification_company_id'])) {
     $notificationLaunchContext['company_id'] = max(0, (int) $_GET['notification_company_id']);
 }
