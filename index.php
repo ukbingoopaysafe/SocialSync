@@ -307,6 +307,10 @@ $csrfToken = generateCSRFToken();
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Calendar</span>
                 </button>
+                <button onclick="switchTab('submissions'); closeSidebarOnMobile()" id="tabSubmissions" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-8 9h14a2 2 0 002-2V7l-4-4H5a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    <span id="tabSubmissionsLabel" class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">Submissions</span>
+                </button>
                 <button onclick="switchTab('ideas'); closeSidebarOnMobile()" id="tabIdeas" class="sidebar-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                     <span class="text-sm font-medium whitespace-nowrap lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">My Ideas</span>
@@ -842,6 +846,34 @@ $csrfToken = generateCSRFToken();
                 </button>
             </div>
         </div>
+
+        <!-- Designer Submissions View -->
+        <div id="submissionsView" class="hidden max-w-7xl mx-auto px-4 lg:px-0">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 id="submissionsHeading" class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+                        <span class="text-3xl">📥</span> Designer Submissions
+                    </h2>
+                    <p id="submissionsSubtitle" class="text-slate-500 text-sm mt-1">Creative work shared by the design team before it becomes a post</p>
+                </div>
+                <button id="newSubmissionButton" onclick="openSubmissionModal()" class="hidden flex items-center gap-2 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium text-sm shadow-lg shadow-cyan-600/20 transition-all active:scale-95">
+                    <i class="fa-solid fa-plus"></i>
+                    New Submission
+                </button>
+            </div>
+
+            <div id="submissionsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+
+            <div id="submissionsEmptyState" class="hidden text-center py-16">
+                <div class="text-6xl mb-4">🗂️</div>
+                <p id="submissionsEmptyTitle" class="text-slate-500 text-lg mb-2">No submissions yet</p>
+                <p id="submissionsEmptyBody" class="text-slate-400 text-sm mb-6">Design contributions will appear here once they are submitted.</p>
+                <button id="submissionsEmptyAction" onclick="openSubmissionModal()" class="hidden inline-flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium text-sm transition-colors">
+                    <i class="fa-solid fa-plus"></i>
+                    Create Your First Submission
+                </button>
+            </div>
+        </div>
     </main>
 
     <!-- ==================== IDEA MODAL (Create/Edit) ==================== -->
@@ -939,6 +971,107 @@ $csrfToken = generateCSRFToken();
                 <button type="button" onclick="viewIdeaDelete()" class="px-5 py-2.5 bg-white border border-red-200 text-red-500 font-bold text-sm rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2">
                     <i class="fa-solid fa-trash"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SUBMISSION MODAL (Create/Edit) ==================== -->
+    <div id="submissionModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-0 lg:p-4">
+        <div class="bg-white rounded-none lg:rounded-xl shadow-2xl w-full max-w-xl h-full lg:h-auto lg:max-h-[90vh] flex flex-col">
+            <div class="bg-gradient-to-r from-cyan-600 to-sky-600 px-6 py-4 flex justify-between items-center rounded-t-xl flex-shrink-0">
+                <h2 id="submissionModalTitle" class="text-lg font-bold text-white flex items-center gap-2">
+                    <span>📥</span> New Submission
+                </h2>
+                <button onclick="closeSubmissionModal()" class="text-white/80 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <form id="submissionForm" class="p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
+                <input type="hidden" id="submissionId">
+
+                <div id="submissionStatusHint" class="hidden rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"></div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Title</label>
+                    <input type="text" id="submissionTitle" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all font-medium text-slate-800 placeholder-slate-400" placeholder="What are you submitting?">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Description</label>
+                    <textarea id="submissionDescription" rows="6" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all text-slate-700 placeholder-slate-400 resize-none" placeholder="Add context, notes, or a quick explanation for the team."></textarea>
+                    <p class="text-xs text-slate-400 mt-2">Keep it simple: what it is, why it matters, and anything the team should know.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Attachments</label>
+                    <div id="submissionAttachmentsPreview" class="space-y-2 mb-3"></div>
+
+                    <div id="submissionDropZone" onclick="document.getElementById('submissionFileInput').click()" class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center cursor-pointer hover:border-cyan-400 hover:bg-cyan-50/50 transition-all">
+                        <input type="file" id="submissionFileInput" class="hidden" accept="image/*,video/mp4,video/webm,.pdf,.zip,.psd" multiple onchange="handleSubmissionFileSelect(event)">
+                        <div class="text-slate-400">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl mb-2"></i>
+                            <p class="text-sm">Click or drag files here</p>
+                            <p class="text-xs text-slate-400 mt-1">Images, videos, PDFs, ZIP, PSD (Max 100MB each)</p>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 rounded-b-xl flex gap-3 flex-shrink-0">
+                <button type="button" onclick="closeSubmissionModal()" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                <button type="button" onclick="saveSubmission()" class="flex-1 px-5 py-2.5 bg-cyan-600 text-white font-bold text-sm rounded-lg hover:bg-cyan-700 transition-colors shadow-lg shadow-cyan-600/20">Save Submission</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW SUBMISSION MODAL ==================== -->
+    <div id="viewSubmissionModal" dir="rtl" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[60] flex items-center justify-center p-0 lg:p-8">
+        <div id="viewSubmissionModalContainer" class="bg-white rounded-none lg:rounded-2xl shadow-2xl w-full max-w-7xl h-full lg:h-[85vh] flex flex-col lg:flex-row overflow-hidden border border-slate-100 text-right">
+            <div id="viewSubmissionMediaColumn" class="hidden lg:w-[48%] xl:w-[48%] flex-shrink-0 bg-slate-900 items-center justify-center relative group border-l border-slate-100">
+                <div id="viewSubmissionMediaWrapper" class="w-full h-full flex items-center justify-center p-4"></div>
+            </div>
+
+            <div id="viewSubmissionContentColumn" class="flex-1 flex flex-col bg-white h-full relative w-full">
+                <div class="px-4 lg:px-6 py-4 flex justify-between items-center border-b border-slate-100 bg-white flex-shrink-0 gap-4 z-10 sticky top-0">
+                    <div class="flex items-center gap-3 overflow-hidden flex-1 min-w-0">
+                        <button onclick="closeViewSubmissionModal()" class="w-9 h-9 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0">
+                            <i class="fa-solid fa-xmark text-xl"></i>
+                        </button>
+                        <div id="viewSubmissionStatusBadge" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 border bg-slate-100 text-slate-700 border-slate-200"></div>
+                    </div>
+                    <div id="viewSubmissionHeaderActions" class="flex items-center gap-2"></div>
+                </div>
+
+                <div id="viewSubmissionMediaMobile" class="lg:hidden bg-slate-100 border-b border-slate-200 hidden"></div>
+
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
+                    <div class="p-4 lg:p-6 space-y-6">
+                        <div>
+                            <h2 id="viewSubmissionTitle" class="text-2xl lg:text-3xl font-black text-slate-900 leading-tight"></h2>
+                            <div class="mt-3 flex flex-wrap items-center gap-3 text-sm text-slate-400">
+                                <span id="viewSubmissionAuthor"></span>
+                                <span>•</span>
+                                <span id="viewSubmissionDate"></span>
+                            </div>
+                        </div>
+
+                        <div id="viewSubmissionReviewNotice" class="hidden rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"></div>
+
+                        <div>
+                            <h3 class="text-sm font-black uppercase tracking-widest text-slate-400 mb-3">Description</h3>
+                            <div id="viewSubmissionDescription" class="prose prose-slate max-w-none text-slate-700 whitespace-pre-wrap leading-relaxed"></div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <h3 class="text-sm font-black uppercase tracking-widest text-slate-400">Attachments</h3>
+                                <span id="viewSubmissionAttachmentCount" class="text-xs font-bold text-slate-400"></span>
+                            </div>
+                            <div id="viewSubmissionAttachments" class="space-y-3"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1550,6 +1683,7 @@ const app = {
     posts: [],
     archivePosts: [],
     archiveAuthors: [],
+    submissions: [],
     currentPost: null,
     currentTab: 'board',
     lastUnreadCount: 0,
@@ -1587,8 +1721,20 @@ function canAccessIdeasWorkspace() {
     return !isDesignerRole(app.user?.role);
 }
 
+function canAccessSubmissionsWorkspace() {
+    return ['designer', 'admin', 'manager'].includes(canonicalRole(app.user?.role));
+}
+
+function isSubmissionDesignerView() {
+    return canonicalRole(app.user?.role) === 'designer';
+}
+
+function getSubmissionsTabLabel() {
+    return isSubmissionDesignerView() ? 'My Submissions' : 'Designer Submissions';
+}
+
 function getAvailableTabs() {
-    const tabs = ['dashboard', 'board', 'calendar', 'users'];
+    const tabs = ['dashboard', 'board', 'calendar', 'submissions', 'users'];
     if (canAccessIdeasWorkspace()) tabs.splice(3, 0, 'ideas');
     return tabs;
 }
@@ -1613,6 +1759,23 @@ function getRoleBadgeClasses(role) {
     if (normalized === 'admin') return 'bg-purple-100 text-purple-700';
     if (normalized === 'manager') return 'bg-blue-100 text-blue-700';
     return 'bg-slate-100 text-slate-700';
+}
+
+function getSubmissionStatusMeta(status) {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'pending') {
+        return { label: 'Pending', classes: 'bg-amber-100 text-amber-700 border-amber-200' };
+    }
+    if (normalized === 'changes_requested') {
+        return { label: 'Changes Requested', classes: 'bg-rose-100 text-rose-700 border-rose-200' };
+    }
+    if (normalized === 'converted') {
+        return { label: 'Converted', classes: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+    }
+    if (normalized === 'rejected') {
+        return { label: 'Rejected', classes: 'bg-slate-200 text-slate-700 border-slate-300' };
+    }
+    return { label: status || 'Unknown', classes: 'bg-slate-100 text-slate-700 border-slate-200' };
 }
 
 function canCurrentUserUploadDesign(post) {
@@ -1723,6 +1886,10 @@ async function init() {
             if (app.currentTab !== 'board') return;
             refreshBoardContent(true);
         }, 10000);
+        setInterval(() => {
+            if (app.currentTab !== 'submissions') return;
+            refreshSubmissionsContent(true);
+        }, 3000);
 
         // Initialize audio context on first user interaction
         const unlockAudio = () => {
@@ -1777,6 +1944,7 @@ async function loadUser() {
     const data = await api('get_user');
     if (data.success) {
         app.user = data.data;
+        const submissionsLabel = getSubmissionsTabLabel();
         document.getElementById('userName').textContent = data.data.full_name || data.data.username;
         document.getElementById('userRole').textContent = getRoleLabel(data.data.role);
         document.getElementById('userAvatar').textContent = (data.data.full_name || data.data.username)[0].toUpperCase();
@@ -1784,6 +1952,17 @@ async function loadUser() {
         if (canonicalRole(data.data.role) === 'manager') document.getElementById('managerLogsLink').classList.remove('hidden');
         document.getElementById('tabIdeas')?.classList.toggle('hidden', isDesignerRole(data.data.role));
         document.getElementById('newPostButton')?.classList.toggle('hidden', isDesignerRole(data.data.role));
+        document.getElementById('tabSubmissionsLabel').textContent = submissionsLabel;
+        document.getElementById('submissionsHeading').innerHTML = `<span class="text-3xl">📥</span> ${escapeHtml(submissionsLabel)}`;
+        document.getElementById('submissionsSubtitle').textContent = isDesignerRole(data.data.role)
+            ? 'Submit creative work for the team without creating posts directly.'
+            : 'Review designer work and convert the best submissions into draft posts.';
+        document.getElementById('newSubmissionButton')?.classList.toggle('hidden', !isDesignerRole(data.data.role));
+        document.getElementById('submissionsEmptyTitle').textContent = isDesignerRole(data.data.role) ? 'No submissions yet' : 'No designer submissions yet';
+        document.getElementById('submissionsEmptyBody').textContent = isDesignerRole(data.data.role)
+            ? 'Share your first concept, asset, or design so the team can review it.'
+            : 'Designer contributions will appear here once they are submitted.';
+        document.getElementById('submissionsEmptyAction')?.classList.toggle('hidden', !isDesignerRole(data.data.role));
 
         // Update company branding (use white logo for dark sidebar)
         if (data.data.company_logo) {
@@ -1816,8 +1995,15 @@ async function logout() {
 }
 
 function switchTab(tab) {
-    const allTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
-    const titles = { dashboard: 'Dashboard', board: 'Content Board', calendar: 'Calendar', ideas: 'My Ideas', users: 'User Management' };
+    const allTabs = ['dashboard', 'board', 'calendar', 'submissions', 'ideas', 'users'];
+    const titles = {
+        dashboard: 'Dashboard',
+        board: 'Content Board',
+        calendar: 'Calendar',
+        submissions: getSubmissionsTabLabel(),
+        ideas: 'My Ideas',
+        users: 'User Management'
+    };
     tab = normalizeAppTab(tab);
     app.currentTab = tab;
     document.getElementById('boardModeSidebar')?.classList.toggle('hidden', tab !== 'board');
@@ -1846,8 +2032,762 @@ function switchTab(tab) {
         refreshBoardContent();
     }
     if (tab === 'calendar') loadCalendar();
+    if (tab === 'submissions') refreshSubmissionsContent();
     if (tab === 'ideas') loadIdeas();
     if (tab === 'users') loadUsers();
+}
+
+// ==================== DESIGNER SUBMISSIONS ====================
+let currentSubmissionAttachments = [];
+let pendingSubmissionFiles = [];
+let currentViewSubmission = null;
+
+function isSubmissionEditable(submission) {
+    return isSubmissionDesignerView()
+        && Number(submission?.created_by) === Number(app.user?.id)
+        && submission?.status === 'changes_requested';
+}
+
+function getSubmissionAttachmentIcon(attachment) {
+    const mime = attachment?.mime_type || '';
+    const path = attachment?.file_path || '';
+    if (mime.startsWith('image/')) return 'fa-regular fa-image';
+    if (mime.startsWith('video/') || isVideoFile(path)) return 'fa-solid fa-film';
+    if (mime.includes('zip')) return 'fa-solid fa-file-zipper';
+    if (mime.includes('pdf')) return 'fa-regular fa-file-pdf';
+    return 'fa-regular fa-file-lines';
+}
+
+function isSubmissionImage(attachment) {
+    return (attachment?.mime_type || '').startsWith('image/');
+}
+
+function isSubmissionVideo(attachment) {
+    return (attachment?.mime_type || '').startsWith('video/') || isVideoFile(attachment?.file_path || '');
+}
+
+function formatSubmissionDate(dateString) {
+    return dateString
+        ? new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        : '';
+}
+
+function renderSubmissionCardMedia(attachments) {
+    const mediaList = (attachments || []).filter(item => isSubmissionImage(item) || isSubmissionVideo(item));
+    if (!mediaList.length) return '';
+
+    if (mediaList.length === 1) {
+        const media = mediaList[0];
+        if (isSubmissionVideo(media)) {
+            return `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 transition-colors flex-shrink-0 relative"><video src="${media.file_path}" class="w-full h-full object-cover" muted></video><div class="absolute inset-0 flex items-center justify-center bg-black/10"><div class="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center shadow-sm"><i class="fa-solid fa-play text-[8px] text-slate-800 ml-0.5"></i></div></div></div>`;
+        }
+        return `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 transition-colors flex-shrink-0"><img src="${media.file_path}" class="w-full h-full object-cover"></div>`;
+    }
+
+    if (mediaList.length === 2) {
+        return `<div class="h-40 w-full grid grid-cols-2 gap-0.5 overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 transition-colors flex-shrink-0">
+            ${mediaList.map(media => isSubmissionVideo(media)
+                ? `<div class="relative w-full h-full"><video src="${media.file_path}" class="w-full h-full object-cover" muted></video><div class="absolute inset-0 flex items-center justify-center bg-black/10"><i class="fa-solid fa-play text-[8px] text-white"></i></div></div>`
+                : `<img src="${media.file_path}" class="w-full h-full object-cover" alt="">`
+            ).join('')}
+        </div>`;
+    }
+
+    const primaryMedia = mediaList[0];
+    const extraCount = mediaList.length - 1;
+    return `<div class="h-40 w-full overflow-hidden bg-slate-100 mb-3 rounded border border-slate-100 transition-colors flex-shrink-0 relative">
+        ${isSubmissionVideo(primaryMedia)
+            ? `<video src="${primaryMedia.file_path}" class="w-full h-full object-cover" muted></video>`
+            : `<img src="${primaryMedia.file_path}" class="w-full h-full object-cover" alt="">`
+        }
+        <div class="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 backdrop-blur-sm">
+            <i class="fa-regular fa-clone"></i> +${extraCount}
+        </div>
+    </div>`;
+}
+
+function renderQueuedSubmissionFilePreview(file) {
+    if (!file) return '';
+    const previewUrl = URL.createObjectURL(file);
+
+    if ((file.type || '').startsWith('image/')) {
+        return `<img src="${previewUrl}" class="h-full w-full object-cover" alt="">`;
+    }
+
+    if ((file.type || '').startsWith('video/')) {
+        return `
+            <div class="relative h-full w-full">
+                <video src="${previewUrl}" class="h-full w-full object-cover" muted></video>
+                <div class="absolute inset-0 flex items-center justify-center bg-slate-900/20">
+                    <i class="fa-solid fa-play text-xs text-white"></i>
+                </div>
+            </div>
+        `;
+    }
+
+    return `<div class="flex h-full w-full items-center justify-center text-slate-400"><i class="fa-regular fa-file-lines"></i></div>`;
+}
+
+function renderSubmissionAttachmentsList(attachments, limit = 3) {
+    if (!attachments?.length) {
+        return '<p class="text-xs text-slate-400">No attachments</p>';
+    }
+
+    return `
+        <div class="flex flex-wrap gap-2">
+            ${attachments.slice(0, limit).map(attachment => `
+                <a href="${attachment.file_path}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600 hover:border-cyan-200 hover:bg-cyan-50 hover:text-cyan-700 transition-colors">
+                    <i class="${getSubmissionAttachmentIcon(attachment)}"></i>
+                    <span>${escapeHtml(attachment.original_name || 'Attachment')}</span>
+                </a>
+            `).join('')}
+            ${attachments.length > limit ? `<span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">+${attachments.length - limit} more</span>` : ''}
+        </div>
+    `;
+}
+
+function getSubmissionViewStatusBadge(status) {
+    const normalized = (status || '').toLowerCase();
+    if (normalized === 'pending') return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (normalized === 'changes_requested') return 'bg-rose-50 text-rose-700 border-rose-200';
+    if (normalized === 'converted') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (normalized === 'rejected') return 'bg-slate-100 text-slate-700 border-slate-200';
+    return 'bg-slate-100 text-slate-700 border-slate-200';
+}
+
+function getSubmissionReviewerName(submission) {
+    return submission?.reviewed_by_full_name || submission?.reviewed_by_username || '';
+}
+
+function getSubmissionDecisionText(submission) {
+    const reviewerName = getSubmissionReviewerName(submission);
+    const normalized = (submission?.status || '').toLowerCase();
+
+    if (!reviewerName || normalized === 'pending') {
+        return '';
+    }
+
+    if (normalized === 'changes_requested') {
+        return `Changes requested by ${reviewerName}`;
+    }
+
+    if (normalized === 'rejected') {
+        return `Rejected by ${reviewerName}`;
+    }
+
+    if (normalized === 'converted') {
+        return `Converted by ${reviewerName}`;
+    }
+
+    return reviewerName;
+}
+
+async function loadSubmissions(checkChanges = false) {
+    if (!canAccessSubmissionsWorkspace()) {
+        app.submissions = [];
+        closeSubmissionModal();
+        if (window.location.hash === '#submissions') {
+            switchTab('board');
+        }
+        return;
+    }
+
+    try {
+        const scrollPos = window.scrollY;
+        const data = await api('get_designer_submissions');
+        if (!data.success) {
+            toast(data.message || 'Failed to load submissions', 'error');
+            return;
+        }
+
+        app.submissions = data.data || [];
+        renderSubmissions();
+        if (checkChanges) window.scrollTo(0, scrollPos);
+    } catch (error) {
+        console.error('Failed to load submissions:', error);
+        toast('Failed to load submissions', 'error');
+    }
+}
+
+function refreshSubmissionsContent(checkChanges = false) {
+    return loadSubmissions(checkChanges);
+}
+
+function renderSubmissions() {
+    const grid = document.getElementById('submissionsGrid');
+    const emptyState = document.getElementById('submissionsEmptyState');
+
+    if (!app.submissions.length) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+
+    grid.innerHTML = app.submissions.map(submission => {
+        const statusConfig = {
+            pending: { border: 'border-amber-400', label: 'Pending', text: 'text-amber-700', pill: 'bg-amber-50 text-amber-600' },
+            changes_requested: { border: 'border-rose-400', label: 'Revise', text: 'text-rose-700', pill: 'bg-rose-50 text-rose-700' },
+            converted: { border: 'border-emerald-400', label: 'Converted', text: 'text-emerald-700', pill: 'bg-emerald-50 text-emerald-600' },
+            rejected: { border: 'border-slate-400', label: 'Rejected', text: 'text-slate-700', pill: 'bg-slate-100 text-slate-600' }
+        };
+        const statusMeta = getSubmissionStatusMeta(submission.status);
+        const cardStatus = statusConfig[(submission.status || '').toLowerCase()] || statusConfig.pending;
+        const createdBy = submission.created_by_full_name || submission.created_by_username || 'Designer';
+        const decisionText = getSubmissionDecisionText(submission);
+        const description = submission.description || '';
+        const preview = description.length > 140 ? `${description.slice(0, 140)}...` : description;
+        const mediaStrip = renderSubmissionCardMedia(submission.attachments || []);
+        const attachmentCount = (submission.attachments || []).length;
+        const reviewComment = submission.review_comment
+            ? `<div class="flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded mb-2"><i class="fa-solid fa-circle-exclamation"></i> ${escapeHtml(submission.review_comment)}</div>`
+            : '';
+
+        let actionsHtml = '';
+        if (isSubmissionDesignerView()) {
+            actionsHtml = isSubmissionEditable(submission)
+                ? `<button onclick="event.stopPropagation(); openSubmissionModal(${submission.id})" class="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-3 py-2 text-xs font-bold text-white hover:bg-cyan-700 transition-colors">
+                        <i class="fa-solid fa-pen-to-square"></i> Edit & Resubmit
+                   </button>`
+                : `<span class="text-xs font-semibold text-slate-400">${statusMeta.label}</span>`;
+        } else if (submission.status === 'pending') {
+            actionsHtml = `
+                <button onclick="event.stopPropagation(); convertSubmissionToPost(${submission.id})" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    Convert to Post
+                </button>
+                <button onclick="event.stopPropagation(); requestSubmissionChanges(${submission.id})" class="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 transition-colors">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Request Changes
+                </button>
+                <button onclick="event.stopPropagation(); rejectSubmission(${submission.id})" class="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-ban"></i>
+                    Reject
+                </button>
+            `;
+        } else {
+            actionsHtml = `<span class="text-xs font-semibold text-slate-400">${statusMeta.label}</span>`;
+        }
+
+        return `
+            <div class="group bg-white rounded-lg p-4 border border-slate-200 border-t-4 ${cardStatus.border} hover:shadow-md transition-all h-96 flex flex-col cursor-pointer" onclick="openSubmissionViewModal(${submission.id})">
+                <div class="flex items-center justify-between mb-3 flex-shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">${cardStatus.label}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-300 font-medium">${formatSubmissionDate(submission.created_at)}</span>
+                </div>
+
+                ${reviewComment}
+                ${mediaStrip}
+
+                <div class="flex-1 min-h-0 flex flex-col">
+                    <h4 class="text-sm font-bold text-slate-800 mb-1 leading-snug line-clamp-2">${escapeHtml(submission.title || 'Untitled Submission')}</h4>
+                    <p class="text-[11px] text-slate-500 leading-relaxed line-clamp-3 overflow-hidden">${escapeHtml(preview || 'No description provided.')}</p>
+                    <div class="flex-grow"></div>
+                </div>
+
+                <div class="flex items-center justify-between pt-3 mt-2 border-t border-slate-50 flex-shrink-0">
+                    <div class="flex items-center gap-2 text-xs">
+                        ${attachmentCount > 0 ? `<div class="flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded"><i class="fa-regular fa-clone"></i> ${attachmentCount}</div>` : ''}
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <div class="flex items-center gap-1.5 mb-0.5">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">${createdBy?.split(' ')?.[0] || 'Team'}</span>
+                        </div>
+                        <span class="text-[9px] text-slate-300 font-medium">${escapeHtml(decisionText || statusMeta.label)}</span>
+                    </div>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-2 flex-shrink-0">
+                    ${actionsHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderSubmissionAttachmentsPreview() {
+    const container = document.getElementById('submissionAttachmentsPreview');
+    if (!container) return;
+
+    const existingHtml = currentSubmissionAttachments.map(attachment => `
+        <div class="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <a href="${attachment.file_path}" target="_blank" rel="noopener" class="min-w-0 flex flex-1 items-center gap-3 text-sm font-medium text-slate-700 hover:text-cyan-700 transition-colors">
+                <div class="h-14 w-14 overflow-hidden rounded-lg bg-white border border-slate-200 flex-shrink-0">
+                    ${isSubmissionVideo(attachment)
+                        ? `<div class="relative h-full w-full">
+                               <video src="${attachment.file_path}" class="h-full w-full object-cover" muted></video>
+                               <div class="absolute inset-0 flex items-center justify-center bg-slate-900/20">
+                                   <i class="fa-solid fa-play text-xs text-white"></i>
+                               </div>
+                           </div>`
+                        : isSubmissionImage(attachment)
+                            ? `<img src="${attachment.file_path}" class="h-full w-full object-cover" alt="">`
+                            : `<div class="flex h-full w-full items-center justify-center text-slate-400"><i class="${getSubmissionAttachmentIcon(attachment)}"></i></div>`
+                    }
+                </div>
+                <span class="min-w-0">
+                    <span class="inline-flex items-center gap-2">
+                        <i class="${getSubmissionAttachmentIcon(attachment)} text-slate-400"></i>
+                        <span class="truncate">${escapeHtml(attachment.original_name || 'Attachment')}</span>
+                    </span>
+                </span>
+            </a>
+            <button type="button" onclick="deleteSubmissionAttachment(${attachment.id})" class="rounded-full bg-white px-2 py-1 text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                Remove
+            </button>
+        </div>
+    `).join('');
+
+    const queuedHtml = pendingSubmissionFiles.map((file, index) => `
+        <div class="flex items-center justify-between gap-3 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2">
+            <div class="min-w-0 flex flex-1 items-center gap-3 text-sm font-medium text-cyan-800">
+                <div class="h-14 w-14 overflow-hidden rounded-lg bg-white border border-cyan-200 flex-shrink-0">
+                    ${renderQueuedSubmissionFilePreview(file)}
+                </div>
+                <div class="min-w-0">
+                    <span class="inline-flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-cyan-500"></i>
+                        <span class="truncate">${escapeHtml(file.name)}</span>
+                    </span>
+                    <div class="mt-1 text-xs text-cyan-600">Will upload after saving the submission</div>
+                </div>
+            </div>
+            <button type="button" onclick="removeQueuedSubmissionFile(${index})" class="rounded-full bg-white px-2 py-1 text-xs font-bold text-slate-500 hover:bg-slate-100 transition-colors">
+                Remove
+            </button>
+        </div>
+    `).join('');
+
+    container.innerHTML = existingHtml + queuedHtml || '<p class="text-sm text-slate-400">No attachments yet.</p>';
+}
+
+function openSubmissionModal(submissionId = null) {
+    if (!isSubmissionDesignerView()) {
+        toast('Only designers can create or edit submissions.', 'info');
+        return;
+    }
+
+    document.getElementById('submissionId').value = '';
+    document.getElementById('submissionTitle').value = '';
+    document.getElementById('submissionDescription').value = '';
+    currentSubmissionAttachments = [];
+    pendingSubmissionFiles = [];
+
+    const hint = document.getElementById('submissionStatusHint');
+    hint.classList.add('hidden');
+    hint.textContent = '';
+
+    if (submissionId) {
+        const submission = app.submissions.find(item => Number(item.id) === Number(submissionId));
+        if (!submission) return;
+        if (!isSubmissionEditable(submission)) {
+            toast('Only submissions with requested changes can be edited.', 'info');
+            return;
+        }
+
+        document.getElementById('submissionId').value = submission.id;
+        document.getElementById('submissionTitle').value = submission.title || '';
+        document.getElementById('submissionDescription').value = submission.description || '';
+        currentSubmissionAttachments = [...(submission.attachments || [])];
+        document.getElementById('submissionModalTitle').innerHTML = '<span>✏️</span> Edit Submission';
+
+        if (submission.review_comment) {
+            hint.textContent = `Reviewer note: ${submission.review_comment}`;
+            hint.classList.remove('hidden');
+        }
+    } else {
+        document.getElementById('submissionModalTitle').innerHTML = '<span>📥</span> New Submission';
+    }
+
+    renderSubmissionAttachmentsPreview();
+    document.getElementById('submissionModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeSubmissionModal() {
+    document.getElementById('submissionModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+    currentSubmissionAttachments = [];
+    pendingSubmissionFiles = [];
+    document.getElementById('submissionFileInput').value = '';
+}
+
+async function saveSubmission() {
+    if (!isSubmissionDesignerView()) return;
+
+    const submissionId = document.getElementById('submissionId').value;
+    const title = document.getElementById('submissionTitle').value.trim();
+    const description = document.getElementById('submissionDescription').value.trim();
+
+    if (!title) {
+        toast('Please add a title for the submission.', 'error');
+        return;
+    }
+
+    try {
+        const action = submissionId ? 'update_designer_submission' : 'create_designer_submission';
+        const payload = { title, description };
+        if (submissionId) payload.id = Number(submissionId);
+
+        const data = await api(action, 'POST', payload);
+        if (!data.success) {
+            toast(data.message || 'Failed to save submission', 'error');
+            return;
+        }
+
+        const persistedSubmissionId = data.data?.id || Number(submissionId);
+        for (const file of pendingSubmissionFiles) {
+            await uploadSubmissionAttachment(persistedSubmissionId, file, false);
+        }
+
+        toast(submissionId ? 'Submission resubmitted successfully' : 'Submission created successfully', 'success');
+        closeSubmissionModal();
+        await refreshSubmissionsContent();
+    } catch (error) {
+        console.error('Save submission error:', error);
+        toast('Failed to save submission', 'error');
+    }
+}
+
+function removeQueuedSubmissionFile(index) {
+    pendingSubmissionFiles.splice(index, 1);
+    renderSubmissionAttachmentsPreview();
+}
+
+async function handleSubmissionFileSelect(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const submissionId = document.getElementById('submissionId').value;
+
+    if (!submissionId) {
+        pendingSubmissionFiles.push(...files);
+        renderSubmissionAttachmentsPreview();
+        event.target.value = '';
+        return;
+    }
+
+    for (const file of files) {
+        await uploadSubmissionAttachment(submissionId, file);
+    }
+
+    await refreshSubmissionsContent();
+    const updatedSubmission = app.submissions.find(item => Number(item.id) === Number(submissionId));
+    currentSubmissionAttachments = [...(updatedSubmission?.attachments || [])];
+    renderSubmissionAttachmentsPreview();
+    event.target.value = '';
+}
+
+async function uploadSubmissionAttachment(submissionId, file, showToast = true) {
+    const formData = new FormData();
+    formData.append('submission_id', submissionId);
+    formData.append('file', file);
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+    const response = await fetch('api.php?action=upload_submission_attachment', {
+        method: 'POST',
+        body: formData,
+        headers: csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+        throw new Error(data.message || 'Upload failed');
+    }
+
+    if (showToast) {
+        toast('Attachment uploaded', 'success');
+    }
+
+    return data.data;
+}
+
+async function deleteSubmissionAttachment(attachmentId) {
+    if (!confirm('Delete this attachment?')) return;
+
+    try {
+        const data = await api(`delete_submission_attachment&id=${attachmentId}`, 'GET');
+        if (!data.success) {
+            toast(data.message || 'Failed to delete attachment', 'error');
+            return;
+        }
+
+        currentSubmissionAttachments = currentSubmissionAttachments.filter(attachment => Number(attachment.id) !== Number(attachmentId));
+        renderSubmissionAttachmentsPreview();
+        refreshSubmissionsContent();
+        toast('Attachment removed', 'success');
+    } catch (error) {
+        console.error('Delete submission attachment error:', error);
+        toast('Failed to delete attachment', 'error');
+    }
+}
+
+async function requestSubmissionChanges(submissionId) {
+    const comment = prompt('What changes should the designer make?\n\nThis note will be sent to the designer.') ?? null;
+    if (comment === null) return;
+
+    const data = await api('request_submission_changes', 'POST', { submission_id: submissionId, comment: comment.trim() });
+    if (data.success) {
+        toast('Changes requested', 'success');
+        refreshSubmissionsContent();
+    } else {
+        toast(data.message || 'Failed to request changes', 'error');
+    }
+}
+
+async function rejectSubmission(submissionId) {
+    const reason = prompt('Optional rejection reason:') ?? null;
+    if (reason === null) return;
+
+    const data = await api('reject_submission', 'POST', { submission_id: submissionId, reason: reason.trim() });
+    if (data.success) {
+        toast('Submission rejected', 'success');
+        refreshSubmissionsContent();
+    } else {
+        toast(data.message || 'Failed to reject submission', 'error');
+    }
+}
+
+async function convertSubmissionToPost(submissionId) {
+    if (!confirm('Convert this submission into a Draft post?')) return;
+
+    const data = await api('convert_submission_to_post', 'POST', { submission_id: submissionId });
+    if (data.success) {
+        toast('Submission converted into a draft post', 'success');
+        await Promise.all([refreshSubmissionsContent(), loadPosts()]);
+    } else {
+        toast(data.message || 'Failed to convert submission', 'error');
+    }
+}
+
+async function deleteSubmission(submissionId, shouldCloseViewer = false) {
+    if (!confirm('Delete this submission?\n\nThis action cannot be undone.')) return;
+
+    const data = await api(`delete_designer_submission&id=${submissionId}`, 'GET');
+    if (data.success) {
+        if (shouldCloseViewer) {
+            closeViewSubmissionModal();
+        }
+        toast('Submission deleted', 'success');
+        await refreshSubmissionsContent();
+    } else {
+        toast(data.message || 'Failed to delete submission', 'error');
+    }
+}
+
+function renderSubmissionViewerMedia(attachments, isMobile) {
+    const media = (attachments || []).filter(item => isSubmissionImage(item) || isSubmissionVideo(item));
+    if (!media.length) return '';
+
+    const slides = media.map((item, idx) => {
+        const isVid = isSubmissionVideo(item);
+        const isActive = idx === 0 ? '' : 'hidden';
+        const heightClass = isMobile ? 'max-h-96' : 'max-h-full h-auto';
+        const objectClass = isMobile ? 'object-contain bg-slate-100' : 'object-contain';
+
+        return `<div class="submission-media-slide w-full h-full flex items-center justify-center transition-opacity duration-300 ${isActive}" data-index="${idx}">
+            ${isVid
+                ? `<video src="${item.file_path}" controls playsinline webkit-playsinline class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm bg-black"></video>`
+                : `<img src="${item.file_path}" class="w-full ${heightClass} ${objectClass} rounded-lg shadow-sm mx-auto" alt="">`
+            }
+        </div>`;
+    }).join('');
+
+    if (media.length === 1) return slides;
+
+    const key = isMobile ? 'submission-mo' : 'submission-dt';
+
+    return `
+        <div class="relative w-full h-full group">
+            <div class="w-full h-full flex items-center justify-center" id="submissionCarouselSlides-${key}">
+                ${slides}
+            </div>
+            <button onclick="changeSubmissionMediaSlide(-1, '${key}')" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button onclick="changeSubmissionMediaSlide(1, '${key}')" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
+                ${media.map((_, i) => `<div class="w-1.5 h-1.5 rounded-full transition-colors pointer-events-auto ${i === 0 ? 'bg-white' : 'bg-white/40'}" id="submission-dot-${key}-${i}"></div>`).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function changeSubmissionMediaSlide(dir, key) {
+    const container = document.getElementById(`submissionCarouselSlides-${key}`);
+    if (!container) return;
+
+    const slides = container.querySelectorAll('.submission-media-slide');
+    let currentIndex = Array.from(slides).findIndex(slide => !slide.classList.contains('hidden'));
+    if (currentIndex < 0) currentIndex = 0;
+
+    slides[currentIndex].classList.add('hidden');
+
+    let nextIndex = currentIndex + dir;
+    if (nextIndex >= slides.length) nextIndex = 0;
+    if (nextIndex < 0) nextIndex = slides.length - 1;
+
+    slides[nextIndex].classList.remove('hidden');
+
+    const dots = document.querySelectorAll(`[id^="submission-dot-${key}-"]`);
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('bg-white', index === nextIndex);
+        dot.classList.toggle('bg-white/40', index !== nextIndex);
+    });
+}
+
+function renderSubmissionViewAttachments(submission) {
+    const container = document.getElementById('viewSubmissionAttachments');
+    const countEl = document.getElementById('viewSubmissionAttachmentCount');
+    if (!container || !countEl) return;
+
+    const attachments = submission.attachments || [];
+    countEl.textContent = `${attachments.length} file${attachments.length === 1 ? '' : 's'}`;
+
+    container.innerHTML = attachments.map(attachment => {
+        const uploaderName = attachment.full_name || attachment.username || 'Unknown';
+        const sizeLabel = attachment.file_size ? `${(attachment.file_size / (1024 * 1024)).toFixed(1)} MB` : '';
+        const previewThumb = isSubmissionVideo(attachment)
+            ? `<div class="relative h-16 w-16 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0">
+                    <video src="${attachment.file_path}" class="h-full w-full object-cover" muted></video>
+                    <div class="absolute inset-0 flex items-center justify-center bg-slate-900/20">
+                        <i class="fa-solid fa-play text-xs text-white"></i>
+                    </div>
+               </div>`
+            : isSubmissionImage(attachment)
+                ? `<div class="h-16 w-16 overflow-hidden rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0">
+                        <img src="${attachment.file_path}" class="h-full w-full object-cover" alt="">
+                   </div>`
+                : `<div class="h-16 w-16 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 flex-shrink-0">
+                        <i class="${getSubmissionAttachmentIcon(attachment)}"></i>
+                   </div>`;
+
+        return `
+            <div class="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4">
+                ${previewThumb}
+                <div class="min-w-0 flex-1">
+                    <div class="text-base font-bold text-slate-800 truncate">${escapeHtml(attachment.original_name || 'Attachment')}</div>
+                    <div class="mt-1 text-sm text-slate-400">Uploaded by ${escapeHtml(uploaderName)}${sizeLabel ? ` • ${sizeLabel}` : ''}</div>
+                </div>
+                <a href="${attachment.file_path}" target="_blank" rel="noopener" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-colors flex-shrink-0">
+                    Download
+                </a>
+            </div>
+        `;
+    }).join('') || '<p class="text-slate-400 text-center py-4">No attachments found.</p>';
+}
+
+function renderSubmissionViewActions(submission) {
+    const container = document.getElementById('viewSubmissionHeaderActions');
+    if (!container) return;
+
+    const actions = [];
+    if (isSubmissionEditable(submission)) {
+        actions.push(`<button onclick="closeViewSubmissionModal(); openSubmissionModal(${submission.id})" class="px-4 py-2 rounded-xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-colors">Edit</button>`);
+    }
+    if (isSubmissionDesignerView() && (submission.status || '').toLowerCase() !== 'converted') {
+        actions.push(`<button onclick="deleteSubmission(${submission.id}, true)" class="px-4 py-2 rounded-xl bg-white text-red-500 text-sm font-bold border border-red-200 hover:bg-red-50 transition-colors">Delete</button>`);
+    }
+    container.innerHTML = actions.join('');
+}
+
+function openSubmissionViewModal(submissionId) {
+    const submission = app.submissions.find(item => Number(item.id) === Number(submissionId));
+    if (!submission) return;
+
+    currentViewSubmission = submission;
+
+    const statusBadge = document.getElementById('viewSubmissionStatusBadge');
+    const titleEl = document.getElementById('viewSubmissionTitle');
+    const authorEl = document.getElementById('viewSubmissionAuthor');
+    const dateEl = document.getElementById('viewSubmissionDate');
+    const descEl = document.getElementById('viewSubmissionDescription');
+    const noticeEl = document.getElementById('viewSubmissionReviewNotice');
+    const mediaColumn = document.getElementById('viewSubmissionMediaColumn');
+    const mediaWrapper = document.getElementById('viewSubmissionMediaWrapper');
+    const mediaMobile = document.getElementById('viewSubmissionMediaMobile');
+    const modalContainer = document.getElementById('viewSubmissionModalContainer');
+    const contentColumn = document.getElementById('viewSubmissionContentColumn');
+
+    if (statusBadge) {
+        const meta = getSubmissionStatusMeta(submission.status);
+        statusBadge.textContent = meta.label;
+        statusBadge.className = `px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex-shrink-0 border ${getSubmissionViewStatusBadge(submission.status)}`;
+    }
+
+    if (titleEl) titleEl.textContent = submission.title || 'Untitled Submission';
+    if (authorEl) authorEl.textContent = submission.created_by_full_name || submission.created_by_username || 'Designer';
+    if (dateEl) {
+        dateEl.textContent = new Date(submission.created_at).toLocaleString('en-US', {
+            month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+    }
+    if (descEl) descEl.textContent = submission.description || 'No description provided.';
+
+    if (noticeEl) {
+        const decisionText = getSubmissionDecisionText(submission);
+        if (submission.review_comment || decisionText) {
+            noticeEl.textContent = [decisionText, submission.review_comment].filter(Boolean).join(' — ');
+            noticeEl.classList.remove('hidden');
+        } else {
+            noticeEl.classList.add('hidden');
+            noticeEl.textContent = '';
+        }
+    }
+
+    const hasMedia = (submission.attachments || []).some(item => isSubmissionImage(item) || isSubmissionVideo(item));
+    const isMobile = window.innerWidth < 1024;
+
+    if (hasMedia) {
+        modalContainer?.classList.remove('max-w-2xl');
+        modalContainer?.classList.add('max-w-7xl');
+        contentColumn?.classList.remove('lg:w-full');
+        contentColumn?.classList.add('lg:w-[52%]');
+
+        if (!isMobile) {
+            mediaColumn?.classList.remove('hidden');
+            mediaColumn?.classList.add('lg:flex');
+            if (mediaWrapper) mediaWrapper.innerHTML = renderSubmissionViewerMedia(submission.attachments || [], false);
+            if (mediaMobile) {
+                mediaMobile.classList.add('hidden');
+                mediaMobile.innerHTML = '';
+            }
+        } else {
+            mediaColumn?.classList.add('hidden');
+            mediaColumn?.classList.remove('lg:flex');
+            if (mediaWrapper) mediaWrapper.innerHTML = '';
+            if (mediaMobile) {
+                mediaMobile.classList.remove('hidden');
+                mediaMobile.innerHTML = `<div class="p-6 flex justify-center">${renderSubmissionViewerMedia(submission.attachments || [], true)}</div>`;
+            }
+        }
+    } else {
+        modalContainer?.classList.remove('max-w-7xl');
+        modalContainer?.classList.add('max-w-2xl');
+        contentColumn?.classList.remove('lg:w-[52%]');
+        contentColumn?.classList.add('lg:w-full');
+        mediaColumn?.classList.add('hidden');
+        mediaColumn?.classList.remove('lg:flex');
+        if (mediaWrapper) mediaWrapper.innerHTML = '';
+        if (mediaMobile) {
+            mediaMobile.classList.add('hidden');
+            mediaMobile.innerHTML = '';
+        }
+    }
+
+    renderSubmissionViewAttachments(submission);
+    renderSubmissionViewActions(submission);
+    document.getElementById('viewSubmissionModal')?.classList.remove('hidden');
+}
+
+function closeViewSubmissionModal() {
+    document.getElementById('viewSubmissionModal')?.classList.add('hidden');
+    currentViewSubmission = null;
 }
 
 // ==================== IDEAS WORKSPACE ====================
@@ -3010,6 +3950,11 @@ async function loadDashboard() {
         'status_changed': { icon: '⟳', bg: 'bg-amber-50 text-amber-500', label: 'Status Update' },
         'comment_added': { icon: '💬', bg: 'bg-indigo-50 text-indigo-500', label: 'Internal Comms' },
         'media_uploaded': { icon: '📎', bg: 'bg-purple-50 text-purple-500', label: 'Media Injection' },
+        'submission_created': { icon: '📥', bg: 'bg-cyan-50 text-cyan-500', label: 'Submission Created' },
+        'submission_updated': { icon: '🛠', bg: 'bg-sky-50 text-sky-500', label: 'Submission Updated' },
+        'submission_changes_requested': { icon: '↺', bg: 'bg-amber-50 text-amber-500', label: 'Changes Requested' },
+        'submission_rejected': { icon: '⛔', bg: 'bg-slate-100 text-slate-500', label: 'Submission Rejected' },
+        'submission_converted': { icon: '⇢', bg: 'bg-emerald-50 text-emerald-500', label: 'Converted To Draft' },
         'deleted': { icon: '✕', bg: 'bg-red-50 text-red-500', label: 'Node Purged' },
     };
 
@@ -3027,8 +3972,10 @@ async function loadDashboard() {
             statusTransition = `<span class="ml-2 px-1.5 py-0.5 rounded-[4px] text-[8px] font-black text-white uppercase ${activityStatusColors[a.new_value] || 'bg-slate-400'}">${a.new_value.replace('_', ' ')}</span>`;
         }
 
+        const cardAction = a.post_id ? `onclick="openViewModal(${a.post_id})"` : '';
+
         return `
-        <div class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-100 hover:shadow-md transition-all cursor-pointer group" onclick="openViewModal(${a.post_id})">
+        <div class="p-4 bg-white border border-slate-100 rounded-2xl hover:border-brand-100 hover:shadow-md transition-all ${a.post_id ? 'cursor-pointer' : ''} group" ${cardAction}>
             <div class="flex items-start gap-3">
                 <div class="w-10 h-10 ${config.bg} rounded-xl flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-110 transition-transform">${config.icon}</div>
                 <div class="flex-1 min-w-0">
@@ -3040,7 +3987,7 @@ async function loadDashboard() {
                         ${config.label} ${statusTransition}
                     </div>
                     <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-50 group-hover:bg-slate-100 transition-colors">
-                        <div class="text-[11px] font-bold text-slate-700 truncate">${escapeHtml(a.post_title)}</div>
+                        <div class="text-[11px] font-bold text-slate-700 truncate">${escapeHtml(a.post_title || a.description || 'Submission activity')}</div>
                     </div>
                 </div>
             </div>

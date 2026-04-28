@@ -377,6 +377,42 @@ INSERT INTO `media_files` (`id`, `post_id`, `original_name`, `file_name`, `file_
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `designer_submissions`
+--
+
+CREATE TABLE `designer_submissions` (
+  `id` int(11) NOT NULL,
+  `company_id` int(11) NOT NULL DEFAULT 1,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `status` enum('pending','changes_requested','converted','rejected') NOT NULL DEFAULT 'pending',
+  `review_comment` text DEFAULT NULL,
+  `reviewed_by` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `submission_attachments`
+--
+
+CREATE TABLE `submission_attachments` (
+  `id` int(11) NOT NULL,
+  `submission_id` int(11) NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `original_name` varchar(255) DEFAULT NULL,
+  `mime_type` varchar(100) DEFAULT NULL,
+  `file_size` bigint(20) DEFAULT NULL,
+  `uploaded_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `notifications`
 --
 
@@ -605,6 +641,9 @@ CREATE TABLE `posts` (
   `change_request_reason` text DEFAULT NULL,
   `change_requested_by` int(11) DEFAULT NULL,
   `change_requested_at` datetime DEFAULT NULL,
+  `source` varchar(50) DEFAULT NULL,
+  `source_id` int(11) DEFAULT NULL,
+  `submitted_by` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -842,6 +881,16 @@ ALTER TABLE `comments`
   ADD KEY `idx_post` (`post_id`);
 
 --
+-- Indexes for table `designer_submissions`
+--
+ALTER TABLE `designer_submissions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_designer_submissions_company` (`company_id`),
+  ADD KEY `idx_designer_submissions_created_by` (`created_by`),
+  ADD KEY `idx_designer_submissions_status` (`status`),
+  ADD KEY `idx_designer_submissions_reviewed_by` (`reviewed_by`);
+
+--
 -- Indexes for table `companies`
 --
 ALTER TABLE `companies`
@@ -880,10 +929,12 @@ ALTER TABLE `posts`
   ADD PRIMARY KEY (`id`),
   ADD KEY `reviewer_id` (`reviewer_id`),
   ADD KEY `change_requested_by` (`change_requested_by`),
+  ADD KEY `submitted_by` (`submitted_by`),
   ADD KEY `idx_status` (`status`),
   ADD KEY `idx_author` (`author_id`),
   ADD KEY `idx_posts_company` (`company_id`),
-  ADD KEY `idx_posts_archive` (`company_id`,`status`,`published_date`);
+  ADD KEY `idx_posts_archive` (`company_id`,`status`,`published_date`),
+  ADD KEY `idx_posts_source` (`source`,`source_id`);
 
 --
 -- Indexes for table `rate_limits`
@@ -901,6 +952,14 @@ ALTER TABLE `sessions`
   ADD UNIQUE KEY `session_token` (`session_token`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `idx_token` (`session_token`);
+
+--
+-- Indexes for table `submission_attachments`
+--
+ALTER TABLE `submission_attachments`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_submission_attachments_submission` (`submission_id`),
+  ADD KEY `idx_submission_attachments_uploaded_by` (`uploaded_by`);
 
 --
 -- Indexes for table `staff_ideas`
@@ -959,6 +1018,12 @@ ALTER TABLE `comments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
+-- AUTO_INCREMENT for table `designer_submissions`
+--
+ALTER TABLE `designer_submissions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `companies`
 --
 ALTER TABLE `companies`
@@ -998,6 +1063,12 @@ ALTER TABLE `rate_limits`
 -- AUTO_INCREMENT for table `sessions`
 --
 ALTER TABLE `sessions`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `submission_attachments`
+--
+ALTER TABLE `submission_attachments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -1050,6 +1121,14 @@ ALTER TABLE `comments`
   ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
+-- Constraints for table `designer_submissions`
+--
+ALTER TABLE `designer_submissions`
+  ADD CONSTRAINT `fk_designer_submissions_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
+  ADD CONSTRAINT `fk_designer_submissions_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_designer_submissions_reviewed_by` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+
+--
 -- Constraints for table `idea_media`
 --
 ALTER TABLE `idea_media`
@@ -1077,13 +1156,21 @@ ALTER TABLE `posts`
   ADD CONSTRAINT `fk_posts_company` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`),
   ADD CONSTRAINT `posts_ibfk_1` FOREIGN KEY (`author_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `posts_ibfk_2` FOREIGN KEY (`reviewer_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `posts_ibfk_3` FOREIGN KEY (`change_requested_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
+  ADD CONSTRAINT `posts_ibfk_3` FOREIGN KEY (`change_requested_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `posts_ibfk_4` FOREIGN KEY (`submitted_by`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `sessions`
 --
 ALTER TABLE `sessions`
   ADD CONSTRAINT `sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `submission_attachments`
+--
+ALTER TABLE `submission_attachments`
+  ADD CONSTRAINT `fk_submission_attachments_submission` FOREIGN KEY (`submission_id`) REFERENCES `designer_submissions` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_submission_attachments_uploaded_by` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `staff_ideas`

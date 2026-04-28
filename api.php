@@ -320,6 +320,99 @@ function getUserDisplayNameById($userId) {
     return trim($user['full_name'] ?: $user['username']);
 }
 
+function canManageDesignerSubmissions($user) {
+    return in_array(canonicalRole($user['role'] ?? ''), ['admin', 'manager'], true);
+}
+
+function getDesignerSubmissionById($submissionId) {
+    return fetchOne(
+        "SELECT ds.*, u.username AS created_by_username, u.full_name AS created_by_full_name,
+                reviewer.username AS reviewed_by_username, reviewer.full_name AS reviewed_by_full_name
+         FROM designer_submissions ds
+         JOIN users u ON ds.created_by = u.id
+         LEFT JOIN users reviewer ON ds.reviewed_by = reviewer.id
+         WHERE ds.id = ?",
+        [$submissionId]
+    );
+}
+
+function getSubmissionAttachments($submissionId) {
+    return fetchAll(
+        "SELECT sa.*, u.username, u.full_name
+         FROM submission_attachments sa
+         LEFT JOIN users u ON sa.uploaded_by = u.id
+         WHERE sa.submission_id = ?
+         ORDER BY sa.created_at DESC, sa.id DESC",
+        [$submissionId]
+    );
+}
+
+function hydrateDesignerSubmission($submission) {
+    if (!$submission) {
+        return null;
+    }
+
+    $submission['attachments'] = getSubmissionAttachments($submission['id']);
+    return $submission;
+}
+
+function canViewDesignerSubmission($user, $submission) {
+    if (!$user || !$submission) {
+        return false;
+    }
+
+    if ((int)$submission['company_id'] !== getCurrentCompanyId()) {
+        return false;
+    }
+
+    $role = canonicalRole($user['role'] ?? '');
+    if ($role === 'designer') {
+        return (int)$submission['created_by'] === (int)$user['id'];
+    }
+
+    return in_array($role, ['admin', 'manager'], true);
+}
+
+function requireDesignerSubmissionAccess($user, $submission) {
+    if (!canViewDesignerSubmission($user, $submission)) {
+        sendResponse(false, null, 'You do not have access to this submission.', 403);
+    }
+}
+
+function createSubmissionLogPayload($submission, $extra = []) {
+    return json_encode(array_merge([
+        'submission_id' => (int)$submission['id'],
+        'company_id' => (int)$submission['company_id'],
+        'status' => $submission['status'],
+    ], $extra), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+}
+
+function logSystemEvent($userId, $action, $entityType = 'system', $entityId = null, $oldValue = null, $newValue = null, $description = '') {
+    executeQuery(
+        "INSERT INTO system_logs (user_id, action, entity_type, entity_id, old_value, new_value, description, ip_address)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        [$userId, $action, $entityType, $entityId, $oldValue, $newValue, $description, $_SERVER['REMOTE_ADDR'] ?? null]
+    );
+}
+
+function logDesignerSubmissionActivity($submission, $userId, $action, $description, $extra = [], $oldValue = null) {
+    $payload = createSubmissionLogPayload($submission, $extra);
+    logActivity(null, $userId, $action, $oldValue, $payload, $description);
+    logSystemEvent($userId, $action, 'designer_submission', $submission['id'], $oldValue, $payload, $description);
+}
+
+function inferMediaTypeFromMime($mime) {
+    if (is_string($mime) && str_starts_with($mime, 'image/')) {
+        return 'image';
+    }
+
+    if (is_string($mime) && str_starts_with($mime, 'video/')) {
+        return 'video';
+    }
+
+    return 'document';
+}
+
 function getNotificationPost($postId = null) {
     if (!$postId) {
         return null;
@@ -337,7 +430,12 @@ function shortenNotificationText($text, $maxLength = 80) {
     return mb_strlen($text) > $maxLength ? mb_substr($text, 0, $maxLength - 3) . '...' : $text;
 }
 
+function normalizeNotificationType($type) {
+    return preg_replace('/_company_\d+$/', '', (string)$type);
+}
+
 function buildPushPayloadText($type, $title, $message, $postId = null, $triggeredBy = null) {
+    $type = normalizeNotificationType($type);
     $company = getNotificationCompany($postId);
     $companyName = $company['name'] ?? null;
     $post = getNotificationPost($postId);
@@ -443,6 +541,24 @@ function buildPushPayloadText($type, $title, $message, $postId = null, $triggere
                 $pushMessage = $actorName . ' commented on "' . $postTitle . '".';
             }
             break;
+
+        case 'submission_converted':
+            if ($postTitle) {
+                $pushMessage = 'Your submission was converted into "' . $postTitle . '".';
+            }
+            break;
+
+        case 'submission_changes_requested':
+            if ($actorName) {
+                $pushMessage = $actorName . ' requested changes on your submission.';
+            }
+            break;
+
+        case 'submission_rejected':
+            if ($actorName) {
+                $pushMessage = $actorName . ' rejected your submission.';
+            }
+            break;
     }
 
     if ($companyName) {
@@ -502,6 +618,17 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
 // Upload config
 define('UPLOAD_DIR', __DIR__ . '/uploads/');
 define('ALLOWED_TYPES', ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm']);
+define('SUBMISSION_ALLOWED_TYPES', [
+    'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+    'video/mp4', 'video/webm',
+    'application/pdf',
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/vnd.adobe.photoshop',
+    'application/photoshop',
+    'application/x-photoshop',
+    'image/vnd.adobe.photoshop'
+]);
 define('MAX_FILE_SIZE', 100 * 1024 * 1024);
 
 // ===== API ENDPOINTS =====
@@ -899,13 +1026,22 @@ try {
             // === RECENT ACTIVITY - filtered by company, manager only ===
             if ($isManager) {
                 $analytics['recent_activity'] = fetchAll(
-                    "SELECT al.*, u.username, u.full_name, p.title as post_title, p.platforms, p.id as post_id
+                    "SELECT al.*, u.username, u.full_name,
+                            COALESCE(p.title, JSON_UNQUOTE(JSON_EXTRACT(al.new_value, '$.title'))) as post_title,
+                            p.platforms, p.id as post_id
                      FROM activity_log al
                      JOIN users u ON al.user_id = u.id
                      LEFT JOIN posts p ON al.post_id = p.id
-                     WHERE (p.company_id = ? OR al.post_id IS NULL)
+                     WHERE (
+                         p.company_id = ?
+                         OR (
+                             al.post_id IS NULL
+                             AND JSON_VALID(al.new_value)
+                             AND JSON_EXTRACT(al.new_value, '$.company_id') = ?
+                         )
+                     )
                      ORDER BY al.created_at DESC LIMIT 25",
-                    [$companyId]
+                    [$companyId, $companyId]
                 );
             } else {
                 $analytics['recent_activity'] = [];
@@ -1769,6 +1905,476 @@ try {
             sendResponse(true, null, 'Deleted');
             break;
 
+        // ===== DESIGNER SUBMISSIONS =====
+
+        case 'get_designer_submissions':
+            requireAuth();
+            $user = getCurrentUser();
+            $companyId = getCurrentCompanyId();
+            $role = canonicalRole($user['role']);
+
+            $params = [$companyId];
+            $where = ["ds.company_id = ?"];
+
+            if ($role === 'designer') {
+                $where[] = "ds.created_by = ?";
+                $params[] = $user['id'];
+            } elseif (!in_array($role, ['admin', 'manager'], true)) {
+                sendResponse(false, null, 'Access denied', 403);
+            }
+
+            $submissions = fetchAll(
+                "SELECT ds.*, u.username AS created_by_username, u.full_name AS created_by_full_name,
+                        reviewer.username AS reviewed_by_username, reviewer.full_name AS reviewed_by_full_name
+                 FROM designer_submissions ds
+                 JOIN users u ON ds.created_by = u.id
+                 LEFT JOIN users reviewer ON ds.reviewed_by = reviewer.id
+                 WHERE " . implode(' AND ', $where) . "
+                 ORDER BY ds.updated_at DESC, ds.id DESC",
+                $params
+            );
+
+            foreach ($submissions as &$submission) {
+                $submission['attachments'] = getSubmissionAttachments($submission['id']);
+            }
+
+            sendResponse(true, $submissions);
+            break;
+
+        case 'create_designer_submission':
+            requireAuth();
+            $user = getCurrentUser();
+            if (!isDesignerRole($user['role'])) {
+                sendResponse(false, null, 'Only designers can create submissions.', 403);
+            }
+
+            $companyId = getCurrentCompanyId();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $title = sanitizeString(trim($input['title'] ?? ''), 255);
+            $description = sanitizeString(trim($input['description'] ?? ''));
+
+            if ($title === '') {
+                sendResponse(false, null, 'Title is required.', 400);
+            }
+
+            executeQuery(
+                "INSERT INTO designer_submissions (company_id, title, description, created_by, status, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, 'pending', NOW(), NOW())",
+                [$companyId, $title, $description ?: null, $user['id']]
+            );
+
+            $submission = getDesignerSubmissionById(lastInsertId());
+            logDesignerSubmissionActivity(
+                $submission,
+                $user['id'],
+                'submission_created',
+                ($user['full_name'] ?: $user['username']) . " created designer submission '{$submission['title']}'",
+                ['title' => $submission['title']]
+            );
+
+            sendResponse(true, hydrateDesignerSubmission($submission), 'Submission created successfully.', 201);
+            break;
+
+        case 'update_designer_submission':
+            requireAuth();
+            $user = getCurrentUser();
+            if (!isDesignerRole($user['role'])) {
+                sendResponse(false, null, 'Only designers can update submissions.', 403);
+            }
+
+            $input = json_decode(file_get_contents('php://input'), true);
+            $submissionId = (int)($input['id'] ?? 0);
+            $title = sanitizeString(trim($input['title'] ?? ''), 255);
+            $description = sanitizeString(trim($input['description'] ?? ''));
+
+            if (!$submissionId) sendResponse(false, null, 'Submission ID required.', 400);
+            if ($title === '') sendResponse(false, null, 'Title is required.', 400);
+
+            $submission = getDesignerSubmissionById($submissionId);
+            if (!$submission) sendResponse(false, null, 'Submission not found.', 404);
+            requireDesignerSubmissionAccess($user, $submission);
+
+            if ($submission['status'] !== 'changes_requested') {
+                sendResponse(false, null, 'Only submissions with requested changes can be edited.', 403);
+            }
+
+            $oldStatus = $submission['status'];
+
+            executeQuery(
+                "UPDATE designer_submissions
+                 SET title = ?, description = ?, status = 'pending', review_comment = NULL, reviewed_by = NULL, updated_at = NOW()
+                 WHERE id = ?",
+                [$title, $description ?: null, $submissionId]
+            );
+
+            $updatedSubmission = getDesignerSubmissionById($submissionId);
+            logDesignerSubmissionActivity(
+                $updatedSubmission,
+                $user['id'],
+                'submission_updated',
+                ($user['full_name'] ?: $user['username']) . " resubmitted designer submission '{$updatedSubmission['title']}'",
+                ['title' => $updatedSubmission['title'], 'previous_status' => $oldStatus],
+                $oldStatus
+            );
+
+            sendResponse(true, hydrateDesignerSubmission($updatedSubmission), 'Submission updated and resubmitted successfully.');
+            break;
+
+        case 'upload_submission_attachment':
+            requireAuth();
+            $user = getCurrentUser();
+
+            if (!isDesignerRole($user['role'])) {
+                sendResponse(false, null, 'Only designers can upload submission attachments.', 403);
+            }
+
+            $submissionId = (int)($_POST['submission_id'] ?? 0);
+            if (!$submissionId) sendResponse(false, null, 'Submission ID required.', 400);
+            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+                sendResponse(false, null, 'Upload error.', 400);
+            }
+
+            $submission = getDesignerSubmissionById($submissionId);
+            if (!$submission) sendResponse(false, null, 'Submission not found.', 404);
+            requireDesignerSubmissionAccess($user, $submission);
+
+            if ((int)$submission['created_by'] !== (int)$user['id']) {
+                sendResponse(false, null, 'You can only upload to your own submissions.', 403);
+            }
+
+            if (!in_array($submission['status'], ['pending', 'changes_requested'], true)) {
+                sendResponse(false, null, 'Attachments can only be updated before conversion or rejection.', 403);
+            }
+
+            $file = $_FILES['file'];
+            $mime = mime_content_type($file['tmp_name']) ?: ($file['type'] ?? '');
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowedSubmissionExtensions = ['pdf', 'zip', 'psd'];
+            $isAllowedSubmissionFile = in_array($mime, SUBMISSION_ALLOWED_TYPES, true)
+                || ($mime === 'application/octet-stream' && in_array($ext, $allowedSubmissionExtensions, true));
+
+            if (!$isAllowedSubmissionFile) {
+                sendResponse(false, null, 'Invalid attachment type.', 400);
+            }
+            if ($file['size'] > MAX_FILE_SIZE) {
+                sendResponse(false, null, 'File too large (max 100MB).', 400);
+            }
+
+            $year = date('Y');
+            $month = date('m');
+            $uploadPath = UPLOAD_DIR . "submissions/$year/$month/";
+            if (!is_dir($uploadPath)) mkdir($uploadPath, 0755, true);
+
+            $uniqueName = 'submission_' . $submissionId . '_' . uniqid() . ($ext ? '.' . $ext : '');
+            $fullPath = $uploadPath . $uniqueName;
+            $relativePath = "uploads/submissions/$year/$month/$uniqueName";
+
+            if (!move_uploaded_file($file['tmp_name'], $fullPath)) {
+                sendResponse(false, null, 'Failed to save attachment.', 500);
+            }
+
+            executeQuery(
+                "INSERT INTO submission_attachments (submission_id, file_path, original_name, mime_type, file_size, uploaded_by)
+                 VALUES (?, ?, ?, ?, ?, ?)",
+                [$submissionId, $relativePath, $file['name'], $mime, $file['size'], $user['id']]
+            );
+
+            $updatedSubmission = getDesignerSubmissionById($submissionId);
+            logDesignerSubmissionActivity(
+                $updatedSubmission,
+                $user['id'],
+                'submission_updated',
+                ($user['full_name'] ?: $user['username']) . " uploaded an attachment to submission '{$updatedSubmission['title']}'",
+                ['title' => $updatedSubmission['title'], 'attachment_path' => $relativePath]
+            );
+
+            $attachment = fetchOne(
+                "SELECT sa.*, u.username, u.full_name
+                 FROM submission_attachments sa
+                 LEFT JOIN users u ON sa.uploaded_by = u.id
+                 WHERE sa.id = ?",
+                [lastInsertId()]
+            );
+
+            sendResponse(true, $attachment, 'Attachment uploaded successfully.', 201);
+            break;
+
+        case 'delete_submission_attachment':
+            requireAuth();
+            $user = getCurrentUser();
+            if (!isDesignerRole($user['role'])) {
+                sendResponse(false, null, 'Only designers can delete submission attachments.', 403);
+            }
+
+            $attachmentId = (int)($_GET['id'] ?? 0);
+            if (!$attachmentId) sendResponse(false, null, 'Attachment ID required.', 400);
+
+            $attachment = fetchOne(
+                "SELECT sa.*, ds.created_by, ds.status, ds.company_id, ds.title
+                 FROM submission_attachments sa
+                 JOIN designer_submissions ds ON ds.id = sa.submission_id
+                 WHERE sa.id = ?",
+                [$attachmentId]
+            );
+
+            if (!$attachment) sendResponse(false, null, 'Attachment not found.', 404);
+            requireDesignerSubmissionAccess($user, $attachment);
+
+            if ((int)$attachment['uploaded_by'] !== (int)$user['id']) {
+                sendResponse(false, null, 'You can only delete your own attachments.', 403);
+            }
+
+            if (!in_array($attachment['status'], ['pending', 'changes_requested'], true)) {
+                sendResponse(false, null, 'Attachments cannot be deleted after conversion or rejection.', 403);
+            }
+
+            $path = __DIR__ . '/' . $attachment['file_path'];
+            if (file_exists($path)) {
+                unlink($path);
+            }
+
+            executeQuery("DELETE FROM submission_attachments WHERE id = ?", [$attachmentId]);
+
+            $submission = getDesignerSubmissionById($attachment['submission_id']);
+            if ($submission) {
+                logDesignerSubmissionActivity(
+                    $submission,
+                    $user['id'],
+                    'submission_updated',
+                    ($user['full_name'] ?: $user['username']) . " deleted an attachment from submission '{$submission['title']}'",
+                    ['title' => $submission['title'], 'deleted_attachment_id' => $attachmentId]
+                );
+            }
+
+            sendResponse(true, null, 'Attachment deleted successfully.');
+            break;
+
+        case 'delete_designer_submission':
+            requireAuth();
+            $user = getCurrentUser();
+            if (!isDesignerRole($user['role'])) {
+                sendResponse(false, null, 'Only designers can delete submissions.', 403);
+            }
+
+            $submissionId = (int)($_GET['id'] ?? 0);
+            if (!$submissionId) sendResponse(false, null, 'Submission ID required.', 400);
+
+            $submission = getDesignerSubmissionById($submissionId);
+            if (!$submission) sendResponse(false, null, 'Submission not found.', 404);
+            requireDesignerSubmissionAccess($user, $submission);
+
+            if ((int)$submission['created_by'] !== (int)$user['id']) {
+                sendResponse(false, null, 'You can only delete your own submissions.', 403);
+            }
+
+            if ($submission['status'] === 'converted') {
+                sendResponse(false, null, 'Converted submissions cannot be deleted.', 400);
+            }
+
+            $attachments = getSubmissionAttachments($submission['id']);
+            foreach ($attachments as $attachment) {
+                $path = __DIR__ . '/' . $attachment['file_path'];
+                if (file_exists($path)) {
+                    unlink($path);
+                }
+            }
+
+            logDesignerSubmissionActivity(
+                $submission,
+                $user['id'],
+                'submission_deleted',
+                ($user['full_name'] ?: $user['username']) . " deleted submission '{$submission['title']}'",
+                ['title' => $submission['title'], 'deleted_status' => $submission['status']],
+                $submission['status']
+            );
+
+            executeQuery("DELETE FROM designer_submissions WHERE id = ?", [$submissionId]);
+            sendResponse(true, null, 'Submission deleted successfully.');
+            break;
+
+        case 'request_submission_changes':
+            requireAuth();
+            $user = getCurrentUser();
+            if (!canManageDesignerSubmissions($user)) {
+                sendResponse(false, null, 'Admin access required.', 403);
+            }
+
+            $companyId = getCurrentCompanyId();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $submissionId = (int)($input['submission_id'] ?? 0);
+            $comment = sanitizeString(trim($input['comment'] ?? ''));
+
+            if (!$submissionId) sendResponse(false, null, 'Submission ID required.', 400);
+
+            $submission = getDesignerSubmissionById($submissionId);
+            if (!$submission) sendResponse(false, null, 'Submission not found.', 404);
+            requireDesignerSubmissionAccess($user, $submission);
+
+            if (in_array($submission['status'], ['converted', 'rejected'], true)) {
+                sendResponse(false, null, 'This submission can no longer be reviewed.', 400);
+            }
+
+            $oldStatus = $submission['status'];
+            executeQuery(
+                "UPDATE designer_submissions
+                 SET status = 'changes_requested', review_comment = ?, reviewed_by = ?, updated_at = NOW()
+                 WHERE id = ?",
+                [$comment ?: null, $user['id'], $submissionId]
+            );
+
+            $updatedSubmission = getDesignerSubmissionById($submissionId);
+            logDesignerSubmissionActivity(
+                $updatedSubmission,
+                $user['id'],
+                'submission_changes_requested',
+                ($user['full_name'] ?: $user['username']) . " requested changes on submission '{$updatedSubmission['title']}'",
+                ['title' => $updatedSubmission['title'], 'comment' => $comment ?: null, 'previous_status' => $oldStatus],
+                $oldStatus
+            );
+
+            $message = $comment
+                ? "Changes requested on your submission '{$updatedSubmission['title']}': {$comment}"
+                : "Changes were requested on your submission '{$updatedSubmission['title']}'.";
+            notify($updatedSubmission['created_by'], 'submission_changes_requested_company_' . $companyId, 'Changes Requested', $message, null, $user['id']);
+
+            sendResponse(true, hydrateDesignerSubmission($updatedSubmission), 'Changes requested successfully.');
+            break;
+
+        case 'reject_submission':
+            requireAuth();
+            $user = getCurrentUser();
+            if (!canManageDesignerSubmissions($user)) {
+                sendResponse(false, null, 'Admin access required.', 403);
+            }
+
+            $companyId = getCurrentCompanyId();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $submissionId = (int)($input['submission_id'] ?? 0);
+            $reason = sanitizeString(trim($input['reason'] ?? ''));
+
+            if (!$submissionId) sendResponse(false, null, 'Submission ID required.', 400);
+
+            $submission = getDesignerSubmissionById($submissionId);
+            if (!$submission) sendResponse(false, null, 'Submission not found.', 404);
+            requireDesignerSubmissionAccess($user, $submission);
+
+            if ($submission['status'] === 'converted') {
+                sendResponse(false, null, 'Converted submissions cannot be rejected.', 400);
+            }
+
+            $oldStatus = $submission['status'];
+            executeQuery(
+                "UPDATE designer_submissions
+                 SET status = 'rejected', review_comment = ?, reviewed_by = ?, updated_at = NOW()
+                 WHERE id = ?",
+                [$reason ?: null, $user['id'], $submissionId]
+            );
+
+            $updatedSubmission = getDesignerSubmissionById($submissionId);
+            logDesignerSubmissionActivity(
+                $updatedSubmission,
+                $user['id'],
+                'submission_rejected',
+                ($user['full_name'] ?: $user['username']) . " rejected submission '{$updatedSubmission['title']}'",
+                ['title' => $updatedSubmission['title'], 'reason' => $reason ?: null, 'previous_status' => $oldStatus],
+                $oldStatus
+            );
+
+            $message = $reason
+                ? "Your submission '{$updatedSubmission['title']}' was rejected: {$reason}"
+                : "Your submission '{$updatedSubmission['title']}' was rejected.";
+            notify($updatedSubmission['created_by'], 'submission_rejected_company_' . $companyId, 'Submission Rejected', $message, null, $user['id']);
+
+            sendResponse(true, hydrateDesignerSubmission($updatedSubmission), 'Submission rejected successfully.');
+            break;
+
+        case 'convert_submission_to_post':
+            requireAuth();
+            $user = getCurrentUser();
+            if (!canManageDesignerSubmissions($user)) {
+                sendResponse(false, null, 'Admin access required.', 403);
+            }
+
+            $companyId = getCurrentCompanyId();
+            $input = json_decode(file_get_contents('php://input'), true);
+            $submissionId = (int)($input['submission_id'] ?? 0);
+
+            if (!$submissionId) sendResponse(false, null, 'Submission ID required.', 400);
+
+            $submission = getDesignerSubmissionById($submissionId);
+            if (!$submission) sendResponse(false, null, 'Submission not found.', 404);
+            requireDesignerSubmissionAccess($user, $submission);
+
+            if ($submission['status'] !== 'pending') {
+                sendResponse(false, null, 'Only pending submissions can be converted.', 400);
+            }
+
+            executeQuery(
+                "INSERT INTO posts (company_id, title, content, platforms, status, author_id, source, source_id, submitted_by, created_at, updated_at)
+                 VALUES (?, ?, ?, '[]', 'DRAFT', ?, 'designer_submission', ?, ?, NOW(), NOW())",
+                [$companyId, $submission['title'], $submission['description'] ?: '', $user['id'], $submission['id'], $submission['created_by']]
+            );
+
+            $postId = lastInsertId();
+            $attachments = getSubmissionAttachments($submission['id']);
+
+            foreach ($attachments as $index => $attachment) {
+                executeQuery(
+                    "INSERT INTO media_files (post_id, original_name, file_name, file_path, file_type, mime_type, file_size, is_primary, uploaded_by)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    [
+                        $postId,
+                        $attachment['original_name'] ?: basename($attachment['file_path']),
+                        basename($attachment['file_path']),
+                        $attachment['file_path'],
+                        inferMediaTypeFromMime($attachment['mime_type'] ?? ''),
+                        $attachment['mime_type'] ?: 'application/octet-stream',
+                        (int)($attachment['file_size'] ?? 0),
+                        $index === 0 ? 1 : 0,
+                        $attachment['uploaded_by']
+                    ]
+                );
+            }
+
+            executeQuery(
+                "UPDATE designer_submissions
+                 SET status = 'converted', reviewed_by = ?, updated_at = NOW()
+                 WHERE id = ?",
+                [$user['id'], $submission['id']]
+            );
+
+            $convertedSubmission = getDesignerSubmissionById($submission['id']);
+            logActivity($postId, $user['id'], 'created', null, null, 'Created from designer submission');
+            logDesignerSubmissionActivity(
+                $convertedSubmission,
+                $user['id'],
+                'submission_converted',
+                ($user['full_name'] ?: $user['username']) . " converted submission '{$convertedSubmission['title']}' into post #{$postId}",
+                ['title' => $convertedSubmission['title'], 'post_id' => $postId, 'created_post_status' => 'DRAFT'],
+                $submission['status']
+            );
+
+            notify(
+                $convertedSubmission['created_by'],
+                'submission_converted_company_' . $companyId,
+                'Submission Converted',
+                "Your submission has been converted into a Post.",
+                $postId,
+                $user['id']
+            );
+
+            $post = fetchOne(
+                "SELECT p.*, u.username AS author_name, u.full_name AS author_full_name
+                 FROM posts p
+                 LEFT JOIN users u ON p.author_id = u.id
+                 WHERE p.id = ?",
+                [$postId]
+            );
+            $post['media'] = fetchAll("SELECT * FROM media_files WHERE post_id = ? ORDER BY created_at DESC, id DESC", [$postId]);
+
+            sendResponse(true, ['submission' => hydrateDesignerSubmission($convertedSubmission), 'post' => $post], 'Submission converted to post successfully.', 201);
+            break;
+
         // ===== COMMENTS =====
 
         case 'add_comment':
@@ -1841,11 +2447,29 @@ try {
             $notifs = fetchAll(
                 "SELECT n.*, p.title as post_title FROM notifications n
                  LEFT JOIN posts p ON n.post_id = p.id
-                 WHERE n.user_id = ? AND (p.company_id = ? OR p.id IS NULL)
+                 WHERE n.user_id = ? AND (
+                     p.company_id = ?
+                     OR (
+                         p.id IS NULL
+                         AND (n.type NOT LIKE 'submission%' OR n.type LIKE ?)
+                     )
+                 )
                  ORDER BY n.created_at DESC LIMIT 30",
-                [$user['id'], $companyId]
+                [$user['id'], $companyId, 'submission%_company_' . $companyId]
             );
-            $unread = fetchOne("SELECT COUNT(*) as c FROM notifications n LEFT JOIN posts p ON n.post_id = p.id WHERE n.user_id = ? AND n.is_read = 0 AND (p.company_id = ? OR p.id IS NULL)", [$user['id'], $companyId])['c'];
+            $unread = fetchOne(
+                "SELECT COUNT(*) as c
+                 FROM notifications n
+                 LEFT JOIN posts p ON n.post_id = p.id
+                 WHERE n.user_id = ? AND n.is_read = 0 AND (
+                     p.company_id = ?
+                     OR (
+                         p.id IS NULL
+                         AND (n.type NOT LIKE 'submission%' OR n.type LIKE ?)
+                     )
+                 )",
+                [$user['id'], $companyId, 'submission%_company_' . $companyId]
+            )['c'];
 
             sendResponse(true, ['notifications' => $notifs, 'unread_count' => $unread]);
             break;
@@ -1861,16 +2485,28 @@ try {
                     "UPDATE notifications n
                      LEFT JOIN posts p ON n.post_id = p.id
                      SET n.is_read = 1
-                     WHERE n.user_id = ? AND (p.company_id = ? OR p.id IS NULL)",
-                    [$user['id'], $companyId]
+                     WHERE n.user_id = ? AND (
+                         p.company_id = ?
+                         OR (
+                             p.id IS NULL
+                             AND (n.type NOT LIKE 'submission%' OR n.type LIKE ?)
+                         )
+                     )",
+                    [$user['id'], $companyId, 'submission%_company_' . $companyId]
                 );
             } elseif (!empty($input['id'])) {
                 executeQuery(
                     "UPDATE notifications n
                      LEFT JOIN posts p ON n.post_id = p.id
                      SET n.is_read = 1
-                     WHERE n.id = ? AND n.user_id = ? AND (p.company_id = ? OR p.id IS NULL)",
-                    [$input['id'], $user['id'], $companyId]
+                     WHERE n.id = ? AND n.user_id = ? AND (
+                         p.company_id = ?
+                         OR (
+                             p.id IS NULL
+                             AND (n.type NOT LIKE 'submission%' OR n.type LIKE ?)
+                         )
+                     )",
+                    [$input['id'], $user['id'], $companyId, 'submission%_company_' . $companyId]
                 );
             }
             sendResponse(true, null, 'Marked as read');
@@ -2139,8 +2775,8 @@ try {
             $offset = ($page - 1) * $limit;
 
             // Build filter conditions
-            $where = ["(p.company_id = ? OR al.post_id IS NULL)"];
-            $params = [$companyId];
+            $where = ["(p.company_id = ? OR (al.post_id IS NULL AND JSON_VALID(al.new_value) AND JSON_EXTRACT(al.new_value, '$.company_id') = ?))"];
+            $params = [$companyId, $companyId];
 
             // Filter by action type
             if (!empty($_GET['action_type'])) {
@@ -2166,8 +2802,9 @@ try {
 
             // Search in description
             if (!empty($_GET['search'])) {
-                $where[] = "(al.description LIKE ? OR p.title LIKE ? OR u.full_name LIKE ?)";
+                $where[] = "(al.description LIKE ? OR p.title LIKE ? OR JSON_UNQUOTE(JSON_EXTRACT(al.new_value, '$.title')) LIKE ? OR u.full_name LIKE ?)";
                 $term = '%' . $_GET['search'] . '%';
+                $params[] = $term;
                 $params[] = $term;
                 $params[] = $term;
                 $params[] = $term;
@@ -2188,7 +2825,8 @@ try {
             $logParams = array_merge($params, [$limit, $offset]);
             $logs = fetchAll(
                 "SELECT al.*, u.username, u.full_name as user_full_name,
-                        p.title as post_title, p.status as post_status
+                        COALESCE(p.title, JSON_UNQUOTE(JSON_EXTRACT(al.new_value, '$.title'))) as post_title,
+                        p.status as post_status
                  FROM activity_log al
                  JOIN users u ON al.user_id = u.id
                  LEFT JOIN posts p ON al.post_id = p.id
