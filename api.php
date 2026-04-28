@@ -87,6 +87,24 @@ function queueDeferredPushNotification($payload, $meta = []) {
     ];
 }
 
+function buildNotificationLaunchUrl($companyId, $postId = null, $type = '') {
+    $query = [
+        'notification_company_id' => (int) $companyId,
+    ];
+
+    if (!empty($postId)) {
+        $query['notification_post_id'] = (int) $postId;
+    }
+
+    if (!empty($type)) {
+        $query['notification_type'] = $type;
+    }
+
+    $hash = (strpos((string) $type, 'submission_') === 0 && empty($postId)) ? '#submissions' : '#board';
+
+    return getAppEntryUrl('index.php') . '?' . http_build_query($query) . $hash;
+}
+
 function sendResponse($success, $data = null, $message = '', $code = 200) {
     $payload = json_encode(['success' => $success, 'data' => $data, 'message' => $message]);
 
@@ -601,6 +619,7 @@ function notify($userId, $type, $title, $message, $postId = null, $triggeredBy =
                     'post_id' => $postId,
                     'notification_type' => $type,
                 ];
+                $payload['url'] = buildNotificationLaunchUrl($companyId, $postId, $type);
             }
             queueDeferredPushNotification($payload, [
                 'user_id' => $userId,

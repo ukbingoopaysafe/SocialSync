@@ -4,6 +4,34 @@ require_once 'db.php';
 require_once 'includes/security.php';
 startAppSession();
 if (!isset($_SESSION['user_id'])) { header('Location: login.php'); exit; }
+
+$notificationLaunchContext = [
+    'company_id' => 0,
+    'post_id' => 0,
+    'type' => '',
+];
+
+if (isset($_GET['notification_company_id'])) {
+    $notificationLaunchContext['company_id'] = max(0, (int) $_GET['notification_company_id']);
+}
+
+if (isset($_GET['notification_post_id'])) {
+    $notificationLaunchContext['post_id'] = max(0, (int) $_GET['notification_post_id']);
+}
+
+if (isset($_GET['notification_type'])) {
+    $notificationLaunchContext['type'] = preg_replace('/[^a-z0-9_]/i', '', (string) $_GET['notification_type']);
+}
+
+if ($notificationLaunchContext['company_id'] > 0 && (int) ($_SESSION['company_id'] ?? 0) !== $notificationLaunchContext['company_id']) {
+    $notificationCompany = fetchOne("SELECT id, name, logo_url FROM companies WHERE id = ?", [$notificationLaunchContext['company_id']]);
+    if ($notificationCompany) {
+        $_SESSION['company_id'] = (int) $notificationCompany['id'];
+        $_SESSION['company_name'] = $notificationCompany['name'];
+        $_SESSION['company_logo'] = $notificationCompany['logo_url'] ?? 'images/Final_Logo White.png';
+    }
+}
+
 $csrfToken = generateCSRFToken();
 ?>
 <!DOCTYPE html>
@@ -1689,6 +1717,7 @@ const app = {
     lastUnreadCount: 0,
     notificationsInitialized: false
 };
+window.notificationLaunchContext = <?= json_encode($notificationLaunchContext, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 const STATUS_LIST = ['DRAFT', 'PENDING_REVIEW', 'REVIEWED', 'APPROVED', 'SCHEDULED', 'PUBLISHED'];
 const STATUS_COLORS = {
     'DRAFT': 'bg-sky-100 text-sky-700',
@@ -1863,6 +1892,54 @@ function isVideoFile(path) {
     return ['mp4', 'webm', 'ogg', 'mov'].includes(ext);
 }
 
+function getNotificationLaunchContext() {
+    const rawContext = window.notificationLaunchContext || {};
+    const companyId = Number(rawContext.company_id || 0);
+    const postId = Number(rawContext.post_id || 0);
+    const type = String(rawContext.type || '');
+
+    if (!companyId && !postId && !type) {
+        return null;
+    }
+
+    return {
+        companyId: companyId || null,
+        postId: postId || null,
+        type
+    };
+}
+
+function clearNotificationLaunchContext() {
+    window.notificationLaunchContext = null;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('notification_company_id');
+    url.searchParams.delete('notification_post_id');
+    url.searchParams.delete('notification_type');
+    history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+}
+
+async function handleNotificationLaunchContext() {
+    const context = getNotificationLaunchContext();
+    if (!context) return;
+
+    const isSubmissionNotification = context.type.startsWith('submission_');
+
+    if (isSubmissionNotification) {
+        switchTab('submissions');
+    } else {
+        switchTab('board');
+        if (typeof activateBoardMode === 'function') {
+            activateBoardMode('workflow');
+        }
+    }
+
+    if (context.postId) {
+        await openViewModal(context.postId);
+    }
+
+    clearNotificationLaunchContext();
+}
+
 async function init() {
     try {
         // Ensure loader is visible (though it is by default in HTML)
@@ -1879,6 +1956,7 @@ async function init() {
         initialTab = normalizeAppTab(initialTab);
 
         switchTab(initialTab);
+        await handleNotificationLaunchContext();
 
         // Start polling: Notifications (5s), Board data (10s while board is visible)
         setInterval(loadNotifications, 5000);

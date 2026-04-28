@@ -38,6 +38,27 @@ if (!function_exists('getAppBaseUrl')) {
     }
 }
 
+if (!function_exists('getAppBasePath')) {
+    function getAppBasePath() {
+        if (PHP_SAPI === 'cli') {
+            return '';
+        }
+
+        $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+        $basePath = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+
+        return ($basePath === '.' || $basePath === '/') ? '' : $basePath;
+    }
+}
+
+if (!function_exists('getAppEntryUrl')) {
+    function getAppEntryUrl($script = 'index.php') {
+        $script = ltrim((string) $script, '/');
+        $basePath = getAppBasePath();
+        return BASE_URL . ($basePath ? $basePath . '/' : '/') . $script;
+    }
+}
+
 if (!function_exists('loadLocalConfigOverrides')) {
     function loadLocalConfigOverrides() {
         $configLocalPath = __DIR__ . '/config.local.php';
@@ -77,6 +98,7 @@ define('DB_CHARSET', 'utf8mb4');
 
 // Application URL (for CORS and redirects)
 define('BASE_URL', getAppBaseUrl());
+define('APP_BASE_PATH', getAppBasePath());
 
 // Session Configuration
 define('SESSION_NAME', 'SOCIALSYNC_SESSION');
