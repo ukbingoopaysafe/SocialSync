@@ -1583,6 +1583,23 @@ function isDesignerRole(role) {
     return canonicalRole(role) === 'designer';
 }
 
+function canAccessIdeasWorkspace() {
+    return !isDesignerRole(app.user?.role);
+}
+
+function getAvailableTabs() {
+    const tabs = ['dashboard', 'board', 'calendar', 'users'];
+    if (canAccessIdeasWorkspace()) tabs.splice(3, 0, 'ideas');
+    return tabs;
+}
+
+function normalizeAppTab(tab) {
+    const validTabs = getAvailableTabs();
+    if (!validTabs.includes(tab)) return 'board';
+    if (tab === 'users' && canonicalRole(app.user?.role?.toLowerCase()) !== 'manager') return 'board';
+    return tab;
+}
+
 function getRoleLabel(role) {
     const normalized = canonicalRole(role);
     if (normalized === 'designer') return 'Designer';
@@ -1695,13 +1712,8 @@ async function init() {
         await Promise.all([loadPosts(), loadNotifications()]);
 
         // Get tab from URL hash or default to 'board'
-        const validTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
         let initialTab = window.location.hash.replace('#', '');
-        if (!validTabs.includes(initialTab)) initialTab = 'board';
-
-        // Check if unauthorized role trying to access users tab
-        if (initialTab === 'users' && canonicalRole(app.user?.role?.toLowerCase()) !== 'manager') initialTab = 'board';
-        if (initialTab === 'ideas' && isDesignerRole(app.user?.role)) initialTab = 'board';
+        initialTab = normalizeAppTab(initialTab);
 
         switchTab(initialTab);
 
@@ -1737,11 +1749,8 @@ async function init() {
 
 // Handle browser back/forward buttons
 window.addEventListener('hashchange', function() {
-    const validTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
     let tab = window.location.hash.replace('#', '');
-    if (!validTabs.includes(tab)) tab = 'board';
-    if (tab === 'users' && canonicalRole(app.user?.role?.toLowerCase()) !== 'manager') tab = 'board';
-    if (tab === 'ideas' && isDesignerRole(app.user?.role)) tab = 'board';
+    tab = normalizeAppTab(tab);
     switchTab(tab);
 });
 
@@ -1809,6 +1818,7 @@ async function logout() {
 function switchTab(tab) {
     const allTabs = ['dashboard', 'board', 'calendar', 'ideas', 'users'];
     const titles = { dashboard: 'Dashboard', board: 'Content Board', calendar: 'Calendar', ideas: 'My Ideas', users: 'User Management' };
+    tab = normalizeAppTab(tab);
     app.currentTab = tab;
     document.getElementById('boardModeSidebar')?.classList.toggle('hidden', tab !== 'board');
     
@@ -1844,6 +1854,16 @@ function switchTab(tab) {
 let userIdeas = [];
 
 async function loadIdeas() {
+    if (!canAccessIdeasWorkspace()) {
+        userIdeas = [];
+        closeIdeaModal();
+        closeViewIdeaModal();
+        if (window.location.hash === '#ideas') {
+            switchTab('board');
+        }
+        return;
+    }
+
     try {
         const data = await api('get_user_ideas');
         if (!data.success) return;
@@ -1924,6 +1944,11 @@ function renderIdeas() {
 let currentIdeaMedia = [];
 
 function openIdeaModal(ideaId = null) {
+    if (!canAccessIdeasWorkspace()) {
+        toast('Ideas workspace is not available for designers.', 'info');
+        switchTab('board');
+        return;
+    }
     document.getElementById('ideaId').value = ideaId || '';
     document.getElementById('ideaTitle').value = '';
     document.getElementById('ideaContent').value = '';
@@ -1941,6 +1966,12 @@ function closeIdeaModal() {
 }
 
 async function saveIdea() {
+    if (!canAccessIdeasWorkspace()) {
+        toast('Ideas workspace is not available for designers.', 'info');
+        closeIdeaModal();
+        return;
+    }
+
     const id = document.getElementById('ideaId').value;
     const title = document.getElementById('ideaTitle').value.trim();
     const content = document.getElementById('ideaContent').value.trim();
@@ -1970,6 +2001,7 @@ async function saveIdea() {
 }
 
 function editIdea(ideaId) {
+    if (!canAccessIdeasWorkspace()) return;
     const idea = userIdeas.find(i => i.id == ideaId);
     if (!idea) return;
 
@@ -1984,6 +2016,7 @@ function editIdea(ideaId) {
 }
 
 async function deleteIdea(ideaId) {
+    if (!canAccessIdeasWorkspace()) return;
     if (!confirm('Delete this idea? This cannot be undone.')) return;
 
     try {
@@ -2000,6 +2033,7 @@ async function deleteIdea(ideaId) {
 }
 
 async function convertIdeaToDraft(ideaId) {
+    if (!canAccessIdeasWorkspace()) return;
     if (!confirm('Convert this idea to a Draft post?\n\nThis will create a new Draft in your workflow. You can choose to keep or delete the original idea.')) return;
 
     const deleteAfter = confirm('Do you want to delete the idea after converting?\n\nClick OK to delete, Cancel to keep it.');
@@ -2052,6 +2086,10 @@ function renderIdeaMediaPreview() {
 }
 
 async function handleIdeaFileSelect(event) {
+    if (!canAccessIdeasWorkspace()) {
+        event.target.value = '';
+        return;
+    }
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -2092,6 +2130,7 @@ async function handleIdeaFileSelect(event) {
 }
 
 async function uploadIdeaMedia(ideaId, file) {
+    if (!canAccessIdeasWorkspace()) return;
     const formData = new FormData();
     formData.append('idea_id', ideaId);
     formData.append('file', file);
@@ -2114,6 +2153,7 @@ async function uploadIdeaMedia(ideaId, file) {
 }
 
 async function deleteIdeaMedia(mediaId) {
+    if (!canAccessIdeasWorkspace()) return;
     if (!confirm('Delete this attachment?')) return;
 
     try {
@@ -2135,6 +2175,7 @@ async function deleteIdeaMedia(mediaId) {
 let currentViewIdea = null;
 
 function viewIdea(ideaId) {
+    if (!canAccessIdeasWorkspace()) return;
     const idea = userIdeas.find(i => i.id == ideaId);
     if (!idea) return;
 
@@ -2202,6 +2243,7 @@ function closeViewIdeaModal() {
 }
 
 function viewIdeaEdit() {
+    if (!canAccessIdeasWorkspace()) return;
     if (!currentViewIdea) return;
     const ideaId = currentViewIdea.id;
     closeViewIdeaModal();
@@ -2209,6 +2251,7 @@ function viewIdeaEdit() {
 }
 
 function viewIdeaConvert() {
+    if (!canAccessIdeasWorkspace()) return;
     if (!currentViewIdea) return;
     const ideaId = currentViewIdea.id;
     closeViewIdeaModal();
@@ -2216,6 +2259,7 @@ function viewIdeaConvert() {
 }
 
 function viewIdeaDelete() {
+    if (!canAccessIdeasWorkspace()) return;
     if (!currentViewIdea) return;
     const ideaId = currentViewIdea.id;
     closeViewIdeaModal();
