@@ -2592,11 +2592,21 @@ async function saveSubmission() {
         }
 
         const persistedSubmissionId = data.data?.id || Number(submissionId);
+        const failedUploads = [];
         for (const file of pendingSubmissionFiles) {
-            await uploadSubmissionAttachment(persistedSubmissionId, file, false);
+            try {
+                await uploadSubmissionAttachment(persistedSubmissionId, file, false);
+            } catch (uploadError) {
+                console.error('Submission attachment upload error:', uploadError);
+                failedUploads.push(file.name);
+            }
         }
 
-        toast(submissionId ? 'Submission resubmitted successfully' : 'Submission created successfully', 'success');
+        if (failedUploads.length) {
+            toast(`Submission saved, but ${failedUploads.length} attachment${failedUploads.length > 1 ? 's' : ''} failed to upload`, 'error');
+        } else {
+            toast(submissionId ? 'Submission resubmitted successfully' : 'Submission created successfully', 'success');
+        }
         closeSubmissionModal();
         await refreshSubmissionsContent();
     } catch (error) {

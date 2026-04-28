@@ -293,6 +293,40 @@ function logActivity($postId, $userId, $action, $oldValue = null, $newValue = nu
         [$postId, $userId, $action, $oldValue, $newValue, $desc]);
 }
 
+function columnAllowsNull($tableName, $columnName) {
+    static $columnNullabilityCache = [];
+
+    $cacheKey = $tableName . '.' . $columnName;
+    if (array_key_exists($cacheKey, $columnNullabilityCache)) {
+        return $columnNullabilityCache[$cacheKey];
+    }
+
+    try {
+        $column = fetchOne(
+            "SELECT IS_NULLABLE
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?
+             LIMIT 1",
+            [DB_NAME, $tableName, $columnName]
+        );
+
+        $columnNullabilityCache[$cacheKey] = strtoupper((string)($column['IS_NULLABLE'] ?? 'YES')) === 'YES';
+    } catch (Throwable $e) {
+        error_log("Failed to inspect column nullability for {$cacheKey}: " . $e->getMessage());
+        $columnNullabilityCache[$cacheKey] = true;
+    }
+
+    return $columnNullabilityCache[$cacheKey];
+}
+
+function activityLogAllowsNullPostId() {
+    return columnAllowsNull('activity_log', 'post_id');
+}
+
+function notificationsAllowNullPostId() {
+    return columnAllowsNull('notifications', 'post_id');
+}
+
 function getNotificationCompanyId($postId = null) {
     if (!empty($postId)) {
         $post = fetchOne("SELECT company_id FROM posts WHERE id = ?", [$postId]);
@@ -415,7 +449,9 @@ function logSystemEvent($userId, $action, $entityType = 'system', $entityId = nu
 
 function logDesignerSubmissionActivity($submission, $userId, $action, $description, $extra = [], $oldValue = null) {
     $payload = createSubmissionLogPayload($submission, $extra);
-    logActivity(null, $userId, $action, $oldValue, $payload, $description);
+    if (activityLogAllowsNullPostId()) {
+        logActivity(null, $userId, $action, $oldValue, $payload, $description);
+    }
     logSystemEvent($userId, $action, 'designer_submission', $submission['id'], $oldValue, $payload, $description);
 }
 
@@ -591,9 +627,15 @@ function buildPushPayloadText($type, $title, $message, $postId = null, $triggere
 }
 
 function notify($userId, $type, $title, $message, $postId = null, $triggeredBy = null) {
-    // 1. Store notification in database (existing logic)
-    executeQuery("INSERT INTO notifications (user_id, type, title, message, post_id, triggered_by) VALUES (?, ?, ?, ?, ?, ?)",
-        [$userId, $type, $title, $message, $postId, $triggeredBy]);
+    // 1. Store notification in database when the current schema supports it.
+    if ($postId !== null || notificationsAllowNullPostId()) {
+        executeQuery(
+            "INSERT INTO notifications (user_id, type, title, message, post_id, triggered_by) VALUES (?, ?, ?, ?, ?, ?)",
+            [$userId, $type, $title, $message, $postId, $triggeredBy]
+        );
+    } else {
+        error_log("Skipped DB notification insert for type '{$type}' because notifications.post_id does not allow NULL on this environment.");
+    }
 
     // 2. Send push notification via OneSignal
     if (defined('ONESIGNAL_APP_ID') && defined('ONESIGNAL_REST_KEY') && ONESIGNAL_APP_ID && ONESIGNAL_REST_KEY) {
