@@ -293,6 +293,31 @@ function logActivity($postId, $userId, $action, $oldValue = null, $newValue = nu
         [$postId, $userId, $action, $oldValue, $newValue, $desc]);
 }
 
+function tableExists($tableName) {
+    static $tableExistenceCache = [];
+
+    if (array_key_exists($tableName, $tableExistenceCache)) {
+        return $tableExistenceCache[$tableName];
+    }
+
+    try {
+        $table = fetchOne(
+            "SELECT 1
+             FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
+             LIMIT 1",
+            [DB_NAME, $tableName]
+        );
+
+        $tableExistenceCache[$tableName] = (bool)$table;
+    } catch (Throwable $e) {
+        error_log("Failed to inspect table existence for {$tableName}: " . $e->getMessage());
+        $tableExistenceCache[$tableName] = false;
+    }
+
+    return $tableExistenceCache[$tableName];
+}
+
 function columnAllowsNull($tableName, $columnName) {
     static $columnNullabilityCache = [];
 
@@ -440,6 +465,11 @@ function createSubmissionLogPayload($submission, $extra = []) {
 }
 
 function logSystemEvent($userId, $action, $entityType = 'system', $entityId = null, $oldValue = null, $newValue = null, $description = '') {
+    if (!tableExists('system_logs')) {
+        error_log("Skipped system log '{$action}' because system_logs table does not exist on this environment.");
+        return;
+    }
+
     executeQuery(
         "INSERT INTO system_logs (user_id, action, entity_type, entity_id, old_value, new_value, description, ip_address)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
