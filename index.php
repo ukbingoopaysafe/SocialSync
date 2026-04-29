@@ -5798,7 +5798,7 @@ async function loadNotifications() {
 
         const notifList = document.getElementById('notifList');
         const notifHtml = data.data.notifications.slice(0, 15).map(n => `
-            <div class="p-4 border-b border-slate-50 cursor-pointer transition-all ${n.is_read ? 'bg-white hover:bg-slate-50' : 'bg-brand-50/30 hover:bg-brand-50/50 border-l-4 border-l-brand-500'}" onclick="notifClick(${n.id}, ${n.post_id})">
+            <div class="p-4 border-b border-slate-50 cursor-pointer transition-all ${n.is_read ? 'bg-white hover:bg-slate-50' : 'bg-brand-50/30 hover:bg-brand-50/50 border-l-4 border-l-brand-500'}" onclick="notifClick(${n.id}, ${n.post_id || 'null'}, ${JSON.stringify(n.type || '')})">
                 <div class="flex items-start gap-4">
                     <div class="w-10 h-10 rounded-full ${n.is_read ? 'bg-slate-100 text-slate-400' : 'bg-brand-100 text-brand-600'} flex items-center justify-center flex-shrink-0 transition-colors">
                         <i class="fa-solid ${n.title.toLowerCase().includes('approval') ? 'fa-check-double' : (n.title.toLowerCase().includes('comment') ? 'fa-comment' : 'fa-bell')} text-sm"></i>
@@ -5849,10 +5849,14 @@ function toggleNotifications() {
         }
     }
 }
-async function notifClick(id, postId) {
+async function notifClick(id, postId, type = '') {
     await api('mark_notification_read', 'POST', { id });
     toggleNotifications();
-    if (postId) openViewModal(postId);
+    if (postId) {
+        openViewModal(postId);
+    } else if (String(type).startsWith('submission_')) {
+        switchTab('submissions');
+    }
     loadNotifications();
 }
 async function markAllRead() { await api('mark_notification_read', 'POST', { mark_all: true }); loadNotifications(); }

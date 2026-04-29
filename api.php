@@ -632,6 +632,12 @@ function buildPushPayloadText($type, $title, $message, $postId = null, $triggere
             }
             break;
 
+        case 'submission_created':
+            if ($actorName) {
+                $pushMessage = $actorName . ' submitted a new designer submission.';
+            }
+            break;
+
         case 'submission_changes_requested':
             if ($actorName) {
                 $pushMessage = $actorName . ' requested changes on your submission.';
@@ -2062,6 +2068,25 @@ try {
                 ($user['full_name'] ?: $user['username']) . " created designer submission '{$submission['title']}'",
                 ['title' => $submission['title']]
             );
+
+            $admins = fetchAll(
+                "SELECT id
+                 FROM users
+                 WHERE role = 'admin' AND is_active = 1"
+            );
+
+            $designerName = $user['full_name'] ?: $user['username'];
+            $submissionMessage = $designerName . " submitted a new designer submission: '{$submission['title']}'.";
+            foreach ($admins as $admin) {
+                notify(
+                    $admin['id'],
+                    'submission_created_company_' . $companyId,
+                    'New Designer Submission',
+                    $submissionMessage,
+                    null,
+                    $user['id']
+                );
+            }
 
             sendResponse(true, hydrateDesignerSubmission($submission), 'Submission created successfully.', 201);
             break;
